@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Lewensloop</title>
+<link rel="stylesheet" href="styl.css">
+</head>
+<body>
+
+<!-- Die hele spel speel binne hierdie een "toestel". Al die inhoud word
+     deur uitleg.js hier ingesit; hierdie lêer bly leeg en eenvoudig. -->
+<div id="toestel">
+  <div id="kop"></div>
+  <div id="blad"></div>
+  <button id="verjaar" onclick="wordOuer()"><i>&#127874;</i>+1 JAAR</button>
+  <nav id="balk"></nav>
+  <div id="wenk"></div>
+  <div id="modaal"></div>
+  <div id="begin"></div>
+</div>
+
+<!-- Die orde hier maak saak: begin.js loop die spel aan die gang en moet
+     dus laaste wees, nadat al die ander lêers gelaai is. -->
+<script src="hulp.js"></script>
+<script src="data.js"></script>
+<script src="gebeure.js"></script>
+<script src="lewe.js"></script>
+<script src="aksies.js"></script>
+<script src="uitleg.js"></script>
+<script src="skerm.js"></script>
+<script src="begin.js"></script>
+
+</body>
+</html>

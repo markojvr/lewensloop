@@ -1,0 +1,256 @@
+# Lewensloop — volledige lys veranderinge
+
+Elke item het 'n kode-verwysing waar dit van toepassing is.
+Prioriteite: **P0** = dis net verkeerd, **P1** = groot realisme-gaping, **P2** = nuwe inhoud.
+
+### Lêerstruktuur
+
+Die spel was een lêer van 2 104 reëls. Dit is op 22 Oktober 2026 opgedeel,
+met presies dieselfde gedrag — net makliker om in te werk:
+
+| Lêer | Wat daarin is |
+|---|---|
+| `index.html` | Net die HTML-raam en die `<script>`-lyste. 35 reëls. |
+| `styl.css` | Al die uitleg en kleure. |
+| `hulp.js` | Klein hulpfunksies: `R()`, `kans()`, `geld()`, `klem()`. |
+| `data.js` | Al die lyste: name, skole, unies, beroepe, bates, misdade, flieks, diere. Onderaan, onder "EKONOMIE", staan al die geldgetalle bymekaar: dorpskoste, huurpryse, verbandkoerse, rente en pensioen. |
+| `gebeure.js` | `GEBEURE` — die lukrake dinge wat met jou gebeur. |
+| `lewe.js` | Die status `s`, stoor/laai, en `wordOuer()` — die jaarmasjien. |
+| `aksies.js` | Alles wat die speler self kies: aktiwiteite, misdaad, werk, studie, bates, verhoudings, diere. |
+| `uitleg.js` | Bou die HTML vir elke tab. |
+| `skerm.js` | Modale vensters, wenke, grafsteen, beginskerm. |
+| `begin.js` | Die inskryfpunt. Laai heel laaste. |
+
+Dit is gewone `<script src>`-lêers, nie ES modules nie, **sodat dubbelklik op
+`index.html` steeds werk**. Moet dit nie na `type="module"` verander nie —
+dan blokkeer die browser dit oor `file://` en moet jy 'n server begin.
+
+---
+
+## A. Foute wat eerste gefix moet word (P0) — ✅ KLAAR (22 Oktober 2026)
+
+Al 16 items is gedoen. Die kolom **Gedoen** sê kortliks wat verander het.
+Nuwe velde in `s`: `skool.agter`, `tronkJare`, `kindersGebore`, `lisensie`, en
+`artsBonus` per dier — almal met `||0`, sodat ou stoor-data in localStorage
+steeds laai.
+
+| # | Probleem | Waar | Gedoen |
+|---|---|---|---|
+| A1 | **Fliek-kaartjies.** `fliekMaat()` vra altyd `f.koste * 2` as jy iemand saamvat — ook as dit jou ma of pa is. 'n 8-jarige betaal dus vir sy ouer se kaartjie. Fix: 'n grootmens wat saamgaan betaal sy eie kaartjie (of betaal joune ook); net 'n maat van jou eie ouderdom kos jou geld. | `aksies.js:106` | ✅ `kaartjiePrys()` in `aksies.js`. Jy betaal jou eie kaartjie plus dié van ’n kind wat jy saamvat; ’n grootmens (18+) betaal self. ’n 8-jarige met sy ma betaal nou R90 in plaas van R300. |
+| A2 | **Geen kinderkaartjie.** Een prys vir alle ouderdomme. SA-bioskope het kinder-/pensioenaris-pryse (± 60% van vol prys). Voeg `kinderPrys` by elke item in `FLIEKS`. | `data.js:177` | ✅ `kinderPrys` by elke fliek in `FLIEKS` (± 60% van vol prys). Geld vir kinders onder 13 **en** pensioenarisse van 60 af. |
+| A3 | **Geen ouderdomsbeperking op flieks.** 'n 6-jarige kan 'n grillerprent (18) gaan kyk. Voeg `ouderdomsbeperking` by elke fliek en keer dit af onder die ouderdom (of "jou ouers sê nee"). | `data.js:177` | ✅ `ouderdomsbeperking` by elke fliek (0, 7, 10, 13, 18). Te jonk → die opsie is grys en “Dit is ’n 18-fliek. Hulle laat jou nie in nie.” |
+| A4 | **Kind gaan alleen fliek/vakansie.** `fliek` is `min:6` en `vakansie` is `min:8` — 'n 8-jarige kan alleen Japan toe vlieg. Onder ± 13 moet 'n ouer/grootmens saamgaan, anders moet die opsie "Gaan alleen" wegval. | `aksies.js:36`, `aksies.js:40` | ✅ Onder 13 val “Gaan alleen” weg by fliek én vakansie — net grootmense (18+) is in die maatlys (`grootmensFilter`). Is daar niemand nie, sê die spel dit. |
+| A5 | **Casino is 'n geldmasjien.** Koste R5 000, 46% kans op R8 000–R22 000 wins → verwagte wins ≈ **+R1 900 per draai**, 3 draaie per jaar. Moet negatief wees (bv. 42% kans op R2 000–R12 000). | `aksies.js:65` | ✅ Nou 2% kans op R30 000–R90 000 plus 36% op R6 000–R12 000. Verwagte opbrengs **−R624 per draai** (87,5% terugbetaling) in plaas van +R1 900. |
+| A6 | **Lotto is te goed.** 0,12% kans op R6–38 m teen R30 → verwagte wins ≈ **+R26 000 per kaartjie**. Werklike Lotto-kans is ± 1 in 20 miljoen. Maak die jackpot-kans ± 0,002% en laat jou meer as een kaartjie per jaar koop. | `aksies.js:60` | ✅ Vier prysvlakke met regte kanse: jackpot 1 uit 2 miljoen. Verwagte opbrengs **−R12,80 per kaartjie** (57% terugbetaling) in plaas van +R26 000. Tot 5 kaartjies per jaar. |
+| A7 | **Tronk breek skool permanent.** `skoolJaar()` begin met `if(s.tronk) return;`. Word jy op 10 toegesluit, pas `o===6` en `o>=7&&o<=12` nooit weer nie → jy sit vir ewig op `vlak:'laerskool'` en kan nooit matrikuleer of studeer nie. Nodig: 'n inhaal-/herhaalstelsel wat graad op ouderdom herbereken ná vrylating. | `lewe.js:140` | ✅ `skoolGraad()` = ouderdom − 5 − `skool.agter`. Elke jaar in die tronk tydens jou skooljare verhoog `agter`; ná vrylating gaan jy voort waar jy opgehou het (en slaan nie grade oor nie). Getoets: toegesluit op 12 in Graad 7 vir 8 jaar → Graad 8 op 20, matriek op 25. |
+| A8 | **Kollegas bly aan ná 'n vonnis.** `tronkToe()` stel `s.beroep=null` maar roep nooit `losWerkMense()` nie, so jou baas en kollegas bly vir altyd in jou mense-lys. | `lewe.js:428` | ✅ `tronkToe()` roep nou `losWerkMense()` en noteer die werksverlies. Studies word ook met ’n boodskap gestaak. |
+| A9 | **Troeteldier kan onsterflik word.** Elke dieretarts-besoek doen `d.maks += 1`, een keer per jaar — dus kan 'n goudvis 40 jaar oud word. Maak die bonus eenmalig of beperk tot +2 totaal. | `aksies.js:641` | ✅ `d.artsBonus` beperk die dierearts se bonus tot +2 jaar in totaal. |
+| A10 | **Egskeiding verdeel net kontant.** `wat==='skei'` neem die helfte van `s.geld`, maar laat `s.bates` en `s.belegging` heeltemal uit. Jy hou die Camps Bay-huis. | `aksies.js:558`, `lewe.js:372` | ✅ Nuwe `skeiVerdeel()` in `lewe.js`, gebruik deur albei plekke. Verdeel die **netto waarde** (kontant + beleggings + bates) in die helfte, en verkoop bates — die duurste eerste — as daar nie genoeg kontant is nie. Die Camps Bay-huis word nou verkoop. |
+| A11 | **Kinders kos vir ewig geld.** `uit += s.kinders * 38000` loop tot jy dood is, ook ná die kind op 18 "huis verlaat het". En `s.kinders` word nooit afgetrek as 'n kind sterf nie. | `lewe.js:326` | ✅ `kindersTuis()` tel net lewende kinders onder 18, en `s.kinders` word verminder as ’n kind sterf. `s.kindersGebore` hou by hoeveel jy ooit gehad het, vir die grafsteen. |
+| A12 | **Troeteldiere is gratis vir kinders.** Al die onderhoudskoste sit binne `if(s.ouderdom>=18)`, dus kan 'n 10-jarige 'n perd (R62 000/jaar) gratis aanhou. | `lewe.js:325` | ✅ `diereKosteJaar()` hef die koste op elke ouderdom. Is jy ’n kind, betaal jou ouers — maar net as hulle dit kan bekostig (`rykf × 30 000`); anders gaan die dier SPCA toe. |
+| A13 | **Dooie vlae.** `s.vlagge.gevang` en `s.vlagge.hond` word gestel maar nooit gelees nie. Die "hond volg jou huis toe"-gebeurtenis gee ook nie 'n regte dier in `s.diere` nie. | `gebeure.js:109`, `gebeure.js:165` | ✅ `s.vlagge.gevang` word nou gelees: is jy al gevang, val die uitsluip-kans van 60% na 34%, en jou ouers se band daal. Die hond gee nou ’n regte dier in `s.diere` (met sy R9 500/jaar) via `voegDierBy()`; die dooie `s.vlagge.hond` is weg. |
+| A14 | **Tronkjare-telling is verkeerd** op die grafsteen: dit tel log-reëls wat met "Jy sit tronk" begin, maar die laaste jaar van elke vonnis log "vrygelaat" in plaas daarvan — dus altyd een jaar te min per vonnis. | `skerm.js:104` | ✅ Nuwe `s.tronkJare` tel elke jaar in `tronkJaar()`, ook die jaar waarin jy vrygelaat word. Twee vonnisse van 3 + 2 jaar wys nou 5, nie 3 nie. |
+| A15 | **Jy kan werk terwyl jy op skool is, voltyds.** `doenAansoek()` kyk nooit na `s.skool.vlak` nie. 'n Graad 10-leerling kan voltyds kelner wees teen R78 000/jaar. Nodig: 'n aparte klas van **deeltydse werk** (sien D3). | `aksies.js:278` | ✅ `werkVereis()` keer voltydse werk terwyl `skool.vlak` `laerskool` of `hoerskool` is, en die Werk-blad wys “Nog op skool” met die rede. Universiteitstudente is nie geraak nie. Die volle deeltydse-werk-stelsel bly D3. |
+| A16 | **Enige ouderdom kan 'n motor besit en bestuur.** Daar is geen lisensiestelsel nie — net een flavour-gebeurtenis oor 'n leerlinglisensie. 'n 12-jarige kan 'n Porsche koop en as ontsnapvoertuig gebruik. | `aksies.js:407`, `gebeure.js:45` | ✅ `magBestuur()` (18+) word getoets by `koopBate()` vir ’n motor en by die “Jou eie motor”-ontsnapvoertuig; `lisensieJaar()` gee die lisensie op 18 met ’n log-reël. Die volle motorstelsel bly H9. |
+
+---
+
+## B. Ekonomie en geld (die grootste realisme-gaping) — P1
+
+**Fase 2 (B1, B2, B5, B6, B13, B14, B17) is ✅ KLAAR (22 Oktober 2026).** Die kolom
+**Gedoen** sê kortliks wat verander het. Die ander items in hierdie afdeling wag nog.
+
+Nuwe velde in `s`: `spaar`, `blyplek`, `huurPlek`, `bond`, `swartlys`, `pensioenFonds`,
+`pensioenKoers`, `afgetree` — almal met verstekwaardes in `vulNuweVelde()`, sodat ou
+stoor-data in localStorage steeds laai (ook 'n lewe wat al op pensioen was).
+Al die nuwe getalle staan bymekaar in `data.js` onder "EKONOMIE".
+
+| # | Verandering | Gedoen |
+|---|---|---|
+| B1 | **Geen huur.** Besit jy nie 'n huis nie, betaal jy niks vir blyplek. Nodig: huur as deel van `finansiesJaar()`, geskaleer volgens dorp en inkomste, plus die keuse om by jou ouers te bly (goedkoper, maar minder geluk ná ± 25). | ✅ `blyplekJaar()` in `lewe.js`. Drie keuses: by jou ouers (R950/maand as jy verdien, en van 25 af kos dit elke jaar geluk), een van vyf `HUURPLEKKE` (agterkamer tot huis in 'n goeie buurt), of jou eie huis. Alles word deur `DORP_KOSTE` geskaleer — dieselfde woonstel kos R108k in Kaapstad en R67k in Vryburg. Op 18 vra die spel een keer waar jy wil bly; daarna verander jy dit op die Bates-blad. Vreet die huur meer as die helfte van jou vermoë op, trek jy kleiner (`kleinerBlyplek()`). |
+| B2 | **Geen huislening (bond).** Jy moet R950 000 **kontant** hê vir die goedkoopste woonstel. Nodig: deposito (10%), rentekoers, paaiement, termyn, en wat gebeur as jy agterraak (repossession). Dit is die enkele grootste ontbrekende stuk. | ✅ `bondJaar()`, `bondOpsies()` en `wysBondOpsies()`. Koop jy 'n huis sonder genoeg kontant, wys die bank vier opsies: 10% of 20% deposito oor 20 of 30 jaar, teen 11,75%, elk met sy paaiement én wat jy in totaal gaan betaal. Die bank keur net goed wat onder 33% van jou bruto inkomste val — 'n onderwyser op R330k kwalifiseer vir 30 jaar, nie vir 20 nie. Jy kan ekstra inbetaal (R250k op 'n nuwe verband sny 19 jaar af). Raak jy drie jaar agter, verkoop die bank die huis op 'n veiling teen 80% en jy word sewe jaar gelys. `netoWaarde()` en `skeiVerdeel()` trek die verband af. |
+| B3 | **Geen voertuigfinansiering**, geen balloon payment, geen versekering (voertuig, huis, lewe), geen licence disc/registrasie. | |
+| B4 | ~~**Geen inflasie.**~~ **(UITGESTEL — nie nou nie.)** Salarisse groei 4,5% per jaar (`lewe.js:292`), maar 'n fliek bly vir 80 jaar R180 en 'n huis bly R950 000. Nodig: een inflasie-multiplikator wat op alle pryse toegepas word, plus 'n beginjaar (bv. gebore in 2026) sodat die spel 'n kalender het. | |
+| B5 | **Kontant verdien geen rente.** Geld in die bank moet ± 5–7% per jaar groei; nodig: spaarrekening vs tjekrekening. | ✅ `spaarRenteJaar()` plus 'n spaarrekening (`s.spaar`) op die Bates-blad. Geld daar groei 5–7% per jaar; geld in die tjekrekening doen steeds niks — jy moet dit self skuif, en die spel herinner jou as jy te veel laat lê. Rente bo SARS se R23 800-vrystelling word belas. Kort die tjekrekening geld vir 'n paaiement, trek die bank dit outomaties uit die spaarrekening (`dekUitSpaar()`). |
+| B6 | **Skuld het geen gevolge.** Negatiewe `s.geld` kos net 9 geluk per jaar — geen rente, geen blacklisting, geen credit score, geen boedelbevel (sequestration), en jy kan onbeperk negatief gaan. | ✅ `skuldJaar()`. Skuld loop teen 19%. Oor die perk (35% van jou bruto inkomste, minstens R25 000) word eers jou spaargeld, dan jou beleggings, dan jou bates opgeëis — die balju vat die goedkoopste ding wat die skuld dek, teen 75% van sy waarde. Is daar niks meer nie, volg 'n boedelbevel: alles weg, skuld afgeskryf, tien jaar gelys. `betaalWatJyKan()` is die harde ondergrens: wat jy nie kan betaal nie, moet jy ontbeer (dit kos geluk en gesondheid) — jou skuld kan dus nie onbeperk groei nie. 'n Boedelbevel vereis minstens R120 000 skuld en kan net een keer elke tien jaar. |
+| B7 | **Geen lenings beskikbaar.** Jy kan nie geld leen om te studeer, 'n besigheid te begin of 'n krisis te oorleef nie. Nodig: persoonlike lening, kredietkaart, mashonisa (hoë rente, swaar gevolge). | |
+| B8 | **Belasting is te grof.** `finansiesJaar()` gebruik vier plat skale (14/22/30/36%). SA het marginale skale plus `primary rebate`, UIF en mediese krediete. Pensioeninkomste word ook teen volle koers belas. | |
+| B9 | **Geen belasting op beleggings of bates:** geen CGT by verkoop, geen dividendbelasting, geen hereregte (transfer duty) of agentekommissie (± 7%) wanneer jy eiendom koop/verkoop. | |
+| B10 | **Geen TFSA of retirement annuity.** Vir 'n spel met 'n Buffett-kant is dit belangrik: TFSA met 'n R36 000/jaar-limiet, 'n RA met belastingaftrekking, en die verskil tussen 'n indeksfonds en aandele. | |
+| B11 | **Beleggingsopbrengs is onrealisties verdeel.** `tussen(-24,34)/100` is 'n plat (uniform) verdeling met gemiddeld +5%. Nodig: 'n skewe verdeling met seldsame groot verliese (crash-jare), en die keuse tussen kontant / indeksfonds / enkelaandele / krypto met verskillende risiko's. | |
+| B12 | **Geen maandelikse debietorders.** Alles gebeur een keer per jaar in een groot bedrag; selfoonkontrak, internet, mediese fonds, gim-lidmaatskap en versekering bestaan nie as vaste uitgawes nie. | |
+| B13 | **Lewenskoste is 'n vaste R56 000** vir almal van 18 af — of jy 'n student, werkloos, 'n miljoenêr of in 'n dorpie is. Nodig: koste wat skaal met leefstyl, dorp, gesinsgrootte en inkomste. | ✅ `lewenskosteJaar()` vervang die plat R56 000. Dit skaal met die dorp (`DORP_KOSTE`), met jou gesin (eggenoot + 60%, R30 000 per kind onder 18, albei ook dorp-geskaleer), en met jou inkomste: 'n student leef op 62%, wie min verdien leef karig (55% van sy netto), en elke rand netto bo R220 000 laat jou 18c meer spandeer. Bly jy by jou ouers en verdien jy nog niks, sit hulle die kos op die tafel — daarom beland 'n student of iemand tussen werke nie sommer in die skuld nie. |
+| B14 | **Sakgeld is te laag.** R100–R600 **per jaar** (`lewe.js:321`) teenoor 'n fliekkaartjie van R180. En die tandfeetjie gee R5. Nodig: sakgeld per week/maand wat met ouderdom groei. | ✅ `sakgeldJaar()`. Sakgeld is nou (ouderdom − 4) × R7 per week × die gesin se rykdomfaktor, met ±15% ruis. 'n Sewejarige in 'n werkersklasgesin kry sowat R21 per week, 'n matriekleerling R91 — dus 'n fliek of twee per maand teenoor die R180-kaartjie. Werk jy self, hou die sakgeld op. Die tandfeetjie gee nou R20–R60 in plaas van R5. |
+| B15 | **Geen begrafnis, testament of boedel.** As jy sterf, verdwyn alles. Nodig: 'n testament, boedelbelasting en 'n erfenis wat na jou kinders gaan (sien H1). | |
+| B16 | **Geen staatstoelae.** Geen kindertoelaag, geen UIF as jy afgedank word, geen ouderdomspensioen (SASSA) as jy nooit 'n pensioenfonds gehad het nie. | |
+| B17 | **Pensioen is 'n gratis geskenk:** `s.pensioen = salaris * 0,35` vir ewig, sonder dat jy ooit bygedra het, en net beskikbaar as jy op 60 nog 'n werk het. Is jy op 60 werkloos, kan jy nooit aftree nie. Nodig: jaarlikse bydraes wat opbou in 'n fonds. | ✅ `pensioenBydraeJaar()`, `pensioenFondsJaar()`, `treeAf()` en `aftreeJaar()`. Jy dra 0%, 5%, 7,5% of 15% by (knoppies op die Werk-blad), jou werkgewer pas dit tot 7,5%, en die bydrae is belastingaftrekbaar. Die fonds groei 0–12% per jaar en **bly joune as jy die werk verloor** — jy kan dus aftree al is jy op 60 werkloos. Van 55 af kan jy aftree: alles in 'n lewende annuïteit (5,5% per jaar), of eers 'n derde kontant (die eerste R550 000 vry). Op 65 vra die spel self. Jy kan die fonds ook vroeg uittrek — en dan vat SARS 36% bo R27 500, wat die les is. |
+| B18 | **Ryk maar brandarm (nuut, 22 Okt 2026).** `betaalWatJyKan()` beperk wat jy kan uitgee tot `geld + skuldPerk()`, maar `skuldJaar()` eis eers op as die skuld **bo** die perk is. Iemand met 'n huis van R2,8 m en geen inkomste bly dus vir altyd op die skuldplafon vassteek: hy betaal elke jaar R25 000 van R100 000, kry elke jaar geluk en gesondheid af, verkoop nooit die huis nie — en sy netto waarde **styg** steeds. Oor 14 jaar getoets: R4,16 m → R5,21 m terwyl hy honger ly. Nodig: kan jy nie jou lewenskoste dek nie en besit jy iets verkoopbaars, vra die speler om te verkoop (of laat die balju optree *by* die perk, nie net daarbo nie). | `lewe.js` — `betaalWatJyKan()`, `skuldJaar()` |
+---
+
+## C. Skool en studie — SA-akkuraatheid (P1)
+
+| # | Verandering |
+|---|---|
+| C1 | **Geen vakkeuses.** In Graad 10 kies jy vakke, en dit bepaal alles daarna. Die belangrikste: **Wiskunde vs Wiskundige Geletterdheid** — sonder Wiskunde is Ingenieurswese, Rekeningkunde en Medies toe. Op die oomblik hang alles net van die `slim`-telling af. |
+| C2 | **Matriek het nie 'n APS nie.** Die spel gebruik 'n persentasie-gemiddeld (`lewe.js:184`) en universiteite vra `punte>=70`. SA gebruik 'n **APS uit 42** plus vakspesifieke vereistes. |
+| C3 | **Geen drie slaagvlakke.** SA se NSC gee 'n *Hoër Sertifikaat*, *Diploma* of *Bachelor's pass*. Die spel het net "geslaag by 40%" of "gedruip". |
+| C4 | **Elke graad is 3 jaar** (`aksies.js:363`). Werklik: BCom 3, BEng 4, LLB 4, MBChB 6, BEd 4. |
+| C5 | **Medies en Regte is Amerikaans gemodelleer.** `NAGRAADS` het 'n "Mediese Skool" en "Regskool" ná 'n graad. In SA is MBChB en LLB voorgraads — direk ná matriek. |
+| C6 | **Geen beroepsregistrasie of articles.** 'n CA(SA) moet SAICA-articles doen, 'n dokter moet internskap + community service doen, 'n ingenieur registreer by ECSA. Nou is 'n graad genoeg. |
+| C7 | **Geen NSFAS.** Die enigste beurs is outomaties as `slim>=82` (`aksies.js:355`). NSFAS is die werklike roete vir die meerderheid; nodig: inkomste-toets, aansoek, en die kans dat die geld laat betaal word. |
+| C8 | **Geen studentelening of studenteskuld.** |
+| C9 | **Jy kan nie 'n jaar druip of uitgegooi word nie.** Universiteit is outomaties sukses solank jy die klasgeld betaal. Nodig: jaarlikse slaagkans op grond van `slim` + hoe hard jy studeer, en "academic exclusion". |
+| C10 | **Geen koshuis, geen res-lewe, geen pendel.** Klasgeld is die enigste koste; in die werklikheid is verblyf dikwels meer as die klasgeld. |
+| C11 | **Geen TVET-kolleges, leerlingskappe of ambagte.** Daar is 'n Tegniese Hoërskool in die spel maar geen pad na 'n ambagsertifikaat (elektrisiën, loodgieter, sweiser) nie — 'n groot SA-loopbaanroete wat heeltemal ontbreek. |
+| C12 | **Geen onderwysersopleiding-, polisie- of weermag-opleidingsfase.** Jy word sommer aangestel. |
+| C13 | **Geen skoolgeld vir jou eie kinders**, en geen keuse van skool vir hulle. |
+| C14 | **Hoërskool het geen sport, kultuur, prefek of leierskap nie** — net `klasGebeurtenis()` met vier uitkomste (`lewe.js:272`). Nodig: eerste span, debat, orkes, RSR, matriekafskeid as 'n keuse (nie net 'n gebeurtenis nie). |
+| C15 | **Die jaar ná Graad 12 is leeg.** Op 18 kry jy net jou uitslag en doen niks. Nodig: 'n gap-jaar-keuse (werk, reis, studeer, weermag). |
+
+---
+
+## D. Werk en loopbaan (P1)
+
+| # | Verandering |
+|---|---|
+| D1 | **Net 27 beroepe, en geen van hulle het 'n loopbaanpad nie.** `VLAK_NAAM` gee vier bevorderingsvlakke binne dieselfde pos, maar jy kan nooit van veld verander of oorgaan na bestuur nie. |
+| D2 | **Geen selfstandige werk.** Geen eie besigheid, geen vryskut, geen side hustle — niks waar jy self 'n inkomste bou. (Vir jou eie website-besigheid sou dit die interessantste deel van die spel wees.) |
+| D3 | **Geen deeltydse of vakansiewerk as stelsel.** Daar is net een lukrake gebeurtenis (`gebeure.js:41`). Nodig: 'n aparte lys deeltydse werke (pakhulp, kelner, nagskof) met min ure, lae betaling, 'n geluk-/slim-koste, en wat toelaatbaar is terwyl jy op skool is. |
+| D4 | **Geen werkloosheid as toestand.** Jy kry drie onderhoude per jaar en dis dit; geen UIF, geen "hoe lank laas gewerk"-penalty, geen ekonomiese afswaai wat werk skaars maak. |
+| D5 | **Geen afleggings (retrenchment).** Jy word net afgedank as jou prestasie onder 20 val (`lewe.js:299`). Geen maatskappy wat toemaak, geen herstrukturering. |
+| D6 | **Salaris groei onbeperk** teen 4,5% per jaar saamgestel. 'n UH wat op 35 begin en 95 word, verdien uiteindelik ± R27 miljoen per jaar — in 'n spel sonder inflasie. Nodig: 'n plafon per pos. |
+| D7 | **Geen voordele:** geen mediese fonds, geen pensioenbydrae, geen bonus, geen aandele-opsies, geen maatskappymotor. |
+| D8 | **Geen werksverhoudinge behalwe 'n baas en 2–4 kollegas.** Geen bevordering ten koste van 'n kollega, geen mentor, geen kantoorpolitiek, geen boelie-baas, geen teistering as 'n keuse-gebeurtenis. |
+| D9 | **Gesondheid beïnvloed nie werk nie.** Jy kan met `gesondheid: 5` 'n chirurg bly. Geen siekteverlof, geen burnout, geen ongeskiktheid (disability). |
+| D10 | **Geen werk in die buiteland of emigrasie.** `s.dorp` word by geboorte gestel en verander nooit — 'n baie groot SA-tema wat ontbreek. |
+| D11 | **Geen aftree-oorgang.** Pensioen is 'n enkele knoppie op 60. Geen vroeë aftrede, geen deeltydse aftrede, geen besluit oor jou pensioenfonds (lewensannuïteit vs living annuity). |
+
+---
+
+## E. Gesin en verhoudings (P1)
+
+| # | Verandering |
+|---|---|
+| E1 | **Geen oupas en oumas.** Jy word gebore met net 'n ma, pa en broers/susters (`lewe.js:35`). Grootouers is 'n groot deel van 'n kinderlewe. |
+| E2 | **Geen uitgebreide familie:** geen ooms, tannies of niggies (net een "oom se testament"-gebeurtenis). |
+| E3 | **Jou ouers se lewe staan stil.** Hulle skei nooit, trou nooit weer, verloor nooit 'n werk nie, word nooit siek nie. Geen stiefouers, geen stiefbroers. |
+| E4 | **Geen baba sonder huwelik.** `raak(v,'baba')` is net vir `eggenoot` (`aksies.js:550`). Geen onverwagte swangerskap, geen tienerswangerskap, geen voorbehoeding as 'n keuse. Vir 'n lewe-simulasie is dit 'n groot gaping. |
+| E5 | **Swangerskap is oombliklik** — geen 9 maande, geen tweeling, geen miskraam, geen komplikasies, geen kraamkoste. |
+| E6 | **Geen aanneming, IVF of surrogaatskap.** Ook: geslag word heeltemal geïgnoreer, so twee mans kan 'n biologiese baba hê. |
+| E7 | **Kinders doen niks.** Hulle verouder, "verlaat die huis" op 18 en bly dan staties — geen skool, geen graad, geen werk, geen troue, geen kleinkinders (al verwys een gebeurtenis na kleinkinders). |
+| E8 | **Geen ouer-kind-interaksie as stelsel:** geen huiswerk help, geen dissipline, geen keuse oor jou kind se skool. |
+| E9 | **Ouderdomsgaping-probleem.** `soekLief()` laat 'n verskil van tot 12 jaar toe (`aksies.js:447`) en kollegas is 22–58 oud — so 'n 16-jarige met 'n werk kan 'n 28-jarige kollega uitvra. Dit moet hard geblokkeer word onder 18. |
+| E10 | **Geen ontrouheid, geen saamblyery, geen verlowing.** Troue is een knoppie teen band ≥ 70. |
+| E11 | **Geen huweliksgoederebedeling.** In SA maak "binne of buite gemeenskap van goed" (met of sonder accrual) die hele verskil by 'n egskeiding — en die spel verdeel net kontant (sien A10). |
+| E12 | **Jou eggenoot verdien niks.** Een huishouding = een inkomste, plus R26 000 ekstra koste. Nodig: 'n eggenoot met 'n beroep, inkomste en loopbaan. |
+| E13 | **Vriende is passief.** Hulle vra jou nooit iets nie, kom nooit in die moeilikheid nie, vra nooit geld nie, trou nie, sterf net. Al die inisiatief is joune. |
+| E14 | **Geen sosiale netwerk-effek:** geen groepe, geen "jou vriend stel jou aan iemand voor", geen vriende wat mekaar ken. |
+
+---
+
+## F. Gesondheid en liggaam (P1)
+
+| # | Verandering |
+|---|---|
+| F1 | **Geen siektes.** `gesondheid` is een getal wat net dryf. Geen griep vs kanker vs diabetes, geen chroniese toestand wat jaarliks geld kos, geen behandelingskeuse, geen herstel. |
+| F2 | **Geen mediese fonds of hospitaalkoste.** 'n Doktersbesoek kos R850 en 'n hartaanval kos niks. Nodig: mediese fonds-premie vs staatshospitaal vs privaat rekening. |
+| F3 | **Geen geestesgesondheid.** Geen depressie, geen angs, geen terapie — al kan `geluk` tot 0 val sonder enige gevolg behalwe die log. |
+| F4 | **Geen alkohol, sigarette of dwelms.** 'n Groot deel van 'n egte lewe-simulasie, en in SA met 'n drinkouderdom van 18, dronkbestuur, en verslawing as 'n langtermyn-spiraal. |
+| F5 | **Geen dieet, gewig of fiksheid** behalwe `gim` en `draf` wat elk een keer per jaar +gesondheid gee. |
+| F6 | **Geen besering of ongeskiktheid.** `ONGELUKKE` is net maniere om dood te gaan; jy kan nie 'n been breek of in 'n rolstoel beland nie. |
+| F7 | **Geen babasterftes of kindersiektes**, geen inentings. |
+| F8 | **Geen tandarts-gevolge.** Gaan nooit tandarts toe nie en niks gebeur. |
+| F9 | **Dood is te eenvoudig.** `doodKontrole()` gebruik 'n ouderdomskromme plus 0,09% kans op 'n ongeluk. Geen verband met leefstyl (rook, gewig, stres, dwelms), geen gesondheidsorg-kwaliteit, geen genetika/familiegeskiedenis. |
+
+---
+
+## G. Misdaad en reg (P1)
+
+| # | Verandering |
+|---|---|
+| G1 | **Geen jeugreg.** 'n 12-jarige kry 'n volle grootmens-vonnis. In SA is 12 reg as minimum ouderdom van kriminele aanspreeklikheid, maar 'n kind gaan na 'n child and youth care centre en kry diversion, nie 8–20 jaar in "die tronk" nie. |
+| G2 | **Elke betrapping is tronk.** Geen waarskuwing, geen boete, geen gemeenskapsdiens, geen opgeskorte vonnis. 'n Kind wat 'n sak lekkers steel, kry 1–2 jaar. |
+| G3 | **Geen hofproses.** Geen arrestasie, geen borgtog, geen prokureur (wat jy kan bekostig of nie), geen pleitooreenkoms, geen onskuldig bevind word. |
+| G4 | **Geen parool, geen goeie gedrag, geen vroeë vrylating.** `tronkJaar()` tel net op. |
+| G5 | **Ontsnapping doen niks.** Slaag jy, is jy 'n "vlugteling" — en dan gebeur daar nooit weer iets nie. Geen jagtog, geen hervatting, geen lewe op die vlug. |
+| G6 | **Jy word nooit 'n slagoffer nie.** Jy kan 'n huis beroof maar nooit beroof word nie. Vir SA-realisme: huisinbraak, hijacking, selfoon gesteel, bedrog/phishing, smash-and-grab. |
+| G7 | **Geen verkeersoortredings.** Geen spoedboete, geen dronkbestuur, geen AARTO-demerits, geen motorongeluk waarvoor jy aanspreeklik is. |
+| G8 | **Geen white-collar misdaad.** Geen belastingontduiking as 'n keuse (net een SARS-gebeurtenis), geen bedrog, geen omkopery, geen cybercrime. |
+| G9 | **Geen rekord-skoonmaak.** `skoon:true`-beroepe is vir ewig toe. In SA kan 'n rekord ná 10 jaar uitgewis word. |
+| G10 | **Geen burgerlike sake.** Geen dagvaarding, geen skadevergoeding, geen dispuut met 'n huurder of werkgewer. |
+
+---
+
+## H. Nuwe stelsels wat die spel "voller" sal maak (P2)
+
+| # | Nuwe inhoud |
+|---|---|
+| H1 | **Generasiespel.** Gaan voort as jou kind wanneer jy sterf, met jou bates as erfenis. Dit is die enkele grootste ding wat 'n lewe-simulasie herspeelbaar maak. |
+| H2 | **Prestasies / bucket list** — doelwitte wat jy oor 'n leeftyd afmerk, en "ribbons" op die grafsteen (bv. "Miljoenêr voor 30", "Nooit 'n misdaad gepleeg nie"). |
+| H3 | **Vaardighede en stokperdjies** as 'n aparte stelsel: klavier, karate, kodeer, kook, visvang — elkeen met vlakke wat oor jare opbou en nuwe geleenthede oopmaak. |
+| H4 | **Eie besigheid:** begin iets, kry kliënte, huur mense, groei of gaan bankrot. (Jou website-besigheid as 'n spel-opsie.) |
+| H5 | **Sport- en kunsloopbane:** gekies op skool, geskeduleer, met 'n kort loopbaan en 'n groot inkomste — en wat jy doen ná 32. |
+| H6 | **Bekendheid / sosiale media:** volgelinge, inkomste, kanselleer-risiko. |
+| H7 | **Verhuising en emigrasie:** tussen SA-dorpe (ander kostes, ander werk, ander skole) en na die buiteland (visum, salaris in 'n ander geldeenheid, familie wat agterbly). |
+| H8 | **Eiendom as belegging:** koop om te verhuur, huurinkomste, slegte huurders, onderhoud, bond op 'n tweede eiendom. |
+| H9 | **Motor as stelsel:** leerlinglisensie → rylisensie (met 'n toets wat jy kan druip) → versekering → diens → ongelukke → verkoop. |
+| H10 | **Geloof en gemeenskap:** kerk, vrywilligerswerk, liefdadigheid (met 'n geluk- en aansien-effek). |
+| H11 | **Politiek:** stem, by 'n party aansluit, raadslid → LP → minister. |
+| H12 | **Kalender en geskiedenis.** Gee die spel 'n beginjaar en laat werklike SA-gebeurtenisse inkom volgens die jaar (beurtkrag, rand-insinking, Covid, 'n boom-jaar vir werk). |
+| H13 | **Meer gebeure.** Daar is net ± 36 lukrake gebeure en 10 keuse-gebeure vir 'n lewe van 80+ jaar — jy sien dieselfde goed herhaal. Mikpunt: 150+, en elkeen moet ten minste een keuse hê. |
+| H14 | **Gebeure wat onthou.** Niks wat jy kies, verander ooit 'n latere gebeurtenis nie. Nodig: vlae wat later gebeure oopsluit (jy het die boelie geslaan → hy kom op 30 weer voor). |
+| H15 | **Meer stats:** Dissipline, Karakter/Reputasie, Stres, Energie — sodat keuses wisselwerking het eerder as net vier stawe. |
+| H16 | **Troeteldiere uitgebrei:** teel, dieretarts-noodgevalle, 'n dier wat wegraak, meer soorte. |
+| H17 | **Volledige SA-detail wat flavour gee:** taxi's, braai, Woolworths vs Shoprite, rugby, 'n plaas, matriekafskeid, kus-vakansie — party is daar, maar dit kan baie dieper. |
+
+---
+
+## I. Klein detail en vloei (P2)
+
+| # | Verandering |
+|---|---|
+| I1 | `klasGebeurtenis()` sê altyd "op die rugbyveld gestry", ongeag geslag of skool. |
+| I2 | Die Graad 8-jaar (ouderdom 13) kry geen "jy is in Graad 8"-log nie — net die skoolkeuse. |
+| I3 | Privaatskole het geen nadeel nie: `kanBekostig()` keer dit af, maar jou ouers betaal nooit werklik die R44 000–R98 000 nie, so dit is 'n gratis stat-bonus. |
+| I4 | 'n Bate kan in dieselfde jaar gekoop en teen volle waarde verkoop word, sonder kommissie of koste. |
+| I5 | `vakansieMaat()` sê "80% meer" vir twee mense — moet 100% wees, of as 'n gedeelde-kamer-afslag verduidelik word. |
+| I6 | Jy kan nie jou log/lewensverhaal stoor, uitvoer of met iemand deel nie. |
+| I7 | Daar is net 6 vorige lewens in `GESKIEDENIS`, en geen statistieke oor al jou lewens heen nie. |
+| I8 | Geen klank, geen animasie by die jaar-oorgang, geen "jy is dood"-oorgang behalwe die modaal. |
+| I9 | Geen sleutelbord-kortpad vir "+1 jaar" (spasiebalk) — dit sou die spel baie vinniger laat voel. |
+| I10 | Geen manier om 'n lewe doelbewus te eindig/herbegin sonder om te sterf nie. |
+| I11 | Die spel waarsku jou nooit voor 'n onomkeerbare keuse nie (bv. skool los, bedank, ontsnap). |
+| I12 | `wysModaal()` sit `titel` en `teks` ongefiltreerd in die HTML; dis veilig met interne teks, maar nie as jy later gebruikersteks daar deurgee nie. |
+| I13 | **Die oom se testament kan oor en oor vuur (nuut, 22 Okt 2026).** Die gebeurtenis is `min:25, max:120` sonder 'n eenmalig-vlag, en elke keer gee dit R40 000–R400 000 kontant of 'n plot van R300 000–R1,4 m. Oor 'n lang lewe kan dit 'n paar keer tref en jou netto waarde met miljoene opblaas sonder dat jy iets gedoen het. Nodig: 'n vlag sodat dit hoogstens een of twee keer gebeur. | `gebeure.js` |
+
+---
+
+## J. Voorgestelde orde van werk
+
+~~**Fase 1 — fixes (A1–A16).**~~ **✅ KLAAR (22 Oktober 2026).** Al 16 items is gedoen — sien die **Gedoen**-kolom in afdeling A. Die spel is nou eerliker: die fliek betaal reg, casino en Lotto verloor geld soos hulle moet, en die tronk breek nie meer jou skoolloopbaan nie.
+
+~~**Fase 2 — geld reg kry (B1, B2, B5, B6, B13, B14, B17).**~~ **✅ KLAAR (22 Oktober 2026).** Al sewe items is gedoen — sien die **Gedoen**-kolom in afdeling B. Geld beteken nou iets: jy moet êrens bly en daarvoor betaal, 'n huis koop jy met 'n verband oor 20 of 30 jaar, spaargeld groei en skuld vreet. *Inflasie (B4) is doelbewus uitgelaat*, soos beplan.
+
+**Fase 3 — skool en werk reg kry (C1, C2, C4, C9, D3, D6).** Vakkeuses + APS + regte graadlengtes + deeltydse werk.
+
+**Fase 4 — gesin en gesondheid (E1, E4, E7, E12, F1, F2, F4).** Grootouers, kinders wat regtig lewe, siektes.
+
+**Fase 5 — nuwe inhoud (H1, H13, H14, H3, H4).** Generasiespel, baie meer gebeure, vaardighede, eie besigheid.
+
+**Klaar tot dusver:**
+
+1. Die opdeel in aparte lêers (sien Lêerstruktuur bo), sodat die latere fases nie in
+   een lêer van 2 000+ reëls hoef te werk nie.
+2. **Fase 1 (A1–A16)** — al die P0-foute.
+3. **Fase 2 (B1, B2, B5, B6, B13, B14, B17)** — huur, verband, rente, skuld,
+   lewenskoste, sakgeld en pensioen.
+
+**Volgende aan die beurt: Fase 3** (C1, C2, C4, C9, D3, D6 — vakkeuses, APS,
+regte graadlengtes, druip, deeltydse werk en 'n plafon op salarisse).
+
+⭐ **Begin Fase 3 by D6.** Salarisse groei 4,5% per jaar sonder plafon, so 'n
+onderwyser wat op 24 begin, verdien op 63 sowat R6,8 miljoen per jaar en sterf met
+meer as R100 miljoen. Dis 'n ou probleem (D6), maar noudat rente en 'n pensioenfonds
+daarop saamgestel word, is dit die enigste ding wat nog maak dat groot bedrae niks
+beteken nie. Die res van die ekonomie is gesond: oor 600 getoetste lewens het 'n
+verstandige speler 1% kans op 'n boedelbevel en 'n roekelose een 4%.
