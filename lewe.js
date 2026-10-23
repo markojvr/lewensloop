@@ -28,9 +28,17 @@ function nuweLewe(naam, van, geslag){
     rykdom:ryk.n, rykf:ryk.f,
     blyplek:'ouers', huurPlek:'kommune', bond:null, swartlys:0,
     beroep:null, beroepeGehad:[], jareGewerk:0, aansoeke:0,
+    deeltyds:null, deeltydsJare:0,
     pensioen:0, pensioenFonds:0, pensioenKoers:0.075, afgetree:false,
     skool:{vlak:'baba', graad:0, studie:null, jareOor:0, punte:0, matriek:false, grade:[], nagraads:[],
-      uit:false, agter:0},
+      uit:false, agter:0,
+      /* C1 — die vakke van Graad 10, en of jy Wiskunde geneem het */
+      vakke:null, wiskunde:false,
+      /* C2 — jou matriekuitslag per vak, en die APS wat daaruit kom */
+      uitslag:[], aps:0,
+      /* C9 — hoe hard jy vanjaar studeer, hoeveel jare jy gedruip het,
+         hoeveel jy geslaag het, en hoeveel keer jy uitgesluit is */
+      ywer:0, herhaal:0, geslaagJare:0, uitgeskop:0, jare:0},
     laerskool:null, hoerskool:null, uni:null, aansien:0, diere:[], lisensie:false,
     verhoudings:[], bates:[], log:[], rekord:[], tronk:null, tronkJare:0,
     dakloos:null, dakloosJare:0,
@@ -91,6 +99,24 @@ function laai(){
    verstekwaardes, sodat 'n ou lewe steeds laai en verder speel. */
 function vulNuweVelde(){
   if(s.spaar===undefined) s.spaar = 0;
+  /* Fase 3 — vakke, APS, druipjare en deeltydse werk. */
+  if(s.deeltyds===undefined) s.deeltyds = null;         /* D3 */
+  if(s.deeltydsJare===undefined) s.deeltydsJare = 0;
+  if(s.skool.vakke===undefined) s.skool.vakke = null;   /* C1 */
+  if(s.skool.wiskunde===undefined) s.skool.wiskunde = false;
+  if(!s.skool.uitslag) s.skool.uitslag = [];            /* C2 */
+  if(!s.skool.aps) s.skool.aps = 0;
+  if(!s.skool.ywer) s.skool.ywer = 0;                   /* C9 */
+  if(!s.skool.herhaal) s.skool.herhaal = 0;
+  if(!s.skool.geslaagJare) s.skool.geslaagJare = 0;
+  if(!s.skool.uitgeskop) s.skool.uitgeskop = 0;
+  if(!s.skool.jare) s.skool.jare = s.skool.jareOor || 0;
+  /* Het 'n ou lewe al matriek maar geen APS nie, reken ons een uit sy
+     gemiddeld terug — anders sou elke universiteit hom skielik weier. */
+  if(s.skool.matriek && !s.skool.aps && s.skool.punte)
+    s.skool.aps = apsVanGemiddeld(s.skool.punte);
+  /* D6 — 'n ou werk ken nie sy plafon nie. */
+  if(s.beroep && !s.beroep.plafon) s.beroep.plafon = beroepPlafon(s.beroep.id);
   if(s.swartlys===undefined) s.swartlys = 0;
   if(s.bond===undefined) s.bond = null;
   if(s.dakloos===undefined) s.dakloos = null;          /* B18 */
@@ -195,35 +221,253 @@ function skoolJaarVerloor(waar){
     ' jaar agter met skool.','skool');
 }
 
+/* ==========================================================================
+   C1 — VAKKEUSE IN GRAAD 10
+   In Graad 10 kies jy sewe vakke, en daardie keuse bepaal alles daarna.
+   Die verpligte vier is twee tale, Lewensorientering en Wiskunde OF
+   Wiskundige Geletterdheid. Die ander drie kies jy uit wat jou skool
+   aanbied. Sonder Wiskunde kan jy nooit die vakvlak kry wat
+   Ingenieurswese, Geneeskunde, Rekeningkunde of Rekenaarwetenskap vra.
+   ========================================================================== */
+function vakVan(naam){
+  var r = null;
+  VAKKE.forEach(function(x){ if(x.n===naam) r=x; });
+  return r;
+}
+/* Watter keusevakke bied jou skool aan? */
+function skoolBied(){ return (s.hoerskool && s.hoerskool.bied) || SKOOL_BIED; }
+function hetVak(naam){ return (s.skool.vakke||[]).indexOf(naam)>=0; }
+/* Is 'n keusevak vir jou oop? Fisiese Wetenskappe, IT en Elektriese
+   Tegnologie werk nie sonder Wiskunde nie — geen skool laat dit toe. */
+function vakOop(naam){
+  var v = vakVan(naam);
+  if(!v) return false;
+  if(v.wisk && !s.skool.wiskunde) return false;
+  return !hetVak(naam);
+}
+function vakkeKeuse(){
+  wagry.push({titel:'Vakkeuse vir Graad ' + VAKKEUSE_GRAAD,
+    vraag:'Jy moet nou kies watter vakke jy tot matriek gaan neem. Die ' +
+      'belangrikste besluit is die eerste een, en jy kan dit later nie ' +
+      'maklik verander nie.',
+    opsies:[
+      {t:'Wiskunde', sub:'Swaarder, laer punte — maar Ingenieurswese, ' +
+        'Geneeskunde, Rekeningkunde en Rekenaarwetenskap bly oop',
+        doen:function(){ stelKernvak('Wiskunde'); }},
+      {t:'Wiskundige Geletterdheid', sub:'Baie makliker en ’n beter APS — ' +
+        'maar daardie vier studierigtings is dan vir altyd toe',
+        doen:function(){ stelKernvak('Wiskundige Geletterdheid'); }}
+    ]});
+}
+function stelKernvak(naam){
+  var sk = s.skool;
+  sk.wiskunde = (naam==='Wiskunde');
+  sk.vakke = VAKKE_VERPLIG.concat([naam]);
+  noteer('Jy het ' + naam + ' gekies.','skool');
+  vraKeusevak();
+}
+function vraKeusevak(){
+  var sk = s.skool;
+  var gekies = sk.vakke.length - VAKKE_VERPLIG.length - 1;
+  if(gekies >= KEUSEVAKKE){ klaarVakke(); return; }
+  var aanbod = skoolBied().filter(vakOop);
+  if(!aanbod.length){ klaarVakke(); return; }
+  var opsies = aanbod.map(function(naam){
+    var v = vakVan(naam);
+    return {t:naam, sub: v.sub || (v.moeilik<=-5 ? 'Een van die swaarder vakke'
+        : v.moeilik>=5 ? '’n Vak waarin die punte gewoonlik hoog is' : ''),
+      doen:function(){ sk.vakke.push(naam); vraKeusevak(); }};
+  });
+  wagry.push({titel:'Keusevak ' + (gekies+1) + ' van ' + KEUSEVAKKE,
+    vraag:'Jy het ' + sk.vakke.join(', ') + '. Kies nog ' +
+      (KEUSEVAKKE-gekies) + ' vak' + (KEUSEVAKKE-gekies===1?'':'ke') + ' by ' +
+      (s.hoerskool ? s.hoerskool.n : 'jou skool') + '.',
+    opsies:opsies});
+}
+function klaarVakke(){
+  noteer('Jou vakke tot matriek: ' + s.skool.vakke.join(', ') + '.','skool');
+  if(!s.skool.wiskunde)
+    noteer('Sonder Wiskunde is Ingenieurswese, Geneeskunde, Rekeningkunde en ' +
+      'Rekenaarwetenskap na matriek vir jou toe.','neutraal');
+}
+/* Vir 'n lewe wat die skool verlaat of in die tronk was voordat die
+   keuse ooit gekom het, en vir ou stoor-data: die mees algemene
+   SA-pakket, met Wiskundige Geletterdheid. */
+function verstekVakke(){
+  var sk = s.skool;
+  sk.wiskunde = false;
+  sk.vakke = VAKKE_VERPLIG.concat(['Wiskundige Geletterdheid',
+    'Besigheidstudies','Geografie','Toerisme']);
+  return sk.vakke;
+}
+
+/* ==========================================================================
+   C2 — DIE APS
+   Matriek gee nie 'n persentasie-gemiddeld vir toelating nie. Elke vak
+   kry 'n vlak van 1 tot 7, en jou APS is die som van jou ses beste vakke
+   sonder Lewensorientering: 6 x 7 = 42.
+   ========================================================================== */
+function apsVlak(persent){
+  var v = 1;
+  for(var i=0;i<APS_VLAKKE.length;i++)
+    if(persent >= APS_VLAKKE[i].vanaf){ v = APS_VLAKKE[i].vlak; break; }
+  return v;
+}
+function apsNaam(vlak){
+  var n = '';
+  APS_VLAKKE.forEach(function(x){ if(x.vlak===vlak) n = x.n; });
+  return n;
+}
+/* 'n Ou lewe het net 'n gemiddeld. Ses vakke op daardie vlak is die
+   naaste eerlike skatting van wat sy APS sou wees. */
+function apsVanGemiddeld(persent){
+  return klem(apsVlak(persent) * APS_VAKKE, 0, APS_MAKS);
+}
+/* Jou vlak in 'n vak, of 0 as jy dit nooit gehad het nie. Dit is waar
+   die vakkeuse van Graad 10 die universiteit se deur toemaak. */
+function vakVlak(naam){
+  var v = 0;
+  (s.skool.uitslag||[]).forEach(function(r){ if(r.n===naam) v = r.vlak; });
+  return v;
+}
+/* Jou matriekuitslag, vak vir vak. 'basis' is jou algemene vlak vir die
+   jaar (dieselfde vorm as die ou een-getal-punt, sodat die balans van
+   die spel nie skuif nie); elke vak se 'moeilik' skuif dit op of af. */
+function berekenUitslag(){
+  var sk = s.skool;
+  if(!sk.vakke || sk.vakke.length < 4) verstekVakke();
+  var bonus = s.hoerskool ? (s.hoerskool.slim||0)*2 : 0;
+  var basis = s.slim*0.72 + bonus + tussen(6,20);
+  sk.uitslag = sk.vakke.map(function(naam){
+    var v = vakVan(naam), p = klem(basis + (v?v.moeilik:0) + tussen(-6,6));
+    return {n:naam, p:p, vlak:apsVlak(p), aps: !(v && v.nieAps)};
+  });
+  var som = 0;
+  sk.uitslag.forEach(function(r){ som += r.p; });
+  sk.punte = Math.round(som / sk.uitslag.length);
+  var vlakke = sk.uitslag.filter(function(r){ return r.aps; })
+    .map(function(r){ return r.vlak; }).sort(function(a,b){ return b-a; });
+  var aps = 0;
+  vlakke.slice(0, APS_VAKKE).forEach(function(v){ aps += v; });
+  sk.aps = Math.min(APS_MAKS, aps);
+  return sk;
+}
+function uitslagTeks(){
+  return (s.skool.uitslag||[]).map(function(r){
+    return r.n + ' ' + r.p + '% (' + r.vlak + ')'; }).join(', ');
+}
+/* C3 later: sk.uitslag hou elke vak se persentasie en vlak, en daarmee
+   kan 'n Hoer Sertifikaat-, Diploma- en Bachelor's-slaag bereken word
+   sonder om aan hierdie funksie te raak. */
+function matriekJaar(){
+  var sk = s.skool;
+  berekenUitslag();
+  sk.vlak = 'klaar';
+  if(sk.punte >= 40){
+    sk.matriek = true; s.geluk = klem(s.geluk+12);
+    noteer('Jy het matriek geslaag: ’n gemiddeld van ' + sk.punte +
+      '% en ’n APS van ' + sk.aps + ' uit ' + APS_MAKS + '.','goed');
+    noteer('Jou uitslag: ' + uitslagTeks(),'skool');
+    if(sk.punte>=80) noteer('Jy het die graad met onderskeiding deurgekom.','goed');
+    if(sk.aps>=36) noteer('Met daardie APS sal enige universiteit na jou kyk.','goed');
+    else if(sk.aps<24) noteer('Met ’n APS van ' + sk.aps +
+      ' gaan dit moeilik wees om by ’n universiteit in te kom.','neutraal');
+  } else {
+    s.geluk = klem(s.geluk-16);
+    noteer('Jy het matriek gedruip met ’n gemiddeld van ' + sk.punte +
+      '%. Dis ’n harde slag.','sleg');
+    noteer('Jou uitslag: ' + uitslagTeks(),'skool');
+  }
+  sluitGroep('klasmaat','na skool');
+}
+
+/* ==========================================================================
+   C9 — SLAAG OF DRUIP OP UNIVERSITEIT
+   Klasgeld betaal was voorheen genoeg om 'n graad te kry. Nou is daar
+   elke jaar 'n slaagkans: slimheid help, hard studeer help meer, 'n
+   swaar graad maak dit moeiliker, en die eerste jaar is die een waar
+   die meeste mense val. Druip jy drie jaar, skryf hulle jou uit.
+   ========================================================================== */
+function studieVanNaam(naam){
+  var r = null;
+  STUDIES.forEach(function(x){ if(x.n===naam) r=x; });
+  if(!r) NAGRAADS.forEach(function(x){ if(x.n===naam) r=x; });
+  return r;
+}
+function slaagKans(){
+  var sk = s.skool, st = studieVanNaam(sk.studie);
+  var k = SLAAG_BASIS + (s.slim-50)*SLAAG_SLIM;
+  if(sk.ywer) k += SLAAG_YWER;
+  if(!sk.geslaagJare && !sk.herhaal) k += SLAAG_EERSTEJAAR;
+  if(s.deeltyds) k += SLAAG_DEELTYDS;                         /* D3 */
+  if(s.gesondheid < 40) k += SLAAG_SIEK;
+  if(st && st.aps) k -= Math.max(0, st.aps - 28) * SLAAG_SWAAR;
+  if(st && st.slim) k -= Math.max(0, st.slim - 62) * 0.8;     /* nagraads */
+  return Math.max(SLAAG_MIN, Math.min(SLAAG_MAKS, Math.round(k)));
+}
+function studieJaar(){
+  var sk = s.skool;
+  var koste = sk.koste || 0;
+  if(!sk.beurs && koste>0){
+    s.geld -= koste;
+    noteer('Jy het ' + geld(koste) + ' klasgeld betaal.','geld');
+  }
+  s.slim = klem(s.slim + tussen(2,6));
+  var kansie = slaagKans(), ywer = sk.ywer;
+  sk.ywer = 0;
+  if(!kans(kansie)){ druipJaar(ywer); return; }
+  sk.geslaagJare = (sk.geslaagJare||0) + 1;
+  sk.jareOor--;
+  if(sk.jareOor > 0){
+    noteer('Jy het jaar ' + sk.geslaagJare + ' van ' + (sk.jare||sk.geslaagJare+sk.jareOor) +
+      ' in ' + sk.studie + ' by ' + (s.uni?s.uni.n:'die universiteit') +
+      ' geslaag (' + sk.jareOor + ' jaar oor).','skool');
+    klasGebeurtenis();
+    return;
+  }
+  if(sk.vlak==='universiteit'){
+    sk.grade.push(sk.studie);
+    noteer('Jy het gegradueer met ’n graad in ' + sk.studie + '!','goed');
+  } else {
+    sk.nagraads.push(sk.studie);
+    noteer('Jy het ' + sk.studie + ' voltooi. Nou is jy regtig gekwalifiseer.','goed');
+  }
+  s.geluk = klem(s.geluk + 14);
+  sk.vlak='klaar'; sk.studie=null; sk.koste=0; sk.beurs=false;
+  sk.jare=0; sk.herhaal=0; sk.geslaagJare=0;
+  sluitGroep('klasmaat','na jou studies');
+}
+function druipJaar(ywer){
+  var sk = s.skool;
+  sk.herhaal = (sk.herhaal||0) + 1;
+  s.geluk = klem(s.geluk - 14);
+  noteer('Jy het jou jaar in ' + sk.studie + ' gedruip' +
+    (ywer ? ', al het jy hard gewerk' : '') + '. Jy moet dit oordoen.','sleg');
+  if(sk.beurs && sk.herhaal >= DRUIP_BEURS){
+    sk.beurs = false; sk.koste = s.uni ? s.uni.koste : 0;
+    noteer('Jou beurs is opgeskort — van nou af betaal jy self klasgeld.','sleg');
+  }
+  if(sk.herhaal >= DRUIP_MAKS) uitgesluit();
+}
+function uitgesluit(){
+  var sk = s.skool;
+  sk.uitgeskop = (sk.uitgeskop||0) + 1;
+  noteer('Akademiese uitsluiting: ' + (s.uni?s.uni.n:'die universiteit') +
+    ' het jou na ' + sk.herhaal + ' mislukte jare uitgeskryf.','sleg');
+  s.geluk = klem(s.geluk - 20);
+  sluitGroep('klasmaat','na jou uitsluiting');
+  sk.vlak='klaar'; sk.studie=null; sk.koste=0; sk.beurs=false;
+  sk.jareOor=0; sk.jare=0; sk.herhaal=0; sk.geslaagJare=0; sk.ywer=0;
+  s.aansien = 0;
+}
+
 function skoolJaar(){
   var o = s.ouderdom, sk = s.skool;
   if(s.tronk){ skoolJaarVerloor('in die tronk'); return; }
   /* B18 — op straat is skool en studie toe, net soos in die tronk. */
   if(s.dakloos){ skoolJaarVerloor('op straat'); return; }
 
-  if(sk.vlak==='universiteit' || sk.vlak==='nagraads'){
-    var koste = sk.koste || 0;
-    if(!sk.beurs && koste>0){
-      s.geld -= koste;
-      noteer('Jy het ' + geld(koste) + ' klasgeld betaal.','geld');
-    }
-    sk.jareOor--;
-    s.slim = klem(s.slim + tussen(2,6));
-    if(sk.jareOor>0){
-      noteer('Jy studeer ' + sk.studie + ' by ' + (s.uni?s.uni.n:'die universiteit') +
-        ' (' + sk.jareOor + ' jaar oor).','skool');
-      klasGebeurtenis();
-    } else {
-      if(sk.vlak==='universiteit'){ sk.grade.push(sk.studie);
-        noteer('Jy het gegradueer met \u2019n graad in ' + sk.studie + '!','goed');
-      } else { sk.nagraads.push(sk.studie);
-        noteer('Jy het ' + sk.studie + ' voltooi. Nou is jy regtig gekwalifiseer.','goed'); }
-      s.geluk = klem(s.geluk + 14);
-      sk.vlak='klaar'; sk.studie=null; sk.koste=0; sk.beurs=false;
-      sluitGroep('klasmaat','na jou studies');
-    }
-    return;
-  }
+  if(sk.vlak==='universiteit' || sk.vlak==='nagraads'){ studieJaar(); return; }
   if(sk.uit || sk.vlak==='klaar') return;
 
   /* g is die graad waarin jy vanjaar hoort — sien skoolGraad(). */
@@ -245,20 +489,15 @@ function skoolJaar(){
     sk.graad = g; skoolBonus(s.hoerskool);
     noteer('Jy is in Graad ' + sk.graad + ' by ' + (s.hoerskool?s.hoerskool.n:'die skool') +
       (o > g+6 ? ', en jy is die oudste in die klas' : '') + '.','skool');
+    /* C1 — in Graad 10 kies jy jou vakke. 'n Ou stoor-lewe wat al verder
+       is, kies dit by die eerste geleentheid wat kom. */
+    if(g>=VAKKEUSE_GRAAD && !sk.vakke) vakkeKeuse();
+    /* Wiskunde en IT laat jou harder dink as die ander vakke. */
+    if(sk.wiskunde) s.slim = klem(s.slim + tussen(0,2));
+    if(hetVak('Inligtingstegnologie')) s.slim = klem(s.slim + tussen(0,2));
     klasGebeurtenis(); return;
   }
-  if(g>=13 && sk.vlak==='hoerskool'){
-    var bonus = s.hoerskool ? (s.hoerskool.slim||0)*2 : 0;
-    var punt = klem(Math.round(s.slim*0.72 + tussen(8,26) + bonus));
-    sk.punte = punt; sk.vlak='klaar';
-    if(punt>=40){ sk.matriek=true; s.geluk=klem(s.geluk+12);
-      noteer('Jy het matriek geslaag met \u2019n gemiddeld van ' + punt + '%!','goed');
-      if(punt>=80) noteer('Jy het die graad met onderskeiding deurgekom.','goed');
-    } else { s.geluk=klem(s.geluk-16);
-      noteer('Jy het matriek gedruip met ' + punt + '%. Dis \u2019n harde slag.','sleg'); }
-    sluitGroep('klasmaat','na skool');
-    return;
-  }
+  if(g>=13 && sk.vlak==='hoerskool'){ matriekJaar(); return; }
 }
 function skoolBonus(sk){
   if(!sk) return;
@@ -350,6 +589,22 @@ function klasGebeurtenis(){
 }
 
 /* ---------- Beroep ---------- */
+/* D6 — die meeste wat 'n pos ooit kan betaal. Sonder dit groei 'n
+   salaris 4,5% per jaar sonder einde en beteken groot bedrae niks. */
+function beroepPlafon(id){
+  var p = 0;
+  BEROEPE.forEach(function(x){ if(x.id===id) p = x.plafon||0; });
+  return p;
+}
+/* Sny die salaris terug tot by die plafon. Gee terug of dit gesny is. */
+function pasPlafonToe(){
+  var b = s.beroep;
+  if(!b) return false;
+  if(!b.plafon) b.plafon = beroepPlafon(b.id);
+  if(!b.plafon || b.salaris <= b.plafon) return false;
+  b.salaris = b.plafon;
+  return true;
+}
 function beroepJaar(){
   if(!s.beroep) return;
   if(s.tronk){ noteer('Jy het jou werk as ' + beroepTitel() + ' verloor terwyl jy in die tronk is.','werk');
@@ -357,16 +612,64 @@ function beroepJaar(){
   var b = s.beroep;
   b.jare++; s.jareGewerk++;
   b.salaris = Math.round(b.salaris * 1.045);
+  pasPlafonToe();
   b.prestasie = klem(b.prestasie + tussen(-7,4) + Math.round((s.slim-50)/16));
   if(b.prestasie>=72 && b.vlak<4 && kans(26 + (b.prestasie-72))){
     b.vlak++; b.salaris = Math.round(b.basis * VLAK_X[b.vlak] * Math.pow(1.045,b.jare));
+    pasPlafonToe();
     b.prestasie = klem(b.prestasie-18);
     s.geluk = klem(s.geluk+11);
     noteer('Bevordering! Jy is nou ' + beroepTitel() + ' teen ' + geld(b.salaris) + ' per jaar.','werk');
   } else if(b.prestasie<=20 && kans(38)){
     noteer('Jy is afgedank as ' + beroepTitel() + '. Jou prestasie was te swak.','sleg');
     s.geluk = klem(s.geluk-16); s.beroep=null; losWerkMense();
+    return;
   }
+  /* Een keer, wanneer jy die boonste punt van die skaal haal. */
+  if(b.plafon && b.salaris >= b.plafon && !b.vol){
+    b.vol = 1;
+    noteer('Jy verdien nou die meeste wat ’n ' + beroepTitel() +
+      ' kan verdien: ' + geld(b.plafon) + ' per jaar.','werk');
+  }
+}
+
+/* ---------- D3: deeltydse werk ---------- */
+/* Min ure, lae betaling, en toelaatbaar terwyl jy op skool of op
+   universiteit is. Dit val weg sodra jy voltyds begin werk. Die bedrag
+   bly onder SARS se drempel, daarom word dit nie belas nie. */
+function deeltydsVan(id){
+  var r = null;
+  DEELTYDS.forEach(function(x){ if(x.id===id) r=x; });
+  return r;
+}
+/* Kan jy nou 'n deeltydse werk hê? Gee die rede terug as jy nie kan nie. */
+function deeltydsVereis(j){
+  if(s.beroep) return 'Jy werk al voltyds';
+  if(s.tronk) return 'Jy is in die tronk';
+  if(s.dakloos) return 'Sonder ’n adres neem hulle jou nie aan nie';
+  if(s.afgetree || s.ouderdom>=AFTREE_OUDERDOM) return 'Jy is te oud daarvoor';
+  if(s.ouderdom < j.min) return 'Jy moet ' + j.min + ' jaar oud wees';
+  if(j.vereisSlim && s.slim < j.vereisSlim) return 'Slimheid ' + j.vereisSlim + '+ nodig';
+  return null;
+}
+function deeltydsJaar(){
+  var d = s.deeltyds;
+  if(!d) return 0;
+  if(s.beroep || s.tronk || s.dakloos || s.afgetree || s.ouderdom>=AFTREE_OUDERDOM){
+    noteer('Jy het jou deeltydse werk by ' + d.t + ' laat staan.','werk');
+    s.deeltyds = null; return 0;
+  }
+  var j = deeltydsVan(d.id) || d;
+  /* Wenke wissel; die ander werke betaal elke jaar omtrent dieselfde. */
+  var bedrag = Math.round(d.s * (j.wenke ? tussen(80,135)/100 : tussen(96,104)/100));
+  s.geld += bedrag; s.totaalVerdien += bedrag;
+  s.deeltydsJare = (s.deeltydsJare||0) + 1;
+  d.jare = (d.jare||0) + 1;
+  if(j.geluk) s.geluk = klem(s.geluk + j.geluk);
+  if(j.slim) s.slim = klem(s.slim + j.slim);
+  if(j.gesondheid) s.gesondheid = klem(s.gesondheid + j.gesondheid);
+  noteer('Jou deeltydse werk by ' + d.t + ' het ' + geld(bedrag) + ' ingebring.','geld');
+  return bedrag;
 }
 function beroepTitel(){
   if(!s.beroep) return 'werkloos';
@@ -450,6 +753,7 @@ function diereKosteJaar(){
    ========================================================================== */
 function finansiesJaar(){
   var netto = inkomsteJaar();      /* salaris en pensioen, na belasting */
+  netto += deeltydsJaar();         /* D3  — deeltydse of vakansiewerk */
   sakgeldJaar();                   /* B14 */
   blyplekJaar(netto);              /* B1  — huur, of by jou ouers */
   bondJaar();                      /* B2  — die huislening */
@@ -496,7 +800,7 @@ function inkomsteJaar(){
    twee per maand. Verdien jy self, hou die sakgeld op. */
 function sakgeldJaar(){
   var o = s.ouderdom;
-  if(o<6 || o>=18 || s.tronk || s.beroep) return 0;
+  if(o<6 || o>=18 || s.tronk || s.beroep || s.deeltyds) return 0;
   var week = (o - 4) * SAKGELD_WEEK * s.rykf;
   if(!lewendeOuers().length) week = week/2;  /* niemand by die huis nie — familie help bietjie */
   var jaar = Math.round(week * 52 * tussen(85,115)/100);

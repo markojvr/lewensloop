@@ -150,6 +150,54 @@ function renderAkt(){
   return h;
 }
 
+/* ---------- Deeltydse werk (D3) ---------- */
+function renderDeeltyds(){
+  var h = '';
+  if(s.deeltyds){
+    var d = s.deeltyds, j = deeltydsVan(d.id) || {};
+    return '<div class="titel">Deeltydse werk</div>'+
+      '<div class="kaart"><div class="ry"><div class="emo">\u{1F9F9}</div><div class="groei">'+
+      '<div class="hoof">' + veilig(d.t) + '</div><div class="klein">' + veilig(j.ure||'') +
+      ' \u00b7 ' + (d.jare||0) + ' jaar' + (j.wenke ? ' \u00b7 die wenke wissel' : '') +
+      '</div></div><div class="regs">' + kortGeld(d.s) +
+      '<br><span class="klein">per jaar</span></div></div>'+
+      /* C9 — langs jou klasse kos dit jou kans om die jaar te slaag. */
+      (studeerTans() ? '<div class="slot">Dit kos jou ' + Math.abs(SLAAG_DEELTYDS) +
+        ' persentpunte van jou kans om die akademiese jaar te slaag.</div>' : '')+
+      '<button class="knop klein2 grys" onclick="losDeeltyds()">Se die werk op</button></div>';
+  }
+  if(s.beroep || s.afgetree || s.tronk || s.dakloos) return '';
+  if(s.ouderdom < 15 || s.ouderdom >= AFTREE_OUDERDOM) return '';
+  h += '<div class="titel">Deeltydse werk</div>';
+  h += '<div class="kaart klein">Min ure en min geld, maar jy mag dit doen terwyl jy '+
+    'op skool of op universiteit is. ' + (DEELTYDS_POGINGS - (s.gedoen.deeltyds||0)) +
+    ' van ' + DEELTYDS_POGINGS + ' plekke oor om vanjaar te probeer.</div>';
+  DEELTYDS.forEach(function(j){
+    var rede = deeltydsVereis(j);
+    h += '<div class="kaart' + (rede?'':' klik') + '"' + (rede?' style="opacity:.55"':
+      ' onclick="neemDeeltyds(\'' + j.id + '\')"') + '><div class="ry">'+
+      '<div class="emo">' + (rede ? '\u{1F512}' : '\u{1F9F9}') + '</div><div class="groei">'+
+      '<div class="hoof">' + veilig(j.t) + '</div>'+
+      '<div class="klein">' + veilig(j.ure) + (j.sub ? ' \u00b7 ' + veilig(j.sub) : '') + '</div>'+
+      (rede ? '<div class="slot">' + veilig(rede) + '</div>' : '')+
+      '</div><div class="regs">' + kortGeld(j.s) + '<br><span class="klein">p/j</span></div>'+
+      '</div></div>';
+  });
+  return h;
+}
+
+/* ---------- Matriekuitslag per vak (C1 + C2) ---------- */
+function vakUitslagHtml(sk){
+  var h = '<div class="klein" style="margin-top:8px">Matriekuitslag \u00b7 gemiddeld ' +
+    sk.punte + '% \u00b7 APS ' + (sk.aps||0) + ' uit ' + APS_MAKS + '</div>';
+  sk.uitslag.forEach(function(r){
+    h += '<div class="eind-stat"><span>' + veilig(r.n) +
+      (r.aps ? '' : ' <span class="klein">(tel nie vir die APS nie)</span>') + '</span>'+
+      '<b>' + r.p + '% \u00b7 vlak ' + r.vlak + '</b></div>';
+  });
+  return h;
+}
+
 /* ---------- Pensioen (B17) ---------- */
 function renderPensioen(){
   var fonds = s.pensioenFonds||0, koers = s.pensioenKoers||0;
@@ -192,6 +240,10 @@ function renderWerk(){
       '<div class="hoof">' + beroepTitel() + '</div><div class="klein">' + b.k + ' · ' + b.jare +
       ' jaar in die pos</div></div><div class="regs">' + kortGeld(b.salaris) + '<br><span class="klein">per jaar</span></div></div>'+
       '<div class="statte" style="margin-top:10px">' + bar('Prestasie', b.prestasie, 'var(--pers)') + '</div>'+
+      /* D6 — wat die pos op sy beste kan betaal. */
+      (b.plafon ? '<div class="klein" style="margin-top:6px">' +
+        (b.salaris >= b.plafon ? 'Jy is op die plafon van hierdie pos — meer verdien jy net in ’n ander pos.'
+          : 'Die plafon vir hierdie pos is ' + geld(b.plafon) + ' per jaar.') + '</div>' : '')+
       '<div class="knoppe"><button class="knop klein2" onclick="werkAksie(\'harder\')">Werk harder</button>'+
       '<button class="knop klein2 groen" onclick="werkAksie(\'verhoging\')">Vra verhoging</button></div>'+
       '<div class="knoppe"><button class="knop klein2 grys" onclick="werkAksie(\'bedank\')">Bedank</button>'+
@@ -204,7 +256,8 @@ function renderWerk(){
     /* A15 — solank jy op skool is, is voltydse werk toe. */
     h += '<div class="kaart"><div class="hoof">Nog op skool</div><div class="klein">'+
       'Jy is in Graad ' + s.skool.graad + '. Voltydse werk moet wag tot jy die skool '+
-      'klaargemaak het, of dit verlaat (jy mag van 16 af).</div></div>';
+      'klaargemaak het, of dit verlaat (jy mag van 16 af). Deeltydse werk mag jy '+
+      'wel doen — kyk hieronder.</div></div>';
   } else {
     h += '<div class="kaart"><div class="hoof">Werkloos</div><div class="klein">'+
       'Doen aansoek vir ’n werk hieronder. Jy kry ' +
@@ -217,6 +270,8 @@ function renderWerk(){
         '.' : '') +
       '</div></div>';
   }
+  /* D3 — deeltydse werk en vakansiewerk. */
+  h += renderDeeltyds();
   /* B17 — pensioen: wat in die fonds is, wat jy bydra, en aftrede. */
   if(s.ouderdom>=18 && !s.afgetree) h += renderPensioen();
 
@@ -224,12 +279,32 @@ function renderWerk(){
   h += '<div class="titel">Opleiding</div>';
   var sk = s.skool, opl = '';
   if(sk.vlak==='universiteit'||sk.vlak==='nagraads')
-    opl = sk.studie + ' by ' + (s.uni?s.uni.n:'die universiteit') + ' — ' + sk.jareOor + ' jaar oor';
+    /* C4 — 'n graad is nou so lank as wat hy in die werklikheid is. */
+    opl = sk.studie + ' by ' + (s.uni?s.uni.n:'die universiteit') + ' — jaar ' +
+      ((sk.geslaagJare||0)+1) + ' van ' + (sk.jare || ((sk.geslaagJare||0) + sk.jareOor));
   else if(sk.vlak==='laerskool'||sk.vlak==='hoerskool') opl = 'Graad ' + sk.graad;
-  else if(sk.matriek) opl = 'Matriek geslaag (' + sk.punte + '%)';
+  else if(sk.matriek) opl = 'Matriek geslaag · APS ' + (sk.aps||0) + ' uit ' + APS_MAKS;
   else if(sk.uit) opl = 'Skool verlaat in Graad ' + sk.graad;
+  else if(sk.uitslag && sk.uitslag.length) opl = 'Matriek gedruip (' + sk.punte + '%)';
   else opl = 'Nog geen kwalifikasie';
   h += '<div class="kaart"><div class="hoof">' + opl + '</div>';
+  /* C9 — op universiteit: hoe jou jaar staan en wat dit kos as jy druip. */
+  if(sk.vlak==='universiteit'||sk.vlak==='nagraads'){
+    h += '<div class="klein">Kans om die jaar te slaag: ' + slaagKans() + '%' +
+      (sk.ywer ? ' — jy studeer hard vanjaar' : ' — "Studeer harder" onder Aktiwiteite help') +
+      '</div>';
+    h += '<div class="klein">Klasgeld: ' + (sk.beurs ? 'volle beurs' :
+      geld(sk.koste||0) + ' per jaar') + '</div>';
+    if(sk.herhaal) h += '<div class="slot">' + sk.herhaal + ' jaar gedruip · nog ' +
+      (DRUIP_MAKS - sk.herhaal) + ' voor akademiese uitsluiting</div>';
+  }
+  /* C1 + C2 — jou vakke, en as jy klaar is, die uitslag en die APS. */
+  if(sk.uitslag && sk.uitslag.length) h += vakUitslagHtml(sk);
+  else if(sk.vakke && sk.vakke.length)
+    h += '<div class="klein" style="margin-top:6px">Jou vakke: ' +
+      veilig(sk.vakke.join(', ')) + '</div>';
+  if(sk.uitgeskop) h += '<div class="slot">Akademies uitgesluit: ' + sk.uitgeskop + ' keer' +
+    (sk.uitgeskop>=UITSLUIT_MAKS ? ' — geen universiteit neem jou weer nie' : '') + '</div>';
   if(sk.grade.length) h += '<div class="klein">Grade: ' + sk.grade.join(', ') + '</div>';
   if(sk.nagraads.length) h += '<div class="klein">Nagraads: ' + sk.nagraads.join(', ') + '</div>';
   if(s.rekord.length) h += '<div class="slot">Kriminele rekord: ' + s.rekord.join(', ') + '</div>';

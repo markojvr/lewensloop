@@ -25,21 +25,41 @@ var LAERSKOLE=[
   {n:'Tuisonderrig by die huis', t:'Tuisskool', koste:0, slim:3, geluk:-2}
 ];
 
+/* 'bied' is die keusevakke wat die skool in Graad 10 aanbied (C1).
+   Nie elke skool bied alles nie: 'n tegniese skool het die werkswinkels
+   en nie 'n kunsklas nie, 'n akademieskool die ander kant om. */
+var SKOOL_BIED=['Fisiese Wetenskappe','Lewenswetenskappe','Rekeningkunde','Besigheidstudies',
+  'Ekonomie','Geografie','Geskiedenis','Rekenaartoepassingstegnologie','Toerisme',
+  'Verbruikerstudies','Visuele Kunste'];
 var HOERSKOLE=[
-  {n:'Hoerskool Durbanville', t:'Openbare skool', koste:0, slim:2, gesondheid:1, geluk:2},
-  {n:'Hoerskool Stellenberg', t:'Openbare skool', koste:0, slim:2, gesondheid:2, geluk:1},
-  {n:'Paul Roos Gimnasium', t:'Sport- en akademieskool', koste:70000, slim:3, gesondheid:4, geluk:2},
-  {n:'Die Akademie', t:'Privaat akademieskool', koste:98000, slim:5, gesondheid:0, geluk:-1, vereisSlim:58},
-  {n:'Tegniese Hoerskool Bellville', t:'Tegniese skool', koste:0, slim:1, gesondheid:2, geluk:3}
+  {n:'Hoerskool Durbanville', t:'Openbare skool', koste:0, slim:2, gesondheid:1, geluk:2,
+    bied:SKOOL_BIED.concat(['Inligtingstegnologie','Dramatiese Kunste','Gasvryheidstudies'])},
+  {n:'Hoerskool Stellenberg', t:'Openbare skool', koste:0, slim:2, gesondheid:2, geluk:1,
+    bied:SKOOL_BIED.concat(['Inligtingstegnologie','Musiek','Landbouwetenskappe'])},
+  {n:'Paul Roos Gimnasium', t:'Sport- en akademieskool', koste:70000, slim:3, gesondheid:4, geluk:2,
+    bied:SKOOL_BIED.concat(['Inligtingstegnologie','Dramatiese Kunste','Musiek'])},
+  {n:'Die Akademie', t:'Privaat akademieskool', koste:98000, slim:5, gesondheid:0, geluk:-1, vereisSlim:58,
+    bied:['Fisiese Wetenskappe','Lewenswetenskappe','Rekeningkunde','Besigheidstudies','Ekonomie',
+      'Geografie','Geskiedenis','Inligtingstegnologie','Musiek','Visuele Kunste']},
+  {n:'Tegniese Hoerskool Bellville', t:'Tegniese skool', koste:0, slim:1, gesondheid:2, geluk:3,
+    bied:['Fisiese Wetenskappe','Lewenswetenskappe','Ingenieursgrafika en Ontwerp',
+      'Siviele Tegnologie','Elektriese Tegnologie','Meganiese Tegnologie',
+      'Rekenaartoepassingstegnologie','Besigheidstudies','Geografie','Toerisme']}
 ];
 
+/* C2 — 'n universiteit vra 'n APS, nie 'n persentasie nie. Elke program
+   het sy eie APS (sien STUDIES); 'apsEkstra' is wat HIERDIE universiteit
+   bo-op daardie getal vra. 'n Gesogte plek vra meer vir dieselfde graad.
+   'nie' is die programme wat die plek nie aanbied nie. */
 var UNIES=[
-  {n:'Universiteit Stellenbosch', koste:76000, punte:70, aansien:3},
-  {n:'Universiteit van Kaapstad', koste:84000, punte:76, aansien:4},
-  {n:'Universiteit van Pretoria', koste:68000, punte:64, aansien:3},
-  {n:'Noordwes-Universiteit', koste:58000, punte:56, aansien:2},
-  {n:'Universiteit van die Vrystaat', koste:52000, punte:52, aansien:2},
-  {n:'UNISA (afstandsonderrig)', koste:30000, punte:42, aansien:1}
+  {n:'Universiteit Stellenbosch', koste:76000, apsEkstra:2, aansien:3},
+  {n:'Universiteit van Kaapstad', koste:84000, apsEkstra:4, aansien:4},
+  {n:'Universiteit van Pretoria', koste:68000, apsEkstra:0, aansien:3},
+  {n:'Noordwes-Universiteit', koste:58000, apsEkstra:-2, aansien:2},
+  {n:'Universiteit van die Vrystaat', koste:52000, apsEkstra:-3, aansien:2,
+    nie:['Geneeskunde','Argitektuur']},
+  {n:'UNISA (afstandsonderrig)', koste:30000, apsEkstra:-5, aansien:1,
+    nie:['Geneeskunde','Ingenieurswese','Argitektuur','Kuns en Drama']}
 ];
 
 var RYKDOM=[
@@ -47,65 +67,212 @@ var RYKDOM=[
   {n:'middelklas', f:1.6}, {n:'middelklas', f:1.6}, {n:'welgesteld', f:3}, {n:'ryk', f:6}
 ];
 
+/* C2 en C4 — elke studierigting is nou 'n egte SA-graad met sy egte
+   lengte en sy egte toelatingsvereistes:
+     jare   = hoe lank die graad duur (BCom 3, BEng 4, LLB 4, MBChB 6, BEd 4)
+     aps    = die APS uit 42 wat die program vra (die universiteit tel sy
+              eie apsEkstra daarby — sien UNIES)
+     vak    = vakke wat jy MOET gehad het, met die NSC-vlak (1-7) wat jy
+              daarin moes kry. Vlak 5 = 60-69%, vlak 6 = 70-79%.
+     ofVak  = een van hierdie vakke op die gegewe vlak is genoeg.
+   C1 — dit is hier waar die vakkeuse van Graad 10 bybly: sonder Wiskunde
+   is Geneeskunde, Ingenieurswese, Rekeningkunde en Rekenaarwetenskap toe,
+   want jy kan nooit 'n vlak in 'n vak kry wat jy nie gehad het nie. */
 var STUDIES=[
-  {n:'Rekeningkunde', slim:58}, {n:'Rekenaarwetenskap', slim:65}, {n:'Ingenieurswese', slim:72},
-  {n:'Opvoedkunde', slim:45}, {n:'Besigheidsbestuur', slim:50}, {n:'Natuurwetenskap', slim:68},
-  {n:'Kommunikasiekunde', slim:42}, {n:'Verpleegkunde', slim:55}, {n:'Sielkunde', slim:60},
-  {n:'Regsgeleerdheid', slim:66}, {n:'Argitektuur', slim:64}, {n:'Kuns en Drama', slim:38}
+  {n:'Geneeskunde',       vol:'MBChB',                  jare:6, aps:38,
+    vak:{'Wiskunde':5,'Fisiese Wetenskappe':5,'Lewenswetenskappe':5}},
+  {n:'Ingenieurswese',    vol:'BIng (Siviel)',          jare:4, aps:33,
+    vak:{'Wiskunde':6,'Fisiese Wetenskappe':5}},
+  {n:'Rekeningkunde',     vol:'BRek',                   jare:3, aps:30,
+    vak:{'Wiskunde':5}},
+  {n:'Rekenaarwetenskap', vol:'BSc Rekenaarwetenskap',  jare:3, aps:30,
+    vak:{'Wiskunde':5}},
+  {n:'Regsgeleerdheid',   vol:'LLB',                    jare:4, aps:30},
+  {n:'Argitektuur',       vol:'BSc Argitektuur',        jare:3, aps:30,
+    vak:{'Wiskunde':4}},
+  {n:'Natuurwetenskap',   vol:'BSc',                    jare:3, aps:28,
+    vak:{'Wiskunde':4}, ofVak:{'Fisiese Wetenskappe':4,'Lewenswetenskappe':4}},
+  {n:'Besigheidsbestuur', vol:'BCom',                   jare:3, aps:28,
+    ofVak:{'Wiskunde':4,'Wiskundige Geletterdheid':6}},
+  {n:'Verpleegkunde',     vol:'BVerpl',                 jare:4, aps:26,
+    vak:{'Lewenswetenskappe':4}, ofVak:{'Wiskunde':3,'Wiskundige Geletterdheid':5}},
+  {n:'Sielkunde',         vol:'BA Sielkunde',           jare:3, aps:26},
+  {n:'Kommunikasiekunde', vol:'BA Kommunikasiekunde',   jare:3, aps:26},
+  {n:'Opvoedkunde',       vol:'BEd',                    jare:4, aps:24},
+  {n:'Kuns en Drama',     vol:'BA Drama',               jare:3, aps:24}
 ];
+/* C5 sal die Mediese Skool en die Regskool later heeltemal uithaal — in
+   SA is MBChB en LLB voorgraads, en hulle staan nou al in STUDIES bo.
+   Hierdie twee bly voorlopig as 'n tweede pad staan sodat ou stoor-data
+   en die bestaande beroepsvereistes nie breek nie. */
 var NAGRAADS=[
   {n:'Mediese Skool', jare:4, koste:220000, slim:78, vereis:['Natuurwetenskap','Verpleegkunde']},
   {n:'Regskool', jare:3, koste:180000, slim:72, vereis:null},
   {n:'Meestersgraad', jare:2, koste:95000, slim:66, vereis:null}
 ];
 
+/* ==========================================================================
+   SKOOL EN STUDIE (Fase 3)
+   Die vakke wat jy in Graad 10 kies (C1), hoe 'n persentasie 'n APS word
+   (C2), en hoe swaar dit is om 'n jaar op universiteit te slaag (C9).
+   ========================================================================== */
+
+/* C1 — die NSC vra sewe vakke: twee tale, Lewensorientering, Wiskunde OF
+   Wiskundige Geletterdheid, en drie keusevakke.
+   'moeilik' is wat die vak aan jou punt doen teenoor jou algemene vlak.
+   Dit is die hart van die Wiskunde-keuse: Wiskunde kos jou agt punte,
+   Wiskundige Geletterdheid gee jou nege — maar sonder Wiskunde is die
+   helfte van die universiteitsprogramme toe. Lewensorientering se +18 is
+   nie 'n fout nie; daarom tel dit ook nie vir toelating nie.
+   'wisk' merk die vakke wat 'n skool net vir Wiskunde-leerlinge oopmaak. */
+var VAKKE=[
+  {n:'Afrikaans Huistaal', moeilik:4, verplig:true},
+  {n:'Engels Eerste Addisionele Taal', moeilik:2, verplig:true},
+  {n:'Lewensorientering', moeilik:18, verplig:true, nieAps:true},
+  {n:'Wiskunde', moeilik:-8, kern:true},
+  {n:'Wiskundige Geletterdheid', moeilik:9, kern:true},
+  {n:'Fisiese Wetenskappe', moeilik:-9, wisk:true,
+    sub:'Nodig vir Ingenieurswese en Geneeskunde'},
+  {n:'Lewenswetenskappe', moeilik:-2, sub:'Nodig vir Geneeskunde en Verpleegkunde'},
+  {n:'Rekeningkunde', moeilik:-5, sub:'Help met BRek, maar Wiskunde is wat tel'},
+  {n:'Inligtingstegnologie', moeilik:-7, wisk:true, slim:2, sub:'Jy leer regtig programmeer'},
+  {n:'Elektriese Tegnologie', moeilik:-5, wisk:true, sub:'Die pad na ’n elektrisien se ambag'},
+  {n:'Meganiese Tegnologie', moeilik:-3, sub:'Draaibanke, sweis en enjins'},
+  {n:'Ingenieursgrafika en Ontwerp', moeilik:-3, sub:'Tekenwerk; help met Argitektuur'},
+  {n:'Siviele Tegnologie', moeilik:-2, sub:'Bou, messelwerk en loodgieterswerk'},
+  {n:'Ekonomie', moeilik:-1},
+  {n:'Geskiedenis', moeilik:0, slim:1},
+  {n:'Musiek', moeilik:0},
+  {n:'Geografie', moeilik:1},
+  {n:'Landbouwetenskappe', moeilik:1},
+  {n:'Besigheidstudies', moeilik:3},
+  {n:'Visuele Kunste', moeilik:4},
+  {n:'Dramatiese Kunste', moeilik:4},
+  {n:'Rekenaartoepassingstegnologie', moeilik:5, sub:'Word en Excel, nie programmering nie'},
+  {n:'Gasvryheidstudies', moeilik:5},
+  {n:'Toerisme', moeilik:6},
+  {n:'Verbruikerstudies', moeilik:6}
+];
+var VAKKE_VERPLIG=['Afrikaans Huistaal','Engels Eerste Addisionele Taal','Lewensorientering'];
+var KEUSEVAKKE=3;              /* hoeveel keusevakke jy bo die verpligte vier kies */
+var VAKKEUSE_GRAAD=10;         /* in watter graad jy kies */
+
+/* C2 — die NSC se sewe vlakke. 'n Vlak is wat 'n persentasie werd is, en
+   jou APS is die som van jou ses beste vakke sonder Lewensorientering:
+   7 vlakke x 6 vakke = 42. */
+var APS_VLAKKE=[
+  {vanaf:80, vlak:7, n:'Uitstekende prestasie'},
+  {vanaf:70, vlak:6, n:'Verdienstelike prestasie'},
+  {vanaf:60, vlak:5, n:'Wesenlike prestasie'},
+  {vanaf:50, vlak:4, n:'Gemiddelde prestasie'},
+  {vanaf:40, vlak:3, n:'Matige prestasie'},
+  {vanaf:30, vlak:2, n:'Basiese prestasie'},
+  {vanaf:0,  vlak:1, n:'Ontoereikende prestasie'}
+];
+var APS_VAKKE=6;               /* hoeveel vakke vir die APS tel */
+var APS_MAKS=42;
+
+/* C9 — die kans om 'n universiteitsjaar te slaag. Slim help, hard
+   studeer help meer, 'n swaar graad maak dit moeiliker, en die eerste
+   jaar is die een waar die meeste mense val. */
+var SLAAG_BASIS=64;            /* iemand met slimheid 50 wat niks doen nie */
+var SLAAG_SLIM=0.8;            /* elke punt slimheid bo 50 */
+var SLAAG_YWER=16;             /* jy het die jaar "Studeer harder" gedoen */
+var SLAAG_EERSTEJAAR=-8;       /* die eerste jaar is die moeilikste */
+var SLAAG_DEELTYDS=-7;         /* jy werk deeltyds langs jou klasse (D3) */
+var SLAAG_SIEK=-8;             /* gesondheid onder 40 */
+var SLAAG_SWAAR=1.2;           /* elke APS-punt wat die graad bo 28 vra */
+var SLAAG_MAKS=97;             /* niemand is ooit heeltemal seker nie */
+var SLAAG_MIN=12;
+var DRUIP_MAKS=3;              /* so baie mislukte jare, dan akademiese uitsluiting */
+var DRUIP_BEURS=2;             /* en so baie, dan is jou beurs weg */
+var UITSLUIT_MAKS=2;           /* twee uitsluitings en geen universiteit neem jou weer */
+
 /* edu: 0 = geen matriek, 1 = matriek, 2 = graad, 3 = nagraads */
 var BEROEPE=[
-  {id:'petrol', t:'Petroljoggie',          s:66000,   edu:0, slim:0,  min:16, k:'Diens'},
-  {id:'kelner', t:'Kelner',                s:78000,   edu:0, slim:15, min:16, k:'Diens'},
-  {id:'plaas',  t:'Plaasarbeider',         s:72000,   edu:0, slim:0,  min:16, k:'Landbou'},
-  {id:'kassier',t:'Kassier',               s:90000,   edu:0, slim:20, min:16, k:'Kleinhandel'},
-  {id:'vullis', t:'Vullisverwyderaar',     s:102000,  edu:0, slim:0,  min:18, k:'Munisipaal'},
-  {id:'bou',    t:'Bouwerker',             s:126000,  edu:0, slim:10, min:18, k:'Konstruksie'},
-  {id:'verkoop',t:'Verkoopsassistent',     s:162000,  edu:1, slim:35, min:18, k:'Kleinhandel'},
-  {id:'oproep', t:'Oproepsentrum-agent',   s:174000,  edu:1, slim:40, min:18, k:'Diens'},
-  {id:'haar',   t:'Haarstilis',            s:156000,  edu:1, slim:30, min:18, k:'Skoonheid'},
-  {id:'weermag',t:'Weermaglid',            s:204000,  edu:1, slim:40, min:18, k:'Veiligheid'},
-  {id:'kok',    t:'Kok',                   s:216000,  edu:1, slim:42, min:19, k:'Kos'},
-  {id:'bank',   t:'Bankteller',            s:198000,  edu:1, slim:50, min:18, k:'Finansies', skoon:true},
-  {id:'polisie',t:'Polisiekonstabel',      s:222000,  edu:1, slim:45, min:19, k:'Veiligheid', skoon:true},
-  {id:'vrag',   t:'Vragmotorbestuurder',   s:234000,  edu:1, slim:35, min:21, k:'Vervoer'},
-  {id:'onderwys',t:'Onderwyser',           s:330000,  edu:2, slim:55, min:21, k:'Onderwys',
+  {id:'petrol', t:'Petroljoggie',          s:66000,   plafon:110000,   edu:0, slim:0,  min:16, k:'Diens'},
+  {id:'kelner', t:'Kelner',                s:78000,   plafon:190000,   edu:0, slim:15, min:16, k:'Diens'},
+  {id:'plaas',  t:'Plaasarbeider',         s:72000,   plafon:155000,   edu:0, slim:0,  min:16, k:'Landbou'},
+  {id:'kassier',t:'Kassier',               s:90000,   plafon:185000,   edu:0, slim:20, min:16, k:'Kleinhandel'},
+  {id:'vullis', t:'Vullisverwyderaar',     s:102000,  plafon:245000,   edu:0, slim:0,  min:18, k:'Munisipaal'},
+  {id:'bou',    t:'Bouwerker',             s:126000,  plafon:330000,   edu:0, slim:10, min:18, k:'Konstruksie'},
+  {id:'verkoop',t:'Verkoopsassistent',     s:162000,  plafon:420000,   edu:1, slim:35, min:18, k:'Kleinhandel'},
+  {id:'oproep', t:'Oproepsentrum-agent',   s:174000,  plafon:400000,   edu:1, slim:40, min:18, k:'Diens'},
+  {id:'haar',   t:'Haarstilis',            s:156000,  plafon:450000,   edu:1, slim:30, min:18, k:'Skoonheid'},
+  {id:'weermag',t:'Weermaglid',            s:204000,  plafon:600000,   edu:1, slim:40, min:18, k:'Veiligheid'},
+  {id:'kok',    t:'Kok',                   s:216000,  plafon:650000,   edu:1, slim:42, min:19, k:'Kos'},
+  {id:'bank',   t:'Bankteller',            s:198000,  plafon:520000,   edu:1, slim:50, min:18, k:'Finansies', skoon:true},
+  {id:'polisie',t:'Polisiekonstabel',      s:222000,  plafon:640000,   edu:1, slim:45, min:19, k:'Veiligheid', skoon:true},
+  {id:'vrag',   t:'Vragmotorbestuurder',   s:234000,  plafon:480000,   edu:1, slim:35, min:21, k:'Vervoer'},
+  {id:'onderwys',t:'Onderwyser',           s:330000,  plafon:820000,   edu:2, slim:55, min:21, k:'Onderwys',
       gr:['Opvoedkunde','Kuns en Drama','Natuurwetenskap'], skoon:true},
-  {id:'joernalis',t:'Joernalis',           s:294000,  edu:2, slim:58, min:21, k:'Media',
+  {id:'joernalis',t:'Joernalis',           s:294000,  plafon:700000,   edu:2, slim:58, min:21, k:'Media',
       gr:['Kommunikasiekunde','Kuns en Drama']},
-  {id:'verpleeg',t:'Verpleegkundige',      s:348000,  edu:2, slim:62, min:21, k:'Mediese',
+  {id:'verpleeg',t:'Verpleegkundige',      s:348000,  plafon:850000,   edu:2, slim:62, min:21, k:'Mediese',
       gr:['Verpleegkunde','Natuurwetenskap']},
-  {id:'bemark', t:'Bemarkingsbestuurder',  s:426000,  edu:2, slim:60, min:24, k:'Besigheid',
+  {id:'bemark', t:'Bemarkingsbestuurder',  s:426000,  plafon:1300000,  edu:2, slim:60, min:24, k:'Besigheid',
       gr:['Besigheidsbestuur','Kommunikasiekunde']},
-  {id:'rekenmeester',t:'Rekenmeester',     s:462000,  edu:2, slim:65, min:22, k:'Finansies',
+  {id:'rekenmeester',t:'Rekenmeester',     s:462000,  plafon:1600000,  edu:2, slim:65, min:22, k:'Finansies',
       gr:['Rekeningkunde','Besigheidsbestuur'], skoon:true},
-  {id:'argitek',t:'Argitek',               s:474000,  edu:2, slim:68, min:23, k:'Ontwerp',
+  {id:'argitek',t:'Argitek',               s:474000,  plafon:1400000,  edu:2, slim:68, min:23, k:'Ontwerp',
       gr:['Argitektuur','Ingenieurswese']},
-  {id:'ingenieur',t:'Siviele Ingenieur',   s:546000,  edu:2, slim:72, min:22, k:'Ingenieurswese',
+  {id:'ingenieur',t:'Siviele Ingenieur',   s:546000,  plafon:1800000,  edu:2, slim:72, min:22, k:'Ingenieurswese',
       gr:['Ingenieurswese']},
-  {id:'ontwikkelaar',t:'Sagteware-ontwikkelaar',s:612000,edu:2,slim:70,min:21,k:'Tegnologie',
+  {id:'ontwikkelaar',t:'Sagteware-ontwikkelaar',s:612000,plafon:2200000,edu:2,slim:70,min:21,k:'Tegnologie',
       gr:['Rekenaarwetenskap','Ingenieurswese']},
-  {id:'sielkundige',t:'Sielkundige',       s:498000,  edu:3, slim:72, min:25, k:'Mediese',
+  {id:'sielkundige',t:'Sielkundige',       s:498000,  plafon:1300000,  edu:3, slim:72, min:25, k:'Mediese',
       gr:['Sielkunde'], na:['Meestersgraad']},
-  {id:'professor',t:'Professor',           s:678000,  edu:3, slim:82, min:30, k:'Onderwys',
+  {id:'professor',t:'Professor',           s:678000,  plafon:1600000,  edu:3, slim:82, min:30, k:'Onderwys',
       na:['Meestersgraad','Mediese Skool','Regskool']},
-  {id:'prokureur',t:'Prokureur',           s:858000,  edu:3, slim:78, min:25, k:'Regte',
-      na:['Regskool'], skoon:true},
-  {id:'dokter', t:'Geneesheer',            s:972000,  edu:3, slim:80, min:26, k:'Mediese',
-      na:['Mediese Skool'], skoon:true},
-  {id:'chirurg',t:'Chirurg',               s:1560000, edu:3, slim:88, min:30, k:'Mediese',
-      na:['Mediese Skool'], skoon:true, ervaring:4},
-  {id:'uh',     t:'Uitvoerende Hoof',      s:1950000, edu:3, slim:75, min:35, k:'Besigheid',
+  /* C4/C5 — die LLB en die MBChB is nou voorgraads (sien STUDIES), maar
+     die ou nagraadse pad bly ook geld, daarom staan albei kwalifikasies
+     in 'gr'. werkVereis() soek in jou grade EN jou nagraadse studies. */
+  {id:'prokureur',t:'Prokureur',           s:858000,  plafon:3500000,  edu:2, slim:78, min:25, k:'Regte',
+      gr:['Regsgeleerdheid','Regskool'], skoon:true},
+  {id:'dokter', t:'Geneesheer',            s:972000,  plafon:2800000,  edu:2, slim:80, min:26, k:'Mediese',
+      gr:['Geneeskunde','Mediese Skool'], skoon:true},
+  {id:'chirurg',t:'Chirurg',               s:1560000, plafon:6000000,  edu:2, slim:88, min:30, k:'Mediese',
+      gr:['Geneeskunde','Mediese Skool'], skoon:true, ervaring:4},
+  {id:'uh',     t:'Uitvoerende Hoof',      s:1950000, plafon:12000000, edu:3, slim:75, min:35, k:'Besigheid',
       na:['Meestersgraad'], ervaring:10}
 ];
+/* D6 — 'plafon' is die meeste wat hierdie pos ooit kan betaal, in vandag
+   se rande. Sonder dit groei 'n salaris 4,5% per jaar sonder einde, en
+   'n UH wat op 35 begin verdien op 95 sowat R27 miljoen per jaar. Die
+   spel het geen inflasie nie (B4 is uitgelaat), so hierdie getalle bly
+   vir altyd in 2026-rande sinvol: dit is wat die heel beste mens in
+   daardie pos vandag in Suid-Afrika verdien, bonus ingesluit. */
 var VLAK_NAAM=['Junior ','','Senior ','Hoof-','Uitvoerende '];
 var VLAK_X=[1, 1.32, 1.75, 2.3, 3.1];
+
+/* ==========================================================================
+   D3 — DEELTYDSE WERK EN VAKANSIEWERK
+   Fase 1 het voltydse werk geblokkeer terwyl jy op skool is (A15). Dit is
+   die ander kant daarvan: min ure, lae betaling, en jy mag dit doen
+   terwyl jy op skool of op universiteit is.
+     s      = wat jy in 'n jaar verdien. Dit bly onder SARS se drempel
+              (R95 750), daarom word dit nie belas nie.
+     ure    = wat die werk van jou week vat, net om te lees
+     wenke  = die bedrag wissel, want wenke wissel
+     Die geluk-, slim- en gesondheidskoste is per jaar wat jy dit doen.
+   Jy mag net een deeltydse werk op 'n keer hê, en dit val weg sodra jy
+   voltyds begin werk.
+   ========================================================================== */
+var DEELTYDS=[
+  {id:'pakhulp', t:'Pakhulp by die supermark', s:24000, min:16, ure:'Saterdae en skoolvakansies',
+    geluk:-3, sub:'Rakke pak en trollies stoot'},
+  {id:'vakansie', t:'Desember-vakansiewerk by die sentrum', s:12000, min:16, ure:'Net Desember en Januarie',
+    geluk:-1, sub:'Ses weke se werk, en dan is jy klaar'},
+  {id:'tutor', t:'Tutor vir laerskoolkinders', s:26000, min:17, vereisSlim:62, ure:'Twee middae per week',
+    geluk:-1, slim:2, sub:'Jy leer dit self beter terwyl jy verduidelik'},
+  {id:'barista', t:'Barista by ’n koffiewinkel', s:34000, min:17, ure:'Drie middae per week',
+    geluk:-1, slim:-1, sub:'Jy ruik die hele dag na koffie'},
+  {id:'kelner', t:'Kelner oor naweke', s:44000, min:16, ure:'Vrydag- en Saterdagaande', wenke:true,
+    geluk:-2, slim:-2, gesondheid:-1, sub:'Die wenke maak die verskil'},
+  {id:'nagskof', t:'Nagskof by die vulstasie', s:58000, min:18, ure:'Drie nagte per week',
+    geluk:-5, slim:-4, gesondheid:-5, sub:'Die beste geld, en jy slaap in die klas'}
+];
+var DEELTYDS_POGINGS=3;        /* hoeveel plekke jy per jaar kan probeer */
 
 var TE_KOOP=[
   {id:'woonstel', n:'Woonstel in Durbanville',   t:'huis', p:950000,   e:'\u{1F3E2}'},

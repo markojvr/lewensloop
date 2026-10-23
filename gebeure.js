@@ -37,10 +37,15 @@ var GEBEURE=[
     return ['Jy het in die eerste rugby-/netbalspan gekom.','goed']; }},
   {min:13,max:18,doen:function(){ s.voorkoms=klem(s.voorkoms-7);
     return ['Aknee het jou gesig oorgeneem. Dis ’n moeilike jaar.','sleg']; }},
-  {min:14,max:18,doen:function(){ var v=tussen(2000,9000); s.geld+=v;
+  /* D3 — die los vakansiewerk-gebeurtenis geld net as jy nie klaar 'n
+     deeltydse werk het nie; anders is dit die DEELTYDS-stelsel se werk. */
+  {min:14,max:18, as:function(){ return !s.deeltyds; },
+   doen:function(){ var v=tussen(2000,9000); s.geld+=v;
     return ['Jy het vakansiewerk by ’n kafee gedoen en '+geld(v)+' gemaak.','geld']; }},
+  /* C1 — noem die vak wat jy werklik neem. */
   {min:15,max:18,doen:function(){ s.slim=klem(s.slim-5); s.geluk=klem(s.geluk-6);
-    return ['Jy het ’n wiskundetoets gedruip. Pa was nie beindruk nie.','skool']; }},
+    var vak = s.skool.vakke ? (s.skool.wiskunde?'Wiskunde':'Wiskundige Geletterdheid') : 'wiskunde';
+    return ['Jy het ’n toets in ' + vak + ' gedruip. Pa was nie beindruk nie.','skool']; }},
   {min:17,max:18,doen:function(){ s.geluk=klem(s.geluk+5);
     return ['Jy het jou leerlinglisensie gekry met een poging.','goed']; }},
   {min:16,max:18,doen:function(){ s.geluk=klem(s.geluk+11);

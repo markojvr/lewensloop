@@ -99,6 +99,13 @@ function wysGrafskrif(){
       (s.beroepeGehad.length ? s.beroepeGehad[s.beroepeGehad.length-1] : 'geen') + '</b></div>'+
     '<div class="eind-stat"><span>Kwalifikasies</span><b>' +
       (s.skool.nagraads.concat(s.skool.grade).join(', ') || (s.skool.matriek?'Matriek':'geen')) + '</b></div>'+
+    /* C2 — die APS staan by die matriek, ook as jy later gegradueer het. */
+    (s.skool.aps ? '<div class="eind-stat"><span>Matriek-APS</span><b>' + s.skool.aps +
+      ' uit ' + APS_MAKS + ' · gemiddeld ' + s.skool.punte + '%' +
+      (s.skool.wiskunde ? ' · met Wiskunde' : '') + '</b></div>' : '')+
+    /* D3 — die jare wat jy deeltyds gewerk het terwyl jy geleer het. */
+    (s.deeltydsJare ? '<div class="eind-stat"><span>Jare deeltyds gewerk</span><b>' +
+      s.deeltydsJare + '</b></div>' : '')+
     '<div class="eind-stat"><span>Kinders</span><b>' + s.kinders +
       ((s.kindersGebore||s.kinders) > s.kinders ? ' van ' + s.kindersGebore + ' gebore' : '') + '</b></div>'+
     '<div class="eind-stat"><span>Troues</span><b>' + s.troues + '</b></div>'+

@@ -13,7 +13,7 @@ met presies dieselfde gedrag — net makliker om in te werk:
 | `index.html` | Net die HTML-raam en die `<script>`-lyste. 35 reëls. |
 | `styl.css` | Al die uitleg en kleure. |
 | `hulp.js` | Klein hulpfunksies: `R()`, `kans()`, `geld()`, `klem()`. |
-| `data.js` | Al die lyste: name, skole, unies, beroepe, bates, misdade, flieks, diere. Onderaan, onder "EKONOMIE", staan al die geldgetalle bymekaar: dorpskoste, huurpryse, verbandkoerse, rente en pensioen. |
+| `data.js` | Al die lyste: name, skole, unies, beroepe, bates, misdade, flieks, diere. Onder "SKOOL EN STUDIE" staan die vakke, die APS-tabel en die slaagkanse; onder "EKONOMIE" staan al die geldgetalle bymekaar: dorpskoste, huurpryse, verbandkoerse, rente en pensioen. |
 | `gebeure.js` | `GEBEURE` — die lukrake dinge wat met jou gebeur. |
 | `lewe.js` | Die status `s`, stoor/laai, en `wordOuer()` — die jaarmasjien. |
 | `aksies.js` | Alles wat die speler self kies: aktiwiteite, misdaad, werk, studie, bates, verhoudings, diere. |
@@ -128,41 +128,56 @@ nooit. Dit is dus moeilik maar uitkombaar, en nie ’n stadige dood nie.
 
 ## C. Skool en studie — SA-akkuraatheid (P1)
 
-| # | Verandering |
-|---|---|
-| C1 | **Geen vakkeuses.** In Graad 10 kies jy vakke, en dit bepaal alles daarna. Die belangrikste: **Wiskunde vs Wiskundige Geletterdheid** — sonder Wiskunde is Ingenieurswese, Rekeningkunde en Medies toe. Op die oomblik hang alles net van die `slim`-telling af. |
-| C2 | **Matriek het nie 'n APS nie.** Die spel gebruik 'n persentasie-gemiddeld (`lewe.js:184`) en universiteite vra `punte>=70`. SA gebruik 'n **APS uit 42** plus vakspesifieke vereistes. |
-| C3 | **Geen drie slaagvlakke.** SA se NSC gee 'n *Hoër Sertifikaat*, *Diploma* of *Bachelor's pass*. Die spel het net "geslaag by 40%" of "gedruip". |
-| C4 | **Elke graad is 3 jaar** (`aksies.js:363`). Werklik: BCom 3, BEng 4, LLB 4, MBChB 6, BEd 4. |
-| C5 | **Medies en Regte is Amerikaans gemodelleer.** `NAGRAADS` het 'n "Mediese Skool" en "Regskool" ná 'n graad. In SA is MBChB en LLB voorgraads — direk ná matriek. |
-| C6 | **Geen beroepsregistrasie of articles.** 'n CA(SA) moet SAICA-articles doen, 'n dokter moet internskap + community service doen, 'n ingenieur registreer by ECSA. Nou is 'n graad genoeg. |
-| C7 | **Geen NSFAS.** Die enigste beurs is outomaties as `slim>=82` (`aksies.js:355`). NSFAS is die werklike roete vir die meerderheid; nodig: inkomste-toets, aansoek, en die kans dat die geld laat betaal word. |
-| C8 | **Geen studentelening of studenteskuld.** |
-| C9 | **Jy kan nie 'n jaar druip of uitgegooi word nie.** Universiteit is outomaties sukses solank jy die klasgeld betaal. Nodig: jaarlikse slaagkans op grond van `slim` + hoe hard jy studeer, en "academic exclusion". |
-| C10 | **Geen koshuis, geen res-lewe, geen pendel.** Klasgeld is die enigste koste; in die werklikheid is verblyf dikwels meer as die klasgeld. |
-| C11 | **Geen TVET-kolleges, leerlingskappe of ambagte.** Daar is 'n Tegniese Hoërskool in die spel maar geen pad na 'n ambagsertifikaat (elektrisiën, loodgieter, sweiser) nie — 'n groot SA-loopbaanroete wat heeltemal ontbreek. |
-| C12 | **Geen onderwysersopleiding-, polisie- of weermag-opleidingsfase.** Jy word sommer aangestel. |
-| C13 | **Geen skoolgeld vir jou eie kinders**, en geen keuse van skool vir hulle. |
-| C14 | **Hoërskool het geen sport, kultuur, prefek of leierskap nie** — net `klasGebeurtenis()` met vier uitkomste (`lewe.js:272`). Nodig: eerste span, debat, orkes, RSR, matriekafskeid as 'n keuse (nie net 'n gebeurtenis nie). |
-| C15 | **Die jaar ná Graad 12 is leeg.** Op 18 kry jy net jou uitslag en doen niks. Nodig: 'n gap-jaar-keuse (werk, reis, studeer, weermag). |
+**Fase 3 (C1, C2, C4, C9) is ✅ KLAAR (23 Oktober 2026).** Die kolom **Gedoen** sê
+kortliks wat verander het. Die ander items in hierdie afdeling wag nog.
+
+Nuwe velde in `s.skool`: `vakke`, `wiskunde`, `uitslag`, `aps`, `ywer`, `herhaal`,
+`geslaagJare`, `uitgeskop`, `jare` — almal met verstekwaardes in `vulNuweVelde()`,
+sodat ou stoor-data steeds laai. 'n Ou lewe wat al matriek het maar net 'n
+persentasie, kry 'n APS terug uit sy gemiddeld (`apsVanGemiddeld()`), en 'n ou
+lewe wat nog in Graad 10–12 is, word by die eerste skooljaar na sy vakke gevra.
+Die nuwe lyste en getalle staan bymekaar in `data.js` onder "SKOOL EN STUDIE".
+
+| # | Verandering | Gedoen |
+|---|---|---|
+| C1 | **Geen vakkeuses.** In Graad 10 kies jy vakke, en dit bepaal alles daarna. Die belangrikste: **Wiskunde vs Wiskundige Geletterdheid** — sonder Wiskunde is Ingenieurswese, Rekeningkunde en Medies toe. Op die oomblik hang alles net van die `slim`-telling af. | ✅ `VAKKE` in `data.js` plus `vakkeKeuse()` in `lewe.js`. In Graad 10 kies jy sewe vakke: twee tale, Lewensoriëntering, **Wiskunde of Wiskundige Geletterdheid**, en drie keusevakke uit wat jou skool aanbied (`bied` per skool in `HOERSKOLE` — die Tegniese Hoërskool het die werkswinkelvakke, Die Akademie net die akademiese). Fisiese Wetenskappe, IT en Elektriese Tegnologie is net oop as jy Wiskunde geneem het. Elke vak het 'n `moeilik`-getal: Wiskunde kos jou 8 punte, Wiskundige Geletterdheid gee jou 9 — dit is die hele keuse in een getal. Getoets oor 200 lewens met slimheid 60–100 by die beste skool: **sonder Wiskunde was Ingenieurswese, Geneeskunde, Rekeningkunde en Rekenaarwetenskap nooit, by enige universiteit, oop nie.** 'n Speler met Wiskundige Geletterdheid en 'n APS van 42 word steeds geweier, met die rede: "Wiskunde op vlak 6 en Fisiese Wetenskappe op vlak 5 nodig." |
+| C2 | **Matriek het nie 'n APS nie.** Die spel gebruik 'n persentasie-gemiddeld (`lewe.js:184`) en universiteite vra `punte>=70`. SA gebruik 'n **APS uit 42** plus vakspesifieke vereistes. | ✅ `berekenUitslag()` en `apsVlak()` in `lewe.js`. Jy kry nou 'n punt **per vak** (jou algemene vlak vir die jaar, plus die vak se `moeilik`, plus 'n bietjie toeval), elke vak kry 'n NSC-vlak van 1 tot 7 (80%+ = 7, 70% = 6, 60% = 5 …), en jou **APS is die som van jou ses beste vakke sonder Lewensoriëntering: 6 × 7 = 42**. `UNIES` vra nie meer `punte>=70` nie, maar `apsEkstra` bo-op die program se eie APS (UCT +4, Stellenbosch +2, UP 0, NWU −2, UVS −3, UNISA −5), en `STUDIES` het elkeen sy regte APS én sy vakvereistes. UNISA bied nie MBChB, BIng of Argitektuur aan nie. Die APS, die gemiddeld en die volledige vakuitslag wys op die Werk-blad se Opleiding-kaart en op die grafsteen. Verdeling oor 295 passiewe lewens: 10de persentiel 21, mediaan 33, 90ste 42. |
+| C3 | **Geen drie slaagvlakke.** SA se NSC gee 'n *Hoër Sertifikaat*, *Diploma* of *Bachelor's pass*. Die spel het net "geslaag by 40%" of "gedruip". | *(Nie in Fase 3 nie, maar die hakie is gereed:* `s.skool.uitslag` *hou elke vak se persentasie en vlak, so die drie slaagvlakke kan bygevoeg word sonder om aan* `berekenUitslag()` *te raak.)* |
+| C4 | **Elke graad is 3 jaar** (`aksies.js:363`). Werklik: BCom 3, BEng 4, LLB 4, MBChB 6, BEd 4. | ✅ `jare` by elke inskrywing in `STUDIES`: MBChB 6, BIng 4, LLB 4, BEd 4, BVerpl 4, BRek 3, BCom 3, BSc 3, BA 3. Elke program het ook sy `vol`-naam (BRek, MBChB, LLB …) wat in die keuselys wys. Die LLB en die MBChB is nou voorgraads, soos in SA — `kwalifikasies()` in `aksies.js` laat die Prokureur- en Geneesheer-poste langs die ou nagraadse pad **of** die nuwe voorgraadse pad kom, sodat niks breek. Die volle opruiming van die Amerikaanse "Mediese Skool"/"Regskool" bly C5. |
+| C5 | **Medies en Regte is Amerikaans gemodelleer.** `NAGRAADS` het 'n "Mediese Skool" en "Regskool" ná 'n graad. In SA is MBChB en LLB voorgraads — direk ná matriek. |  |
+| C6 | **Geen beroepsregistrasie of articles.** 'n CA(SA) moet SAICA-articles doen, 'n dokter moet internskap + community service doen, 'n ingenieur registreer by ECSA. Nou is 'n graad genoeg. |  |
+| C7 | **Geen NSFAS.** Die enigste beurs is outomaties as `slim>=82` (`aksies.js:355`). NSFAS is die werklike roete vir die meerderheid; nodig: inkomste-toets, aansoek, en die kans dat die geld laat betaal word. |  |
+| C8 | **Geen studentelening of studenteskuld.** |  |
+| C9 | **Jy kan nie 'n jaar druip of uitgegooi word nie.** Universiteit is outomaties sukses solank jy die klasgeld betaal. Nodig: jaarlikse slaagkans op grond van `slim` + hoe hard jy studeer, en "academic exclusion". | ✅ `slaagKans()`, `studieJaar()`, `druipJaar()` en `uitgesluit()` in `lewe.js`. Elke jaar is daar 'n slaagkans: 64% as basis, plus 0,8 per punt slimheid bo 50, **+16 as jy daardie jaar "Studeer harder" gedoen het**, −8 in jou eerste jaar, −7 as jy deeltyds werk, −8 as jou gesondheid onder 40 is, en −1,2 vir elke APS-punt wat die graad bo 28 vra (BIng −6, MBChB −12). Druip jy, herhaal die jaar en betaal jy weer klasgeld; twee druipjare en jou beurs is weg; **drie en jy word akademies uitgesluit** (studies weg, aansien weg, 20 geluk weg). Twee uitsluitings en geen universiteit neem jou weer. Die kans wys op die Opleiding-kaart, so die speler sien wat studeer werd is. Oor 400 studente per geval: BCom met slimheid 50 wat nooit studeer 88% gegradueer / 12% uitgesluit; dieselfde student wat elke jaar studeer 99% / 1%; BEd met slimheid 40 wat nooit studeer 71% / 29%; MBChB met slimheid 90 wat studeer 100% in gemiddeld 6,2 jaar. |
+| C10 | **Geen koshuis, geen res-lewe, geen pendel.** Klasgeld is die enigste koste; in die werklikheid is verblyf dikwels meer as die klasgeld. |  |
+| C11 | **Geen TVET-kolleges, leerlingskappe of ambagte.** Daar is 'n Tegniese Hoërskool in die spel maar geen pad na 'n ambagsertifikaat (elektrisiën, loodgieter, sweiser) nie — 'n groot SA-loopbaanroete wat heeltemal ontbreek. |  |
+| C12 | **Geen onderwysersopleiding-, polisie- of weermag-opleidingsfase.** Jy word sommer aangestel. |  |
+| C13 | **Geen skoolgeld vir jou eie kinders**, en geen keuse van skool vir hulle. |  |
+| C14 | **Hoërskool het geen sport, kultuur, prefek of leierskap nie** — net `klasGebeurtenis()` met vier uitkomste (`lewe.js:272`). Nodig: eerste span, debat, orkes, RSR, matriekafskeid as 'n keuse (nie net 'n gebeurtenis nie). |  |
+| C15 | **Die jaar ná Graad 12 is leeg.** Op 18 kry jy net jou uitslag en doen niks. Nodig: 'n gap-jaar-keuse (werk, reis, studeer, weermag). |  |
 
 ---
 
 ## D. Werk en loopbaan (P1)
 
-| # | Verandering |
-|---|---|
-| D1 | **Net 27 beroepe, en geen van hulle het 'n loopbaanpad nie.** `VLAK_NAAM` gee vier bevorderingsvlakke binne dieselfde pos, maar jy kan nooit van veld verander of oorgaan na bestuur nie. |
-| D2 | **Geen selfstandige werk.** Geen eie besigheid, geen vryskut, geen side hustle — niks waar jy self 'n inkomste bou. (Vir jou eie website-besigheid sou dit die interessantste deel van die spel wees.) |
-| D3 | **Geen deeltydse of vakansiewerk as stelsel.** Daar is net een lukrake gebeurtenis (`gebeure.js:41`). Nodig: 'n aparte lys deeltydse werke (pakhulp, kelner, nagskof) met min ure, lae betaling, 'n geluk-/slim-koste, en wat toelaatbaar is terwyl jy op skool is. |
-| D4 | **Geen werkloosheid as toestand.** Jy kry drie onderhoude per jaar en dis dit; geen UIF, geen "hoe lank laas gewerk"-penalty, geen ekonomiese afswaai wat werk skaars maak. |
-| D5 | **Geen afleggings (retrenchment).** Jy word net afgedank as jou prestasie onder 20 val (`lewe.js:299`). Geen maatskappy wat toemaak, geen herstrukturering. |
-| D6 | **Salaris groei onbeperk** teen 4,5% per jaar saamgestel. 'n UH wat op 35 begin en 95 word, verdien uiteindelik ± R27 miljoen per jaar — in 'n spel sonder inflasie. Nodig: 'n plafon per pos. |
-| D7 | **Geen voordele:** geen mediese fonds, geen pensioenbydrae, geen bonus, geen aandele-opsies, geen maatskappymotor. |
-| D8 | **Geen werksverhoudinge behalwe 'n baas en 2–4 kollegas.** Geen bevordering ten koste van 'n kollega, geen mentor, geen kantoorpolitiek, geen boelie-baas, geen teistering as 'n keuse-gebeurtenis. |
-| D9 | **Gesondheid beïnvloed nie werk nie.** Jy kan met `gesondheid: 5` 'n chirurg bly. Geen siekteverlof, geen burnout, geen ongeskiktheid (disability). |
-| D10 | **Geen werk in die buiteland of emigrasie.** `s.dorp` word by geboorte gestel en verander nooit — 'n baie groot SA-tema wat ontbreek. |
-| D11 | **Geen aftree-oorgang.** Pensioen is 'n enkele knoppie op 60. Geen vroeë aftrede, geen deeltydse aftrede, geen besluit oor jou pensioenfonds (lewensannuïteit vs living annuity). |
+**Fase 3 (D3, D6) is ✅ KLAAR (23 Oktober 2026).** Nuwe velde in `s`: `deeltyds` en
+`deeltydsJare`, plus `plafon` op `s.beroep` — almal met verstekwaardes in
+`vulNuweVelde()`. Is 'n ou lewe se salaris al bo sy pos se plafon, word dit
+by die volgende jaar afgesny en die spel sê dit in die log.
+
+| # | Verandering | Gedoen |
+|---|---|---|
+| D1 | **Net 27 beroepe, en geen van hulle het 'n loopbaanpad nie.** `VLAK_NAAM` gee vier bevorderingsvlakke binne dieselfde pos, maar jy kan nooit van veld verander of oorgaan na bestuur nie. |  |
+| D2 | **Geen selfstandige werk.** Geen eie besigheid, geen vryskut, geen side hustle — niks waar jy self 'n inkomste bou. (Vir jou eie website-besigheid sou dit die interessantste deel van die spel wees.) |  |
+| D3 | **Geen deeltydse of vakansiewerk as stelsel.** Daar is net een lukrake gebeurtenis (`gebeure.js:41`). Nodig: 'n aparte lys deeltydse werke (pakhulp, kelner, nagskof) met min ure, lae betaling, 'n geluk-/slim-koste, en wat toelaatbaar is terwyl jy op skool is. | ✅ `DEELTYDS` in `data.js` plus `deeltydsJaar()` in `lewe.js` en `neemDeeltyds()`/`losDeeltyds()` in `aksies.js`. Ses werke met min ure en lae betaling: pakhulp by die supermark (R24 000/jaar, 16+), Desember-vakansiewerk (R12 000), tutor (R26 000, slimheid 62+, en dit **gee** jou slim), barista (R34 000), kelner oor naweke (R44 000, die wenke wissel 80–135%), nagskof by die vulstasie (R58 000, maar −5 geluk, −4 slim en −5 gesondheid per jaar). Jy mag dit doen terwyl jy op skool **of** op universiteit is; dit val weg sodra jy voltyds begin werk, in die tronk beland of op straat is, en net een op 'n keer. Dit bly onder SARS se drempel, dus word dit nie belas nie, maar dit stop jou sakgeld en dit kos jou 7 persentpunte van jou kans om 'n akademiese jaar te slaag (C9) — die werklike afruil. Die ou los "vakansiewerk by 'n kafee"-gebeurtenis geld net nog as jy nie 'n deeltydse werk het nie. |
+| D4 | **Geen werkloosheid as toestand.** Jy kry drie onderhoude per jaar en dis dit; geen UIF, geen "hoe lank laas gewerk"-penalty, geen ekonomiese afswaai wat werk skaars maak. |  |
+| D5 | **Geen afleggings (retrenchment).** Jy word net afgedank as jou prestasie onder 20 val (`lewe.js:299`). Geen maatskappy wat toemaak, geen herstrukturering. |  |
+| D6 | **Salaris groei onbeperk** teen 4,5% per jaar saamgestel. 'n UH wat op 35 begin en 95 word, verdien uiteindelik ± R27 miljoen per jaar — in 'n spel sonder inflasie. Nodig: 'n plafon per pos. | ✅ `plafon` by elke pos in `BEROEPE` plus `pasPlafonToe()` in `lewe.js`. Elke pos het nou 'n boonste punt in vandag se rande: Petroljoggie R110 000, Onderwyser R820 000, Siviele Ingenieur R1,8 m, Sagteware-ontwikkelaar R2,2 m, Prokureur R3,5 m, Chirurg R6 m, Uitvoerende Hoof **R12 m in plaas van R27 m**. Die 4,5%-groei en die bevorderings werk steeds, maar hulle word by die plafon afgesny, en dit geld ook vir "Vra verhoging" (dan sê jou baas jy is op die boonste punt van die skaal). Die Werk-blad wys die plafon, en die spel log dit een keer wanneer jy dit haal. Getoets: 60 jaar in elke een van die 28 poste, 40 keer elk — **0 oortredings van die plafon**. Omdat die spel geen inflasie het (B4 is uitgelaat), bly hierdie getalle vir altyd in 2026-rande sinvol. |
+| D7 | **Geen voordele:** geen mediese fonds, geen pensioenbydrae, geen bonus, geen aandele-opsies, geen maatskappymotor. |  |
+| D8 | **Geen werksverhoudinge behalwe 'n baas en 2–4 kollegas.** Geen bevordering ten koste van 'n kollega, geen mentor, geen kantoorpolitiek, geen boelie-baas, geen teistering as 'n keuse-gebeurtenis. |  |
+| D9 | **Gesondheid beïnvloed nie werk nie.** Jy kan met `gesondheid: 5` 'n chirurg bly. Geen siekteverlof, geen burnout, geen ongeskiktheid (disability). |  |
+| D10 | **Geen werk in die buiteland of emigrasie.** `s.dorp` word by geboorte gestel en verander nooit — 'n baie groot SA-tema wat ontbreek. |  |
+| D11 | **Geen aftree-oorgang.** Pensioen is 'n enkele knoppie op 60. Geen vroeë aftrede, geen deeltydse aftrede, geen besluit oor jou pensioenfonds (lewensannuïteit vs living annuity). |  |
 
 ---
 
@@ -270,7 +285,7 @@ nooit. Dit is dus moeilik maar uitkombaar, en nie ’n stadige dood nie.
 
 ~~**Fase 2 — geld reg kry (B1, B2, B5, B6, B13, B14, B17).**~~ **✅ KLAAR (22 Oktober 2026).** Al sewe items is gedoen — sien die **Gedoen**-kolom in afdeling B. Geld beteken nou iets: jy moet êrens bly en daarvoor betaal, 'n huis koop jy met 'n verband oor 20 of 30 jaar, spaargeld groei en skuld vreet. *Inflasie (B4) is doelbewus uitgelaat*, soos beplan.
 
-**Fase 3 — skool en werk reg kry (C1, C2, C4, C9, D3, D6).** Vakkeuses + APS + regte graadlengtes + deeltydse werk.
+~~**Fase 3 — skool en werk reg kry (C1, C2, C4, C9, D3, D6).**~~ **✅ KLAAR (23 Oktober 2026).** Al ses items is gedoen — sien die **Gedoen**-kolomme in afdelings C en D. Skool beteken nou iets: in Graad 10 kies jy vakke, en sonder Wiskunde is Ingenieurswese, Geneeskunde, Rekeningkunde en Rekenaarwetenskap vir altyd toe; matriek gee ’n APS uit 42 in plaas van een persentasie; ’n graad is so lank as wat hy regtig is; jy kan ’n jaar druip en uitgeskop word; daar is deeltydse werk vir wie nog op skool is; en ’n salaris groei nie meer verby sy pos se plafon nie.
 
 **Fase 4 — gesin en gesondheid (E1, E4, E7, E12, F1, F2, F4).** Grootouers, kinders wat regtig lewe, siektes.
 
@@ -286,13 +301,25 @@ nooit. Dit is dus moeilik maar uitkombaar, en nie ’n stadige dood nie.
 4. **B18 + B19 (23 Okt 2026)** — die bodem van die ekonomie: die spel vra jou om te
    verkoop voordat die balju kom, en wie niks oor het nie, beland op straat met ’n egte
    pad terug. Sien die dakloosheid-blok in afdeling B.
+5. **Fase 3 (C1, C2, C4, C9, D3, D6)** — vakkeuses in Graad 10, die APS uit 42,
+   regte graadlengtes, druip en akademiese uitsluiting, deeltydse werk, en ’n
+   plafon per pos op salarisse.
 
-**Volgende aan die beurt: Fase 3** (C1, C2, C4, C9, D3, D6 — vakkeuses, APS,
-regte graadlengtes, druip, deeltydse werk en 'n plafon op salarisse).
+**Volgende aan die beurt: Fase 4** (E1, E4, E7, E12, F1, F2, F4 — grootouers,
+kinders wat regtig lewe, siektes).
 
-⭐ **Begin Fase 3 by D6.** Salarisse groei 4,5% per jaar sonder plafon, so 'n
-onderwyser wat op 24 begin, verdien op 63 sowat R6,8 miljoen per jaar en sterf met
-meer as R100 miljoen. Dis 'n ou probleem (D6), maar noudat rente en 'n pensioenfonds
-daarop saamgestel word, is dit die enigste ding wat nog maak dat groot bedrae niks
-beteken nie. Die res van die ekonomie is gesond: oor 600 getoetste lewens het 'n
-verstandige speler 1% kans op 'n boedelbevel en 'n roekelose een 4%.
+⭐ **Twee dinge wat Fase 3 oopgelaat het en wat die moeite werd is om volgende te
+doen.** Eerstens **C3** (die drie NSC-slaagvlakke): die APS is nou daar, maar ’n
+universiteit vra in die werklikheid ook ’n *Bachelor's pass*, en `s.skool.uitslag`
+hou al elke vak se vlak, so dit is ’n klein stuk werk met ’n groot effek op
+akkuraatheid. Tweedens **C5** (Medies en Regte is nog Amerikaans gemodelleer): die
+LLB en die MBChB staan nou as voorgraadse grade in `STUDIES`, maar die ou “Mediese
+Skool” en “Regskool” staan nog langs hulle in `NAGRAADS`. Dit werk, en niks breek
+nie, maar dit is twee paaie na dieselfde pos — C5 moet die ou een uithaal.
+
+⚠ **Een ding om in die oog te hou:** `slim` groei elke skooljaar (skoolbonus plus
+“Studeer harder” plus gebeure), so ’n speler wat net “Studeer harder” druk, sit op
+matriek dikwels met slimheid 95+ en ’n APS van 42. Dit is nie nuut in Fase 3 nie —
+die ou persentasie-gemiddeld het ook 100% gehaal — maar noudat die APS die regte
+deure oopsluit, is dit die volgende plek waar die spel te maklik voel. ’n Plafon op
+hoeveel slim ’n skooljaar kan gee, sou dit regmaak.

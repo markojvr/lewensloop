@@ -49,6 +49,8 @@ var AKTIWITEITE=[
   {id:'studeer', g:'Skool', n:'Studeer harder', e:'\u{1F4D6}', koste:0, min:6, maks:1,
    as:function(){ return ['laerskool','hoerskool','universiteit','nagraads'].indexOf(s.skool.vlak)>=0; },
    doen:function(){ s.slim=klem(s.slim+tussen(4,9)); s.geluk=klem(s.geluk-4);
+     /* C9 — op universiteit is dit die ywer waarop jou slaagkans hang. */
+     if(studeerTans()) s.skool.ywer = 1;
      return ['Jy het laat gestudeer. Dit sal betaal.','skool']; }},
   {id:'bank_klas', g:'Skool', n:'Bank die klas', e:'\u{1F60E}', koste:0, min:13, maks:1,
    as:function(){ return s.skool.vlak==='hoerskool'; },
@@ -397,15 +399,19 @@ function vraFamilieHulp(v){
 
 /* ---------- Werk ---------- */
 var EDU_TEKS=['','Matriek nodig','Universiteitsgraad nodig','Nagraadse kwalifikasie nodig'];
+/* Alles wat jy klaargemaak het: jou grade en jou nagraadse studies. Die
+   LLB en die MBChB kan nou langs albei paaie kom (sien STUDIES), daarom
+   soek 'gr' in albei lyste. */
+function kwalifikasies(){ return s.skool.grade.concat(s.skool.nagraads); }
 function werkVereis(j){
-  /* A15 — jy kan nie voltyds werk terwyl jy nog op skool is nie. Die
-     stelsel vir deeltydse werk en vakansiewerk is item D3 vir later. */
+  /* A15 — jy kan nie voltyds werk terwyl jy nog op skool is nie. Vir
+     deeltydse werk en vakansiewerk, sien DEELTYDS (D3) hieronder. */
   if(s.skool.vlak==='laerskool' || s.skool.vlak==='hoerskool')
     return 'Jy is nog op skool — voltydse werk moet wag';
   if(s.ouderdom < j.min) return 'Jy moet ' + j.min + ' jaar oud wees';
   if(eduVlak() < j.edu) return EDU_TEKS[j.edu];
-  if(j.gr && !j.gr.some(function(g){ return s.skool.grade.indexOf(g)>=0; }))
-    return 'Graad in ' + j.gr.join(' of ') + ' nodig';
+  if(j.gr && !j.gr.some(function(g){ return kwalifikasies().indexOf(g)>=0; }))
+    return 'Kwalifikasie in ' + j.gr.join(' of ') + ' nodig';
   if(j.na && !j.na.some(function(g){ return s.skool.nagraads.indexOf(g)>=0; }))
     return j.na.join(' of ') + ' nodig';
   if(s.slim < j.slim) return 'Slimheid ' + j.slim + '+ nodig';
@@ -434,10 +440,16 @@ function doenAansoek(id){
      onderhoud. ’n NGO se adres en ’n ID maak die groot verskil. */
   if(s.dakloos) kansie *= (s.dakloos.ngo ? DAKLOOS_NGO_KANS : DAKLOOS_WERKKANS);
   if(kans(kansie)){
-    s.beroep = {id:j.id, t:j.t, basis:j.s, salaris:j.s, vlak:0, prestasie:tussen(45,68), jare:0, k:j.k};
+    s.beroep = {id:j.id, t:j.t, basis:j.s, salaris:j.s, vlak:0, prestasie:tussen(45,68), jare:0,
+      k:j.k, plafon:j.plafon||0};
     s.beroepeGehad.push(j.t);
     s.geluk = klem(s.geluk+12);
     noteer('Jy is aangestel as ' + beroepTitel() + ' teen ' + geld(j.s) + ' per jaar!','werk');
+    /* D3 — voltydse werk en 'n Saterdagwerk gaan nie saam nie. */
+    if(s.deeltyds){
+      noteer('Jy het jou deeltydse werk by ' + s.deeltyds.t + ' laat staan.','werk');
+      s.deeltyds = null;
+    }
     maakKollegas(); wenk('Jy het die werk gekry!');
   } else {
     s.geluk = klem(s.geluk-5);
@@ -458,12 +470,19 @@ function werkAksie(wat){
   }
   else if(wat==='verhoging'){
     if(s.gedoen.verhoging){ wenk('Jy het al vanjaar gevra.'); return; }
+    /* D6 — bo die plafon van jou pos is daar niks meer om te vra nie.
+       Wil jy meer verdien, moet jy 'n ander pos kry. */
+    if(s.beroep.plafon && s.beroep.salaris >= s.beroep.plafon){
+      wenk('Jy verdien reeds die boonste punt van die skaal vir hierdie pos.');
+      return; }
     s.gedoen.verhoging=1;
     if(s.beroep.prestasie>=58 && kans(40 + (s.beroep.prestasie-58))){
       var op = tussen(8,24);
       s.beroep.salaris = Math.round(s.beroep.salaris * (1+op/100));
-      noteer('Jy het ’n ' + op + '% verhoging gekry! Nou ' + geld(s.beroep.salaris) + '.','geld');
-      wenk('Verhoging van ' + op + '%!');
+      var gesny = pasPlafonToe();
+      noteer('Jy het ’n ' + op + '% verhoging gekry! Nou ' + geld(s.beroep.salaris) +
+        (gesny ? ' — die boonste punt van die skaal.' : '.'),'geld');
+      wenk(gesny ? 'Verhoging tot by die plafon.' : 'Verhoging van ' + op + '%!');
     } else {
       s.beroep.prestasie = klem(s.beroep.prestasie-6); s.geluk=klem(s.geluk-5);
       noteer('Jou baas het die verhoging geweier.','sleg'); wenk('Geweier.');
@@ -474,6 +493,43 @@ function werkAksie(wat){
     s.beroep=null; losWerkMense(); s.geluk=klem(s.geluk+4); wenk('Jy het bedank.');
   }
   stoor(); renderAlles();
+}
+
+/* ==========================================================================
+   D3 — DEELTYDSE WERK
+   Die ander kant van A15: voltydse werk is toe terwyl jy op skool is,
+   maar 'n Saterdagwerk of 'n Desember-vakansiewerk is nie. Dit betaal
+   min, kos jou geluk of punte, en jy mag net een op 'n keer hê.
+   ========================================================================== */
+function neemDeeltyds(id){
+  var j = deeltydsVan(id);
+  if(!j || !s.lewe) return;
+  if(s.deeltyds){ wenk('Jy het al ’n deeltydse werk.'); return; }
+  var rede = deeltydsVereis(j);
+  if(rede){ wenk(rede + '.'); return; }
+  if((s.gedoen.deeltyds||0) >= DEELTYDS_POGINGS){
+    wenk(DEELTYDS_POGINGS + ' plekke per jaar is al waarby jy kom.'); return; }
+  s.gedoen.deeltyds = (s.gedoen.deeltyds||0) + 1;
+  /* Hierdie werke is maklik om te kry; jou voorkoms en 'n bietjie
+     slimheid maak die verskil, en 'n rekord maak dit moeiliker. */
+  var kansie = 74 + (s.voorkoms-50)/5 + (s.slim-50)/8;
+  if(s.rekord.length) kansie -= 20;
+  if(kans(kansie)){
+    s.deeltyds = {id:j.id, t:j.t, s:j.s, jare:0};
+    s.geluk = klem(s.geluk+5);
+    noteer('Jy het deeltydse werk gekry: ' + j.t + ' (' + geld(j.s) + ' per jaar).','werk');
+    wenk('Jy het die werk gekry!');
+  } else {
+    noteer('Hulle het iemand anders geneem vir ' + j.t.toLowerCase() + '.','sleg');
+    wenk('Afgekeur. Probeer elders.');
+  }
+  stoor(); renderAlles();
+}
+function losDeeltyds(){
+  if(!s.deeltyds){ wenk('Jy het nie deeltydse werk nie.'); return; }
+  noteer('Jy het jou deeltydse werk by ' + s.deeltyds.t + ' opgese.','werk');
+  s.deeltyds = null; s.geluk = klem(s.geluk+3);
+  wenk('Jy het opgese.'); stoor(); renderAlles();
 }
 
 /* ==========================================================================
@@ -571,40 +627,85 @@ function trekPensioenUit(){
 }
 
 /* ---------- Studie ---------- */
+/* C2 — wat hierdie universiteit vir hierdie program vra: die program se
+   eie APS plus wat die plek self bo-op vra (UCT vra vier meer as UP vir
+   dieselfde graad; UNISA vra vyf minder). */
+function apsVereis(st, u){ return klem(st.aps + (u.apsEkstra||0), 14, APS_MAKS); }
+/* C1 — die vakvereistes. Jou vlak in 'n vak wat jy nooit gehad het nie
+   is 0, en daarom is dit hier waar die Graad 10-keuse die deur toemaak. */
+/* 'a, b en c' in plaas van 'a en b en c'. */
+function lysEn(lys, woord){
+  if(lys.length<2) return lys.join('');
+  return lys.slice(0,-1).join(', ') + ' ' + (woord||'en') + ' ' + lys[lys.length-1];
+}
+function vakTeKort(st){
+  var k, mis = [];
+  if(st.vak) for(k in st.vak) if(vakVlak(k) < st.vak[k]) mis.push(k + ' op vlak ' + st.vak[k]);
+  if(mis.length) return lysEn(mis) + ' nodig';
+  if(st.ofVak){
+    var oor = false, lys = [];
+    for(k in st.ofVak){ lys.push(k + ' vlak ' + st.ofVak[k]); if(vakVlak(k) >= st.ofVak[k]) oor = true; }
+    if(!oor) return lysEn(lys, 'of') + ' nodig';
+  }
+  return null;
+}
+/* Hoekom is hierdie program vir jou toe? null beteken jy kom in. */
+function studieToe(st, u){
+  if(u.nie && u.nie.indexOf(st.n)>=0) return 'Word nie hier aangebied nie';
+  var nodig = apsVereis(st, u);
+  if((s.skool.aps||0) < nodig) return 'APS ' + nodig + ' nodig, jy het ' + (s.skool.aps||0);
+  return vakTeKort(st);
+}
+function oopProgramme(u){
+  return STUDIES.filter(function(st){ return !studieToe(st, u); });
+}
 function wysStudies(){
   if(!s.skool.matriek){ wenk('Jy het matriek nodig.'); return; }
   if(s.ouderdom<18){ wenk('Jy moet 18 wees.'); return; }
   if(s.skool.vlak==='universiteit'||s.skool.vlak==='nagraads'){ wenk('Jy studeer alreeds.'); return; }
+  /* C9 — na twee akademiese uitsluitings is die deur toe. */
+  if((s.skool.uitgeskop||0) >= UITSLUIT_MAKS){
+    wenk('Na ' + UITSLUIT_MAKS + ' uitsluitings neem geen universiteit jou weer nie.'); return; }
+  var aps = s.skool.aps||0;
   var opsies = UNIES.map(function(u){
-    var kan = s.skool.punte >= u.punte;
-    return { t:u.n, klas: kan?'':'grys',
-      sub: geld(u.koste) + ' per jaar \u00b7 vereis ' + u.punte + '% in matriek' +
-        (kan ? '' : ' \u2014 jy het ' + s.skool.punte + '%'),
-      doen:function(){ if(!kan){ wenk('Jou matriekpunt is te laag vir ' + u.n + '.'); return; }
+    var oop = oopProgramme(u).length;
+    return { t:u.n, klas: oop?'':'grys',
+      sub: geld(u.koste) + ' per jaar \u00b7 ' + (oop
+        ? oop + ' van ' + STUDIES.length + ' programme is oop vir jou'
+        : 'geen program is oop vir \u2019n APS van ' + aps),
+      doen:function(){ if(!oop){ wenk('Jou APS is te laag vir alles wat ' + u.n + ' aanbied.'); return; }
         kiesStudie(u); } };
   });
   opsies.push({t:'Toemaar', klas:'grys', doen:function(){ sluitModaal(); }});
-  wysModaal('Universiteit','Waar wil jy studeer?', opsies);
+  wysModaal('Universiteit','Jou APS is ' + aps + ' uit ' + APS_MAKS +
+    '. Waar wil jy studeer?', opsies);
 }
 function kiesStudie(u){
-  var beurs = (s.slim>=82 || s.skool.punte>=80);
+  var aps = s.skool.aps||0;
+  /* 'n Volle beursie kom van 'n APS wat uitstaan, of van pure slimheid.
+     NSFAS en studenteskuld is C7 en C8 vir later. */
+  var beurs = (aps>=38 || s.slim>=82);
   var opsies = STUDIES.map(function(st){
-    var kan = s.slim >= st.slim;
-    return { t:st.n, klas: kan?'':'grys', sub: kan ? 'Jy kwalifiseer' : 'Slimheid ' + st.slim + '+ nodig',
+    var rede = studieToe(st, u);
+    return { t:st.n + ' \u2014 ' + st.vol, klas: rede?'grys':'',
+      sub: rede ? rede : st.jare + ' jaar \u00b7 APS ' + apsVereis(st,u) + ' nodig, jy het ' + aps,
       doen:function(){
-        if(!kan){ wenk('Jy is nie vir ' + st.n + ' aanvaar nie.'); return; }
+        if(rede){ wenk(st.n + ': ' + rede + '.'); return; }
         var koste = beurs ? 0 : u.koste;
         s.uni = u; s.aansien = u.aansien;
-        s.skool = Object.assign(s.skool, {vlak:'universiteit', studie:st.n, jareOor:3,
-          koste:koste, beurs:beurs});
-        noteer('Jy is by ' + u.n + ' aanvaar vir ' + st.n +
-          (beurs ? ' met \u2019n volle beurs!' : ' (' + geld(koste) + ' per jaar).'),'skool');
+        /* C4 — elke graad is nou sy regte lengte lank. */
+        s.skool = Object.assign(s.skool, {vlak:'universiteit', studie:st.n,
+          jare:st.jare, jareOor:st.jare, koste:koste, beurs:beurs,
+          herhaal:0, geslaagJare:0, ywer:0});
+        noteer('Jy is by ' + u.n + ' aanvaar vir ' + st.vol + ' in ' + st.n + ' \u2014 ' +
+          st.jare + ' jaar' + (beurs ? ', met \u2019n volle beurs!'
+            : ' teen ' + geld(koste) + ' per jaar.'),'skool');
         maakKlasmaats(u.n);
         sluitModaal(); stoor(); renderAlles();
       }};
   });
   opsies.push({t:'Terug', klas:'grys', doen:function(){ wysStudies(); }});
-  wysModaal(u.n, (beurs ? 'Jou punte is goed genoeg vir \u2019n volle beurs! '
+  wysModaal(u.n, 'Jou APS is ' + aps + '. ' + (beurs ? 'Dit is goed genoeg vir \u2019n volle beurs! '
     : 'Klasgeld is ' + geld(u.koste) + ' per jaar. ') + 'Wat wil jy studeer?', opsies);
 }
 
@@ -618,7 +719,8 @@ function wysNagraads(){
       doen:function(){
         if(!kan){ wenk('Jy kwalifiseer nie: slimheid ' + ng.slim + '+' +
           (ng.vereis?' en ’n graad in ' + ng.vereis.join(' of '):'') + '.'); return; }
-        s.skool = Object.assign(s.skool, {vlak:'nagraads', studie:ng.n, jareOor:ng.jare, koste:ng.koste, beurs:false});
+        s.skool = Object.assign(s.skool, {vlak:'nagraads', studie:ng.n, jare:ng.jare,
+          jareOor:ng.jare, koste:ng.koste, beurs:false, herhaal:0, geslaagJare:0, ywer:0});
         noteer('Jy is vir ' + ng.n + ' ingeskryf.','skool');
         sluitModaal(); stoor(); renderAlles();
       }};
@@ -629,6 +731,8 @@ function wysNagraads(){
 function losSkool(){
   if(s.skool.vlak==='universiteit'||s.skool.vlak==='nagraads'){
     s.skool.vlak='klaar'; s.skool.studie=null; s.geluk=klem(s.geluk-6);
+    s.skool.jareOor=0; s.skool.jare=0; s.skool.herhaal=0;
+    s.skool.geslaagJare=0; s.skool.ywer=0;
     noteer('Jy het jou studies gestaak.','sleg'); stoor(); renderAlles(); return;
   }
   if(s.ouderdom<16){ wenk('Jy mag eers op 16 die skool verlaat.'); return; }
