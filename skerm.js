@@ -42,7 +42,9 @@ function kiesPersoon(titel, teks, filter, terugroep, alleenT){
   kiesLys(titel, teks, opsies);
 }
 function saamFilter(v){
-  return ['vriend','lief','eggenoot','broer','suster','ma','pa','seun','dogter','klasmaat','kollega']
+  return ['vriend','lief','eggenoot','broer','suster','ma','pa','seun','dogter','klasmaat','kollega',
+    /* H1 — die familie wat met die generasiespel bykom. */
+    'oom','tante','neef','niggie','kleinkind']
     .indexOf(v.tipe) >= 0;
 }
 /* Betaal self, of (as kind) vra jou ouers. ouersOutomaties = hulle betaal sonder om te vra. */
@@ -92,7 +94,12 @@ function wysGrafskrif(){
   var jare = s.ouderdom;
   var h = '<div class="groot">\u{1F56F}</div>'+
     '<div class="m-titel">' + veilig(s.naam + ' ' + s.van) + '</div>'+
-    '<div class="m-teks" style="margin-bottom:12px">Oorlede op ' + jare + ' jaar weens ' + s.oorsaak + '.</div>'+
+    '<div class="m-teks" style="margin-bottom:12px">Oorlede op ' + jare + ' jaar weens ' + s.oorsaak + '.' +
+      /* H1 — die hoeveelste lewe in hierdie familie. */
+      ((s.generasie||1) > 1 ? '\n' + generasieWoord(s.generasie) + ' geslag van die ' +
+        veilig(s.van) + '-familie.' : '') + '</div>'+
+    ((s.familielyn||[]).length ? '<div class="eind-stat"><span>Voor jou</span><b>' +
+      veilig(familielynTeks()) + '</b></div>' : '')+
     '<div class="eind-stat"><span>Netto waarde</span><b>' + geld(netoWaarde()) + '</b></div>'+
     '<div class="eind-stat"><span>Totaal verdien</span><b>' + geld(s.totaalVerdien) + '</b></div>'+
     '<div class="eind-stat"><span>Laaste beroep</span><b>' +
@@ -114,6 +121,16 @@ function wysGrafskrif(){
     (kindOpsomming() ? '<div class="eind-stat"><span>Jou kinders</span><b>' +
       veilig(kindOpsomming()) + '</b></div>' : '')+
     '<div class="eind-stat"><span>Troues</span><b>' + s.troues + '</b></div>'+
+    /* H4 — wat jy self gebou het. */
+    (s.besigheid ? '<div class="eind-stat"><span>Jou besigheid</span><b>' +
+      veilig(s.besigheid.naam) + ' (' + s.besigheid.jare + ' jaar, wins ' +
+      kortGeld(s.besigheid.wins||0) + ')</b></div>' : '')+
+    ((s.besighedeGehad||[]).length ? '<div class="eind-stat"><span>Besighede gehad</span><b>' +
+      veilig(s.besighedeGehad.map(function(q){ return q.n + ' (' + q.einde + ')'; }).join(', ')) +
+      '</b></div>' : '')+
+    /* H3 — die vaardighede wat jy oor 'n leeftyd opgebou het. */
+    (vaardigOpsomming() ? '<div class="eind-stat"><span>Vaardighede</span><b>' +
+      veilig(vaardigOpsomming()) + '</b></div>' : '')+
     /* F1/F2 — met watter toestande het jy geleef, en wie het betaal. */
     (chronies().length ? '<div class="eind-stat"><span>Chroniese toestande</span><b>' +
       chronies().map(function(x){ var tt=toestandVan(x.id); return tt?tt.n:''; }).join(', ') +
@@ -134,13 +151,56 @@ function wysGrafskrif(){
       s.dakloosJare + '</b></div>' : '')+
     '<div class="eind-stat"><span>Geluk by die einde</span><b>' + s.geluk + '%</b></div>';
   var m = el('modaal');
+  /* H1 — is daar 'n lewende kind, kan die speler as hom voortgaan. Die
+     boedel is klaar verdeel voordat hy kies, sodat hy sien wat elke
+     kind sou erf. */
+  var kinders = lewendeKinders();
+  if(kinders.length) h += '<div class="m-teks" style="margin-top:10px">Jou lyn hou aan: ' +
+    'kies een van jou kinders en speel sy lewe verder, met sy deel van die boedel.</div>';
   m.innerHTML = '<div class="mk graf">' + h + '<div class="m-lys" id="m-lys"></div></div>';
+  kinders.sort(function(a,b){ return b.ouderdom - a.ouderdom; });
+  kinders.slice(0,6).forEach(function(v){
+    var deel = erfDeel(v);
+    var kb = document.createElement('button');
+    kb.className = 'knop groen';
+    kb.innerHTML = 'Gaan voort as ' + veilig(v.naam) +
+      '<small>' + v.ouderdom + ' jaar \u00b7 ' + veilig(kindKort(v)) + ' \u00b7 erf ' +
+      kortGeld(deel.kontant + (deel.bates[0] ? deel.bates[0].waarde : 0)) +
+      (deel.bates.length ? ' met ' + veilig(deel.bates[0].n) : '') +
+      (deel.besigheid ? ' en die besigheid' : '') + '</small>';
+    kb.onclick = function(){
+      var id = v.id;
+      sluitModaal();
+      if(gaanVoortAsKind(id)){
+        el('verjaar').style.display='flex';
+        renderAlles(); naOnder();
+        wenk('Jy is nou ' + s.naam + ', die ' + generasieWoord(s.generasie) + ' geslag.');
+      } else wysBeginskerm();
+    };
+    el('m-lys').appendChild(kb);
+  });
   var b = document.createElement('button');
-  b.className='knop'; b.textContent='Begin ’n nuwe lewe';
+  b.className = kinders.length ? 'knop grys' : 'knop';
+  b.textContent='Begin ’n nuwe lewe';
   b.onclick = function(){ sluitModaal(); try{ localStorage.removeItem(SLEUTEL); }catch(e){} wysBeginskerm(); };
   el('m-lys').appendChild(b);
   m.classList.add('wys');
   el('verjaar').style.display='none';
+}
+/* H1 — een kort reël oor waar 'n kind in sy lewe staan, vir die knoppie. */
+function kindKort(v){
+  var k = v.kl || kindLewe(v);
+  if(k.beroep) return k.beroep.t.toLowerCase();
+  if(k.skool.vlak==='universiteit') return 'studeer ' + k.skool.studie;
+  if(k.skool.vlak==='laerskool' || k.skool.vlak==='hoerskool') return 'Graad ' + k.skool.graad;
+  if(v.ouderdom<6) return 'nog klein';
+  return k.skool.matriek ? 'matriek, werk nie' : 'geen matriek';
+}
+/* H3 — die vaardighede wat saam met jou gaan, vir die grafsteen. */
+function vaardigOpsomming(){
+  return myVaardighede().filter(function(x){ return vaardigVlak(x.id)>0; })
+    .map(function(x){ return x.n.toLowerCase() + ' (vlak ' + vaardigVlak(x.id) + ')'; })
+    .join(', ');
 }
 
 var beginGeslag = '?';

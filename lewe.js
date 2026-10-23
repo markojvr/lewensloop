@@ -51,7 +51,13 @@ function nuweLewe(naam, van, geslag){
     /* E4 — voorbehoeding en hoeveel swangerskappe daar was */
     voorbehoeding:'geen', swangerskappe:0,
     /* F9 — jou familiegeskiedenis, by geboorte gerol */
-    gene:null, kleinkinders:0
+    gene:null, kleinkinders:0,
+    /* H3 — vaardighede en stokperdjies: id -> {vlak, punte, jare, laas} */
+    vaardighede:{},
+    /* H4 — jou eie besigheid, en wat jy al gehad het */
+    besigheid:null, besighedeGehad:[],
+    /* H1 — die hoeveelste lewe in hierdie familie, en wie voor jou was */
+    generasie:1, familielyn:[]
   };
   /* F9 — die gene word heel eerste gerol, want elke ander stelsel kan
      daarna daarna kyk (watter siekte in die familie is, hoe lank jy leef). */
@@ -92,7 +98,10 @@ function rol(v){
     klasmaat:'Klasmaat', kollega:'Kollega', baas:'Jou baas',
     /* E1 en E7 */
     ouma:'Ouma', oupa:'Oupa',
-    kleinkind: v.geslag==='m'?'Kleinseun':'Kleindogter'};
+    kleinkind: v.geslag==='m'?'Kleinseun':'Kleindogter',
+    /* H1 — die generasiespel skuif die familie een plek op: jou pa se
+       broer word jou oom, jou kleinkind se niggie word jou niggie. */
+    oom:'Oom', tante:'Tante', neef:'Neef', niggie:'Niggie'};
   var n = m[v.tipe] || 'Vriend';
   if((v.tipe==='ouma'||v.tipe==='oupa') && v.kant)
     n += v.kant==='ma' ? ' (ma se kant)' : ' (pa se kant)';
@@ -101,11 +110,58 @@ function rol(v){
 /* Afrikaans stem die besitlike vorm met die geslag saam: sy seun, haar
    dogter. Sonder hierdie helper staan daar "Carike het sy graad gekry". */
 function besit(v){ return v && v.geslag==='v' ? 'haar' : 'sy'; }
+
+/* ==========================================================================
+   H14 — VLAE WAT ONTHOU
+   Voor Fase 6 het geen keuse ooit 'n latere gebeurtenis verander nie.
+   Nou skryf 'n keuse 'n vlag in s.vlagge, en 'n gebeurtenis jare later
+   lees dit: die boelie wat jy op tien geslaan het, kom op dertig weer
+   voor; die vriend wat jou geld geskuld het, duik weer op.
+
+   'n Vlag hou drie dinge by: in watter jaar dit gestel is ('o'), hoeveel
+   keer ('keer'), en wat ook al die gebeurtenis daarby wil onthou ('d',
+   gewoonlik 'n naam). Die ou vlae (s.vlagge.gevang, geenPa, aftreeGevra)
+   is gewone getalle — vlag() hanteer albei vorms, sodat ou stoor-data
+   steeds werk.
+   ========================================================================== */
+function stelVlag(naam, data){
+  if(!s.vlagge) s.vlagge = {};
+  var oud = vlag(naam);
+  s.vlagge[naam] = {o:s.ouderdom, keer:(oud?oud.keer:0)+1,
+    d:(data===undefined ? (oud?oud.d:null) : data)};
+  return s.vlagge[naam];
+}
+function vlag(naam){
+  var v = s.vlagge ? s.vlagge[naam] : null;
+  if(!v) return null;
+  if(typeof v === 'object') return v;
+  return {o:0, keer:Number(v)||1, d:null};   /* 'n ou vlag wat net 'n getal was */
+}
+function hetVlag(naam){ return !!vlag(naam); }
+function vlagKeer(naam){ var v = vlag(naam); return v ? v.keer : 0; }
+/* Hoeveel jare terug is dit gestel? -1 as dit nooit gebeur het nie. */
+function vlagJare(naam){ var v = vlag(naam); return v ? s.ouderdom - v.o : -1; }
+function vlagData(naam){ var v = vlag(naam); return v ? v.d : null; }
+/* Die naam wat by 'n vlag gestoor is, of 'n terugval as daar nie een is nie. */
+function vlagNaam(naam, terugval){
+  var d = vlagData(naam);
+  if(d && typeof d === 'object' && d.naam) return d.naam;
+  if(typeof d === 'string' && d) return d;
+  return terugval || kies(MANSNAME);
+}
+function wisVlag(naam){ if(s.vlagge) delete s.vlagge[naam]; }
+/* 'n Vlag wat eers ná 'n paar jaar mag "terugkom": dit moet gestel wees,
+   die jare moet verby wees, en dit mag nie klaar afgehandel wees nie. */
+function vlagRyp(naam, jare){
+  return hetVlag(naam) && vlagJare(naam) >= (jare||1) && !hetVlag(naam + 'Klaar');
+}
+function sluitVlag(naam){ stelVlag(naam + 'Klaar', null); }
 function emoVan(v){
   var m={ma:'\u{1F469}', pa:'\u{1F468}', broer:'\u{1F466}', suster:'\u{1F467}',
     lief:'\u{1F495}', eggenoot:'\u{1F48D}', seun:'\u{1F9D2}', dogter:'\u{1F9D2}',
     klasmaat:'\u{1F392}', kollega:'\u{1F454}', baas:'\u{1F9D1}',
-    ouma:'\u{1F475}', oupa:'\u{1F474}', kleinkind:'\u{1F476}'};
+    ouma:'\u{1F475}', oupa:'\u{1F474}', kleinkind:'\u{1F476}',
+    oom:'\u{1F9D4}', tante:'\u{1F471}', neef:'\u{1F9D1}', niggie:'\u{1F469}'};
   return m[v.tipe] || (v.geslag==='m'?'\u{1F9D1}':'\u{1F469}');
 }
 function maat(){ return s.verhoudings.filter(function(v){
@@ -172,6 +228,15 @@ function vulNuweVelde(){
   if(!s.kleinkinders) s.kleinkinders = 0;               /* E7 */
   if(!s.fiks) s.fiks = 0;
   if(!s.gene) s.gene = rolGene();                       /* F9 */
+  /* Fase 6 — vaardighede, 'n eie besigheid en die generasielyn. 'n Lewe
+     wat voor hierdie fase gestoor is, weet niks daarvan nie; elke veld
+     kry hier sy verstek sodat so 'n lewe steeds laai en verder speel. */
+  if(!s.vaardighede) s.vaardighede = {};                /* H3 */
+  if(s.besigheid===undefined) s.besigheid = null;       /* H4 */
+  if(!s.besighedeGehad) s.besighedeGehad = [];
+  if(!s.generasie) s.generasie = 1;                     /* H1 */
+  if(!s.familielyn) s.familielyn = [];
+  if(!s.vlagge) s.vlagge = {};                          /* H14 */
   /* E7 — 'n ou kind het nog nie 'n eie lewe nie. kindLewe() bou dit
      agteruit uit sy ouderdom, sodat 'n 30-jarige seun nie skielik weer
      in Graad 1 begin nie. E12 doen dieselfde vir 'n eggenoot. */
@@ -197,6 +262,10 @@ function geskiedenisBy(){
 function netoWaarde(){
   var t = s.geld + (s.spaar||0) + s.belegging + (s.pensioenFonds||0) - bondSkuld();
   s.bates.forEach(function(b){ t += b.waarde; });
+  /* H4 — wat iemand vandag vir jou besigheid sou betaal. Die balju en
+     'n egskeiding raak dit nie: dit is nie kontant nie, en sonder jou
+     is dit meestal niks werd. */
+  t += besigheidWaarde();
   return t;
 }
 
@@ -219,6 +288,7 @@ function wordOuer(){
   skoolJaar();
   beroepJaar();
   aftreeJaar();
+  vaardigJaar();                   /* H3 — 'n stokperdjie wat jy laat lê, roes */
   gewoonteJaar();                  /* F4 — drank, rook en dwelms vreet eerste */
   siekteJaar();                    /* F1 — nuwe toestande, en wat hulle doen */
   herstelJaar();                   /* F1/F9 — en dan herstel die liggaam */
@@ -883,8 +953,11 @@ function diereKosteJaar(){
    getalle in data.js onder "EKONOMIE".
    ========================================================================== */
 function finansiesJaar(){
-  var netto = inkomsteJaar();      /* salaris en pensioen, na belasting */
+  besigheidJaar();                 /* H4  — die besigheid se jaar loop eerste, want
+                                      sy wins word saam met jou salaris belas */
+  var netto = inkomsteJaar();      /* salaris, besigheidswins en pensioen, na belasting */
   netto += deeltydsJaar();         /* D3  — deeltydse of vakansiewerk */
+  netto += vaardigInkomsteJaar();  /* H3  — wat 'n stokperdjie self inbring */
   sakgeldJaar();                   /* B14 */
   blyplekJaar(netto);              /* B1  — huur, of by jou ouers */
   bondJaar();                      /* B2  — die huislening */
@@ -907,6 +980,11 @@ function brutoInkomste(){
   var b = 0;
   if(s.beroep) b += s.beroep.salaris;
   if(s.pensioen) b += s.pensioen;
+  /* H4 — die wins van jou besigheid is inkomste soos enige ander: SARS
+     belas dit, die bank tel dit vir 'n verband, en die krediteure kyk
+     daarna. 'n Verlies tel nie as inkomste nie (dit is klaar uit jou
+     sak betaal in besigheidJaar). */
+  b += Math.max(0, besigheidWins());
   return b;
 }
 /* E12 — wat jou eggenoot vanjaar verdien. 'n Huishouding is twee
@@ -930,7 +1008,9 @@ function inkomsteJaar(){
     netto = Math.round(belasbaar * (1 - belastingKoers(belasbaar)));
     s.geld += netto; s.totaalVerdien += netto;
     noteer('Jy het ' + geld(netto) + ' verdien (na belasting' +
-      (bydrae ? ' en jou pensioenbydrae' : '') + ').','geld');
+      (bydrae ? ' en jou pensioenbydrae' : '') + ')' +
+      (besigheidWins()>0 ? ' — jou salaris en ' + s.besigheid.naam + ' se wins saam' : '') +
+      '.','geld');
   }
   /* E12 — SARS belas elke mens apart, dus word haar salaris apart
      bereken en dan by die huishouding se kontant gegooi. */
@@ -1247,6 +1327,8 @@ function lewenskosteJaar(netto){
   var som = basis, m = maat();
   if(m && m.tipe==='eggenoot') som += KOSTE_BASIS * f * KOSTE_MAAT;
   som += kindersTuis() * KOSTE_KIND * f;
+  /* H3 — wie self kook, plant of vang, eet goedkoper. */
+  som *= 1 - vaardigKosSny();
   return Math.round(som);
 }
 function uitgawesJaar(netto){
@@ -1324,7 +1406,9 @@ function pensioenFondsJaar(){
 /* ---------- Beleggings en bates ---------- */
 function beleggingJaar(){
   if(!(s.belegging>0)) return;
-  var r = tussen(-24,34)/100;
+  /* H3 — wie jaarverslae lees en 'n besigheid kan waardeer, kry 'n paar
+     persent meer uit dieselfde mark. */
+  var r = (tussen(-24,34) + vaardigBeleggingBonus())/100;
   var w = Math.round(s.belegging * r);
   s.belegging = Math.max(0, s.belegging + w);
   noteer('Jou beleggings het ' + (w>=0?'gegroei met ':'gedaal met ') + geld(Math.abs(w)) +
@@ -2300,7 +2384,10 @@ function kindMaat(v, stil){
    kan met hom gesels, en hy loop sy eie kinderjare deur. */
 function kleinkindBy(v){
   var k = v.kl;
-  var kk = nuweMens(null, 0, k.maat ? k.maat.van : v.van);
+  /* 'n Kind kry sy pa se van: is jou kind 'n seun, loop die van saam
+     met hom; is sy 'n dogter, kry die kleinkind haar man se van. Dit
+     is wat die familielyn in die generasiespel (H1) laat klop. */
+  var kk = nuweMens(null, 0, v.geslag==='m' ? v.van : (k.maat ? k.maat.van : v.van));
   kk.tipe = 'kleinkind'; kk.ouerId = v.id; kk.band = tussen(70,100);
   kindLewe(kk);
   s.verhoudings.push(kk);
@@ -2793,4 +2880,581 @@ function teJonkGevang(g){
   s.geluk = klem(s.geluk - tussen(5,12));
   noteer(p.naam + ' het uitgevind van ' + g.n.toLowerCase() + '. Daar was groot moeilikheid.','sleg');
   return true;
+}
+
+/* ==========================================================================
+   H3 — VAARDIGHEDE EN STOKPERDJIES (Fase 6)
+   Die lys self staan in data.js. Hier is net die masjinerie: wat jou
+   vlak is, wat 'n jaar se oefening doen, en waar 'n vaardigheid in die
+   res van die spel uitkom — geld (vaardigInkomsteJaar), lewenskoste
+   (vaardigKosSny), die JSE (vaardigBeleggingBonus), 'n werksaansoek
+   (vaardigWerkBonus) en jou besigheid (vaardigBesigheidVlak).
+   ========================================================================== */
+function vaardigVan(id){
+  var r = null;
+  VAARDIGHEDE.forEach(function(x){ if(x.id===id) r = x; });
+  return r;
+}
+function vaardig(id){ return (s.vaardighede && s.vaardighede[id]) || null; }
+function vaardigVlak(id){ var v = vaardig(id); return v ? (v.vlak||0) : 0; }
+function vaardigNaam(id){
+  var x = vaardigVan(id), v = vaardigVlak(id);
+  return (x && v) ? x.vlakke[v] : '';
+}
+/* Al die vaardighede wat jy al begin het, van die sterkste af. */
+function myVaardighede(){
+  var r = [];
+  VAARDIGHEDE.forEach(function(x){ if(vaardig(x.id)) r.push(x); });
+  r.sort(function(a,b){ return vaardigVlak(b.id) - vaardigVlak(a.id); });
+  return r;
+}
+/* Watter vlak die punte beteken. */
+function vlakVanPunte(p){
+  var v = 0;
+  for(var i=1;i<VAARDIG_PUNTE.length;i++) if(p >= VAARDIG_PUNTE[i]) v = i;
+  return v;
+}
+/* Een jaar se oefening. Gee terug wat gebeur het, sodat die aksie dit
+   kan vertel. */
+function oefenJaar(id){
+  var x = vaardigVan(id);
+  if(!x) return null;
+  if(!s.vaardighede) s.vaardighede = {};
+  var v = s.vaardighede[id] || (s.vaardighede[id] = {vlak:0, punte:0, jare:0, laas:s.ouderdom});
+  /* 'n Slim mens vorder vinniger, en 'n kind leer die gouste. Die
+     drempels in VAARDIG_PUNTE loop al verder uitmekaar, dus is elke
+     vlak hoër as die vorige een se werk. */
+  var punte = tussen(VAARDIG_JAAR[0], VAARDIG_JAAR[1]) + s.slim*VAARDIG_SLIM;
+  if(s.ouderdom <= VAARDIG_KIND_TOT) punte *= VAARDIG_KIND;
+  v.punte += Math.max(1, Math.round(punte));
+  v.jare = (v.jare||0) + 1;
+  v.laas = s.ouderdom;
+  var oud = v.vlak||0, nuut = vlakVanPunte(v.punte);
+  if(nuut > oud){
+    v.vlak = nuut;
+    s.geluk = klem(s.geluk + tussen(3,8));
+    noteer('Jy het ’n vlak in ' + x.n.toLowerCase() + ' geklim: jy ' + x.vlakke[nuut] + '.','goed');
+  }
+  /* Die stats wat die oefening self gee. */
+  var st = x.stat || {};
+  if(st.slim) s.slim = klem(s.slim + tussen(0, st.slim));
+  if(st.geluk) s.geluk = klem(s.geluk + tussen(0, st.geluk));
+  if(st.gesondheid) s.gesondheid = klem(s.gesondheid + tussen(0, st.gesondheid));
+  if(st.voorkoms) s.voorkoms = klem(s.voorkoms + tussen(0, st.voorkoms));
+  return {vlak:v.vlak, opgeklim:nuut>oud, naam:x.vlakke[v.vlak]||''};
+}
+/* 'n Vaardigheid wat jy jare lank laat lê, roes. Vlak 5 roes ook, net
+   stadiger — niemand bly vir ewig 'n konsertpianis as hy nooit meer
+   sit nie. */
+function vaardigJaar(){
+  if(!s.vaardighede) return;
+  VAARDIGHEDE.forEach(function(x){
+    var v = s.vaardighede[x.id];
+    if(!v || !v.punte) return;
+    var stil = s.ouderdom - (v.laas===undefined ? s.ouderdom : v.laas);
+    if(stil < VAARDIG_ROES_NA) return;
+    v.punte = Math.max(0, v.punte - tussen(VAARDIG_ROES[0], VAARDIG_ROES[1]));
+    var nuut = vlakVanPunte(v.punte);
+    if(nuut < (v.vlak||0)){
+      v.vlak = nuut;
+      noteer('Jy het ' + x.n.toLowerCase() + ' te lank laat lê. Jy ' +
+        (nuut ? x.vlakke[nuut] : 'kan dit skaars meer') + '.','sleg');
+    }
+  });
+}
+/* Wat die vaardighede self inbring: die troue wat jy speel, die webwerf
+   wat jy oor 'n naweek bou, die boek wat verkoop. Dit is los werk langs
+   jou gewone inkomste, en SARS belas dit teen jou gewone koers. */
+function vaardigInkomsteJaar(){
+  var som = 0;
+  VAARDIGHEDE.forEach(function(x){
+    if(!x.inkomste) return;
+    var v = vaardigVlak(x.id);
+    if(v < x.inkomste.vanaf || s.tronk) return;
+    /* Hoe hoër die vlak, hoe nader aan die boonste punt van die reeks. */
+    var deel = (v - x.inkomste.vanaf + 1) / (VAARDIG_PUNTE.length - x.inkomste.vanaf);
+    var lo = x.inkomste.bedrag[0], hi = x.inkomste.bedrag[1];
+    var bedrag = Math.round((lo + (hi-lo)*deel) * tussen(55,120)/100);
+    if(bedrag < 500) return;
+    /* Het jy 'n voltydse werk of 'n besigheid, is daar minder tyd daarvoor. */
+    if(s.beroep) bedrag = Math.round(bedrag * 0.45);
+    if(s.besigheid) bedrag = Math.round(bedrag * 0.6);
+    var netto = Math.round(bedrag * (1 - belastingKoers(bedrag + brutoInkomste())));
+    som += netto;
+    s.geld += netto; s.totaalVerdien += netto;
+    noteer(x.n + ' het ' + geld(netto) + ' ingebring na belasting (jy ' + x.vlakke[v] + ').','geld');
+  });
+  return som;
+}
+/* B13 se lewenskoste: wie self kook, plant of vang, eet goedkoper. */
+function vaardigKosSny(){
+  var sny = 0;
+  VAARDIGHEDE.forEach(function(x){
+    if(!x.kos) return;
+    var v = vaardigVlak(x.id);
+    if(v < x.kos.vanaf) return;
+    sny += x.kos.sny[0] + (x.kos.sny[1]-x.kos.sny[0]) *
+      ((v - x.kos.vanaf) / Math.max(1, VAARDIG_PUNTE.length-1 - x.kos.vanaf));
+  });
+  return Math.min(0.3, sny);
+}
+/* Wie waardasie verstaan, kry 'n paar persent meer uit die JSE. */
+function vaardigBeleggingBonus(){
+  var b = 0;
+  VAARDIGHEDE.forEach(function(x){
+    if(!x.bele) return;
+    var v = vaardigVlak(x.id);
+    if(v < x.bele.vanaf) return;
+    b += tussen(x.bele.bonus[0], x.bele.bonus[1]) * (v - x.bele.vanaf + 1) / 3;
+  });
+  return b;
+}
+/* 'n Aansoek: 'n ontwikkelaar wat self kodeer, kry die werk makliker. */
+function vaardigWerkBonus(j){
+  var b = 0;
+  VAARDIGHEDE.forEach(function(x){
+    if(x.werk && x.werk.indexOf(j.id)>=0) b += vaardigVlak(x.id) * VAARDIG_WERK_BONUS;
+  });
+  return b;
+}
+/* Die vlak van die vaardigheid agter 'n soort besigheid (H4). */
+function vaardigBesigheidVlak(soortId){
+  var v = 0;
+  VAARDIGHEDE.forEach(function(x){
+    if(x.besigheid === soortId) v = Math.max(v, vaardigVlak(x.id));
+  });
+  return v;
+}
+
+/* ==========================================================================
+   H4 — JOU EIE BESIGHEID (Fase 6)
+   Die soorte besighede en al die getalle staan in data.js. Hier is die
+   jaar self: kliënte kom en gaan, die vaste koste loop, die werkers kry
+   hul loon, en wat oorbly is wins of verlies.
+
+   Dit loop DEUR die bestaande finansiesketting, nie langs dit nie:
+     - wins kom by brutoInkomste() en word saam met jou salaris belas
+     - 'n verlies gaan deur betaalWatJyKan(), dus deur B6 se skuld,
+       die balju en uiteindelik die straat
+     - die waarde van die besigheid tel in netoWaarde()
+   ========================================================================== */
+function besigheidSoort(id){
+  var r = null;
+  BESIGHEDE.forEach(function(x){ if(x.id===id) r = x; });
+  return r;
+}
+/* Hoeveel kliënte jy kan hanteer: jyself, plus elke werker, plus wat
+   die toerusting waarvoor jy betaal het, bysit. */
+function besigheidKapasiteit(){
+  var b = s.besigheid; if(!b) return 0;
+  var x = besigheidSoort(b.id); if(!x) return 0;
+  var kap = x.basis + (b.werkers||0) * x.perWerker;
+  kap *= 1 + ((b.toerusting||0)/100000) * BESIG_TOERUSTING;
+  /* Die vaardigheid agter die besigheid laat jou self meer doen. */
+  kap *= 1 + vaardigBesigheidVlak(x.id) * 0.06;
+  return Math.round(kap*10)/10;
+}
+function besigheidWins(){ return s.besigheid ? (s.besigheid.wins||0) : 0; }
+/* Wat iemand vir die besigheid sou betaal: 'n winsgewende een verkoop
+   vir 'n veelvoud van sy wins, 'n sukkelende een net vir sy toerusting. */
+function besigheidWaarde(){
+  var b = s.besigheid; if(!b) return 0;
+  var wins = b.wins||0;
+  if(wins > 0) return Math.round(wins*BESIG_VERKOOP + (b.toerusting||0)*0.5);
+  return Math.round((b.toerusting||0) * BESIG_TOE_F);
+}
+function besigheidNaam(x){
+  /* "Van der Merwe Webwerwe" — jou van, en wat jy doen. */
+  return s.van + ' ' + x.n.split(' ')[0];
+}
+function huurWerkerIn(){
+  var b = s.besigheid; if(!b) return null;
+  if(!b.span) b.span = [];
+  var w = nuweMens(null, tussen(19,56), null);
+  var p = {naam:w.naam, van:w.van, geslag:w.geslag, jare:0};
+  b.span.push(p);
+  b.werkers = b.span.length;
+  return p;
+}
+function besigheidJaar(){
+  var b = s.besigheid;
+  if(!b){ return 0; }
+  var x = besigheidSoort(b.id);
+  if(!x){ s.besigheid = null; return 0; }
+  /* Sonder jou loop dit nie: in die tronk maak dit toe, en op straat
+     hou net 'n stalletjie dit uit. */
+  if(s.tronk){ sluitBesigheid('terwyl jy in die tronk was', true); return 0; }
+  if(s.dakloos && b.id!=='smous'){
+    sluitBesigheid('toe jy jou blyplek verloor het', true); return 0; }
+  b.jare = (b.jare||0) + 1;
+  var f = x.plaaslik ? dorpFaktor() : 1;
+  /* --- kliënte: wat bykom, en wat elke jaar wegval --- */
+  var groei = tussen(Math.round(x.groei[0]*10), Math.round(x.groei[1]*10))/10;
+  groei *= 1 + vaardigBesigheidVlak(x.id) * BESIG_VAARDIG_F
+             + (s.slim-50) * BESIG_SLIM
+             + (s.aansien||0) * BESIG_AANSIEN;
+  groei += ((b.bemarking||0)/10000) * BESIG_BEMARK_F;
+  if(s.beroep) groei *= BESIG_WERK_AANDAG;
+  if(groei < 0) groei = 0;
+  var verloop = (b.kliente||0) * tussen(BESIG_VERLOOP[0], BESIG_VERLOOP[1])/100;
+  var kap = besigheidKapasiteit();
+  var oud = b.kliente||0;
+  b.kliente = Math.max(0, oud + groei - verloop);
+  var vol = false;
+  if(b.kliente > kap){ b.kliente = kap; vol = true; }
+  /* --- die jaar se omset --- */
+  var omset = b.kliente * tussen(x.waarde[0], x.waarde[1]) * f;
+  var sleg = kans(x.risiko);
+  if(sleg) omset *= tussen(Math.round(BESIG_SLEG[0]*100), Math.round(BESIG_SLEG[1]*100))/100;
+  else if(kans(BESIG_GOED))
+    omset *= tussen(Math.round(BESIG_GOED_F[0]*100), Math.round(BESIG_GOED_F[1]*100))/100;
+  omset = Math.round(omset);
+  /* --- die koste --- */
+  var koste = Math.round(x.vaste*f + (b.werkers||0)*x.loon + (b.bemarking||0));
+  b.omset = omset; b.koste = koste; b.wins = omset - koste;
+  b.totaalWins = (b.totaalWins||0) + b.wins;
+  if(b.wins > (b.beste||0)) b.beste = b.wins;
+  noteer(b.naam + ': ' + Math.round(b.kliente) + ' ' + x.wat + ', omset ' + geld(omset) +
+    ', koste ' + geld(koste) + ' — ' + (b.wins>=0 ? 'wins ' : 'verlies ') +
+    geld(Math.abs(b.wins)) + (b.wins>=0 ? ' voor belasting' : '') + '.',
+    b.wins>=0 ? 'geld' : 'sleg');
+  if(sleg) noteer(kies(['’n Groot kliënt het weggeloop.','Dit was ’n stil jaar in die bedryf.',
+    '’n Mededinger het oopgemaak reg oorkant jou.','Beurtkrag het jou halwe jaar gevreet.']) +
+    ' Die omset was laer as wat dit moes wees.','sleg');
+  if(vol) noteer('Jy kon nie meer werk inneem nie — ' + b.naam +
+    ' is vol. Huur iemand of koop toerusting as jy wil groei.','neutraal');
+  /* --- en dan die geld --- */
+  if(b.wins < 0){
+    b.verliesJare = (b.verliesJare||0) + 1;
+    betaalWatJyKan(-b.wins, b.naam + ' se verlies');
+    if(b.verliesJare >= BESIG_VERLIES_MAKS){ besigheidBankrot(); return 0; }
+    noteer(b.naam + ' is ' + b.verliesJare + ' jaar agtermekaar in die rooi. Nog ' +
+      (BESIG_VERLIES_MAKS - b.verliesJare) + ' so ’n jaar en dit is klaar.','sleg');
+  } else {
+    b.verliesJare = 0;
+    /* Die wins self word in inkomsteJaar() belas en by jou kontant
+       gegooi, saam met enige salaris: brutoInkomste() tel dit in. */
+  }
+  /* 'n Werker wat niks te doen het nie, soek self 'n ander werk. */
+  if((b.werkers||0) > 0 && kap > 0 && b.kliente/kap < BESIG_KAPASITEIT_MIN && kans(26)){
+    var weg = b.span.pop();
+    b.werkers = b.span.length;
+    if(weg) noteer(weg.naam + ' het bedank — daar was te min werk vir ' +
+      (b.werkers+1) + ' mense by ' + b.naam + '.','werk');
+  }
+  if(b.span) b.span.forEach(function(p){ p.jare = (p.jare||0) + 1; });
+  b.bemarking = b.bemarking||0;
+  return b.wins;
+}
+/* Drie verliesjare agtermekaar, of 'n verlies wat jy nie kan dra nie. */
+function besigheidBankrot(){
+  var b = s.besigheid; if(!b) return;
+  var skuld = Math.round(Math.abs(b.wins||0) * 0.4);
+  noteer(b.naam + ' is bankrot. Die deure is toe en die toerusting is ' +
+    'opgeveil.','sleg');
+  if(skuld>1000){
+    s.geld -= skuld;
+    noteer('Daar was nog ' + geld(skuld) + ' aan krediteure oor.','geld');
+  }
+  s.geluk = klem(s.geluk - tussen(14,28));
+  s.aansien = Math.max(0, (s.aansien||0) - 1);
+  stelVlag('bankrot', {n:b.naam});
+  s.besighedeGehad = (s.besighedeGehad||[]);
+  s.besighedeGehad.push({n:b.naam, jare:b.jare, einde:'bankrot'});
+  s.besigheid = null;
+}
+/* Maak toe of verkoop. 'stil' is wanneer die lewe dit vir jou toemaak
+   (die tronk, die straat) en jy niks daarvoor kry nie. */
+function sluitBesigheid(rede, stil){
+  var b = s.besigheid; if(!b) return 0;
+  var kry = stil ? 0 : besigheidWaarde();
+  if(kry>0){ s.geld += kry; }
+  noteer(b.naam + ' het toegemaak ' + rede +
+    (kry>0 ? '. Jy het ' + geld(kry) + ' daarvoor gekry.' : '.'), kry>0 ? 'geld' : 'sleg');
+  s.besighedeGehad = (s.besighedeGehad||[]);
+  s.besighedeGehad.push({n:b.naam, jare:b.jare||0, einde: stil ? 'toe' : 'verkoop'});
+  s.besigheid = null;
+  return kry;
+}
+
+/* ==========================================================================
+   H1 — DIE GENERASIESPEL (Fase 6)
+   Wanneer jy sterf, kan jy as een van jou kinders voortgaan. Dit is
+   moontlik omdat E7 'n kind al 'n volle lewe laat leef: hy het sy eie
+   slimheid, sy eie skoolloopbaan met 'n APS, dalk 'n graad, 'n werk,
+   'n maat en sy eie kinders. Hier word daardie kind die nuwe `s`.
+
+   Drie dinge gebeur:
+     1. die boedel word verdeel (boedel, erfDeel) — ná Fase 2 se
+        verband- en skuldreëls, want skuld word nie geërf nie
+     2. die kind se reeds-geleefde geskiedenis word sy nuwe lewensverhaal
+     3. die familie skuif een plek op: jou eggenoot word sy ma of pa,
+        jou ander kinders word sy broers en susters, jou kleinkinders
+        word sy kinders, jou ouers word sy grootouers, en jou broers en
+        susters word sy ooms en tantes
+
+   s.generasie tel hoeveel lewens die familie al geleef het en
+   s.familielyn hou elkeen se naam, ouderdom en nalatenskap by.
+   ========================================================================== */
+function lewendeKinders(){
+  return s.verhoudings.filter(function(v){
+    return v.lewe && (v.tipe==='seun' || v.tipe==='dogter'); });
+}
+/* Wat daar is om te erf: alles wat jy besit, min die verband en min jou
+   skuld. Is dit netto niks, erf niemand niks — maar niemand erf ook jou
+   skuld nie. */
+function boedel(){
+  var bateSom = 0;
+  s.bates.forEach(function(b){ bateSom += b.waarde; });
+  var som = s.geld + (s.spaar||0) + s.belegging + (s.pensioenFonds||0) + bateSom - bondSkuld();
+  som = Math.max(0, Math.round(som));
+  /* Boedelbelasting: SARS vat 20% van alles bo R3,5 miljoen. Dit is ook
+     die rede waarom 'n familie se geld nie oor vyf geslagte sonder
+     einde aangroei nie. */
+  if(som > BOEDEL_VRYSTELLING) som -= Math.round((som - BOEDEL_VRYSTELLING) * BOEDEL_BELASTING);
+  return som;
+}
+/* Die huis waarin die gesin gebly het — die een ding wat 'n erfgenaam
+   eerder as kontant wil kry. */
+function familieBate(){
+  var beste = null;
+  s.bates.forEach(function(b){ if(b.t==='huis' && (!beste || b.waarde>beste.waarde)) beste = b; });
+  return beste;
+}
+/* Hoe die boedel verdeel word: 'n lewende eggenoot kry die helfte, en
+   die res word gelyk tussen die lewende kinders verdeel. */
+function erfDeel(v){
+  /* Erf hierdie kind nie die besigheid nie (hy is te jonk, of daar is
+     nie een nie), word dit verkoop en is die opbrengs deel van die
+     kontant wat verdeel word. */
+  var erfBesigheid = !!s.besigheid && v.ouderdom>=16;
+  var som = boedel() + (erfBesigheid ? 0 : besigheidWaarde());
+  var eg = maat();
+  var kinders = lewendeKinders();
+  var deel = 0;
+  if(kinders.length){
+    var virKinders = (eg && eg.tipe==='eggenoot') ? som/2 : som;
+    deel = Math.round(virKinders / kinders.length);
+  }
+  var r = {kontant:deel, bates:[], besigheid:false, deelVan:kinders.length, som:som};
+  /* Is sy deel groot genoeg en is die verband afbetaal, kry hy die huis
+     self in plaas van kontant daarvoor. */
+  var huis = familieBate();
+  if(huis && !bondSkuld() && deel >= huis.waarde){
+    r.bates.push({id:huis.id, n:huis.n, t:huis.t, waarde:huis.waarde, e:huis.e});
+    r.kontant = deel - huis.waarde;
+  }
+  r.besigheid = erfBesigheid;
+  return r;
+}
+/* Die geskiedenis wat 'n kind as 'n ander mens geleef het, in die eerste
+   persoon. kindNoteer() se teks is in die derde persoon ("het sy graad
+   gekry"), daarom word 'sy'/'haar' hier 'jou'. */
+function kindLogNaJou(t){
+  return String(t).replace(/ sy /g, ' jou ').replace(/ haar /g, ' jou ');
+}
+/* Skuif elke mens in die ou lewe een plek in die familie op. */
+function oorgangVerhoudings(v, oud){
+  var lys = [], k = v.kl || {};
+  /* Die ouer wat pas oorlede is, bly in die geheue staan. */
+  lys.push({id:volgendeId++, naam:oud.naam, van:oud.van, geslag:oud.geslag,
+    ouderdom:oud.ouderdom, band:100, voorkoms:50, lewe:false, raak:0,
+    tipe: oud.geslag==='m' ? 'pa' : 'ma'});
+  oud.verhoudings.forEach(function(r){
+    if(r===v) return;                       /* hy is nou die speler self */
+    var t = r.tipe, nuut = null, kant = r.kant;
+    if(t==='eggenoot' || t==='lief'){
+      /* Jou maat by jou dood is die kind se ander ouer. */
+      nuut = r.geslag==='m' ? 'pa' : 'ma';
+    }
+    else if(t==='seun' || t==='dogter'){
+      nuut = r.geslag==='m' ? 'broer' : 'suster';
+    }
+    else if(t==='kleinkind'){
+      if(r.ouerId === v.id) nuut = r.geslag==='m' ? 'seun' : 'dogter';
+      else nuut = r.geslag==='m' ? 'neef' : 'niggie';
+    }
+    else if(t==='ma' || t==='pa'){
+      nuut = r.geslag==='m' ? 'oupa' : 'ouma';
+      kant = oud.geslag==='v' ? 'ma' : 'pa';
+    }
+    else if(t==='broer' || t==='suster'){
+      nuut = r.geslag==='m' ? 'oom' : 'tante';
+    }
+    /* Die ou lewe se oumas en oupas is die kind se oorgrootouers, en sy
+       vriende, klasmaats en kollegas was nooit die kind se mense nie. */
+    if(!nuut) return;
+    /* Dooies bly net staan as hulle naby familie is — anders sou 'In
+       geheue' ná 'n lang lewe uit honderd mense bestaan. */
+    if(!r.lewe && ['ma','pa','ouma','oupa','seun','dogter'].indexOf(nuut)<0) return;
+    r.tipe = nuut;
+    if(kant) r.kant = kant; else delete r.kant;
+    /* Die band begin by die band wat daardie mens met jou ouer gehad
+       het, maar dit is nie dieselfde verhouding nie. */
+    r.band = klem(Math.round(r.band * tussen(70,100)/100));
+    lys.push(r);
+  });
+  /* Sy eie maat word 'n egte mens in sy lewe. */
+  if(k.maat){
+    /* Soos by 'n troue elders in die spel neem die eggenoot jou van. */
+    var m = {id:volgendeId++, naam:k.maat.naam, van:v.van, geslag:k.maat.geslag,
+      ouderdom:k.maat.ouderdom, band:tussen(58,92), voorkoms:tussen(30,88),
+      lewe:true, raak:0, tipe:'eggenoot'};
+    lys.push(m);
+  }
+  /* Twee broers met presies dieselfde naam lees vreemd, en dit kan
+     gebeur omdat name lukraak gekies word. Die een wat NIE die speler
+     is nie, kry 'n ander naam. */
+  lys.forEach(function(r){
+    if(r.naam === v.naam && r.lewe && r.id !== v.id)
+      r.naam = kies(r.geslag==='m' ? MANSNAME : VROUENAME);
+  });
+  return lys;
+}
+/* Die kind se skoolloopbaan, oorgeskryf na die vorm wat s.skool gebruik. */
+function oorgangSkool(k, ouderdom){
+  var sk = s.skool;
+  sk.vlak = k.skool.vlak==='baba' && ouderdom>=6 ? 'laerskool' : k.skool.vlak;
+  sk.graad = k.skool.graad || 0;
+  sk.matriek = !!k.skool.matriek;
+  sk.aps = k.skool.aps || 0;
+  sk.punte = sk.aps ? klem(Math.round(32 + sk.aps*1.45)) : 0;
+  sk.grade = (k.skool.grade||[]).slice();
+  sk.nagraads = [];
+  sk.agter = 0;
+  sk.uitslag = [];
+  /* Het hy matriek, het hy vakke gehad. Ons weet nie watter nie, dus kry
+     hy die verstek — met Wiskunde as sy punte goed was. */
+  if(sk.aps){ verstekVakke();
+    if(sk.aps>=30){ sk.wiskunde = true;
+      sk.vakke = VAKKE_VERPLIG.concat(['Wiskunde','Fisiese Wetenskappe',
+        'Lewenswetenskappe','Rekeningkunde']); } }
+  if(sk.vlak==='universiteit'){
+    var st = studieVanNaam(k.skool.studie);
+    sk.studie = k.skool.studie;
+    sk.jare = st ? st.jare : (k.skool.jareOor||3);
+    sk.jareOor = k.skool.jareOor || 1;
+    sk.geslaagJare = Math.max(0, sk.jare - sk.jareOor);
+    sk.koste = k.studieBetaal || 0;
+    sk.beurs = !k.studieBetaal;
+    s.uni = kies(UNIES);
+    s.aansien = s.uni.aansien;
+  } else { sk.studie = null; sk.jareOor = 0; sk.jare = 0; }
+}
+/* Die kind se werk, oorgeskryf na s.beroep. */
+function oorgangBeroep(k){
+  if(!k.beroep) return;
+  var j = null;
+  BEROEPE.forEach(function(x){ if(x.id===k.beroep.id) j = x; });
+  s.beroep = {id:k.beroep.id, t:k.beroep.t, basis:j ? j.s : k.salaris,
+    salaris:k.salaris || (j?j.s:0), vlak:0, prestasie:tussen(45,70),
+    jare:k.jareGewerk||0, k: j ? j.k : 'Werk', plafon:k.beroep.plafon || beroepPlafon(k.beroep.id)};
+  s.beroepeGehad = [k.beroep.t];
+  s.jareGewerk = k.jareGewerk || 0;
+  pasPlafonToe();
+}
+/* Die hele oorgang. Ná hierdie funksie is `s` die kind. */
+function gaanVoortAsKind(id){
+  var oud = s;
+  var v = null;
+  oud.verhoudings.forEach(function(x){ if(x.id===id) v = x; });
+  if(!v || !v.lewe) return false;
+  var k = v.kl || kindLewe(v);
+  var deel = erfDeel(v);
+  var ouBesigheid = deel.besigheid ? oud.besigheid : null;
+  var ouDiere = (oud.diere||[]).slice();
+  /* Die lyn wat agter hom lê, met die ou lewe heel agter by. */
+  var lyn = (oud.familielyn||[]).slice();
+  lyn.push({naam:oud.naam + ' ' + oud.van, generasie:oud.generasie||1,
+    ouderdom:oud.ouderdom, oorsaak:oud.oorsaak,
+    beroep: oud.beroepeGehad.length ? oud.beroepeGehad[oud.beroepeGehad.length-1] : 'geen',
+    netto: boedel() + besigheidWaarde(), kinders: oud.kindersGebore || oud.kinders});
+
+  /* nuweLewe() gee ons 'n status met presies die regte vorm; daarna
+     oorskryf ons alles wat die kind self al geleef het. */
+  nuweLewe(v.naam, v.van, v.geslag);
+  s.generasie = (oud.generasie||1) + 1;
+  s.familielyn = lyn;
+  s.ouderdom = v.ouderdom;
+  s.geluk = k.geluk; s.gesondheid = k.gesondheid; s.slim = k.slim; s.voorkoms = k.voorkoms;
+  s.dorp = k.dorp || oud.dorp;
+  s.gene = oud.gene;                 /* F9 — dieselfde familiegeskiedenis */
+  s.gewoontes = {drink:(k.gewoontes||{}).drink||0, rook:(k.gewoontes||{}).rook||0,
+    dwelms:(k.gewoontes||{}).dwelms||0};
+  s.lisensie = v.ouderdom>=18;
+  s.diere = ouDiere;                 /* die gesin se diere bly by die huis */
+  oorgangSkool(k, v.ouderdom);
+  oorgangBeroep(k);
+  /* Die nuwe mens het sy eie geheue: nuweLewe() se vlae (soos geenPa)
+     hoort by die ouer, nie by hom nie. */
+  s.vlagge = {};
+  s.verhoudings = oorgangVerhoudings(v, oud);
+  s.kinders = s.verhoudings.filter(function(r){
+    return r.lewe && (r.tipe==='seun'||r.tipe==='dogter'); }).length;
+  s.kindersGebore = s.kinders;
+  s.troues = k.maat ? 1 : 0;
+  var eg = maat();
+  if(eg) maatBeroepKies(eg);         /* E12 — sy eggenoot verdien ook self */
+  /* --- die erfenis --- */
+  s.geld = Math.max(0, deel.kontant);
+  deel.bates.forEach(function(b){ s.bates.push(b); });
+  if(ouBesigheid){ s.besigheid = ouBesigheid; }
+  var erfSom = deel.kontant;
+  deel.bates.forEach(function(b){ erfSom += b.waarde; });
+  /* Waarin hy opgegroei het, hang af van wat hy geërf het. */
+  s.rykf = erfSom>3000000 ? 6 : erfSom>900000 ? 3 : erfSom>250000 ? 1.6 : erfSom>40000 ? 1 : 0.6;
+  s.rykdom = s.rykf>=6 ? 'ryk' : s.rykf>=3 ? 'welgesteld' : s.rykf>=1.6 ? 'middelklas'
+    : s.rykf>=1 ? 'werkersklas' : 'arm';
+  s.blyplek = s.bates.some(function(b){ return b.t==='huis'; }) ? 'eie'
+    : (v.ouderdom<18 ? (lewendeOuers().length ? 'ouers' : 'familie') : 'huur');
+  if(v.ouderdom>=18 && s.blyplek==='huur') s.huurPlek = 'kommune';
+  /* H3 — een ding wat sy ouer hom geleer het, op vlak 1. */
+  var geleer = myVaardighedeVan(oud);
+  s.vaardighede = {};
+  if(geleer){
+    s.vaardighede[geleer.id] = {vlak:1, punte:VAARDIG_PUNTE[1], jare:1, laas:s.ouderdom};
+  }
+  /* --- sy lewensverhaal --- */
+  s.log = [];
+  noteer('Jy is ' + v.naam + ' ' + v.van + ', kind van ' + oud.naam + ' ' + oud.van +
+    ' — die ' + generasieWoord(s.generasie) + ' geslag van hierdie familie.','jaar');
+  (k.geskiedenis||[]).forEach(function(r){
+    s.log.push({o:r.o, t:'Jy ' + kindLogNaJou(r.t) + '.', k:'neutraal'});
+  });
+  s.log.push({o:v.ouderdom, t:oud.naam + ' is op ' + oud.ouderdom + ' oorlede weens ' +
+    oud.oorsaak + '.', k:'sleg'});
+  if(erfSom>0) s.log.push({o:v.ouderdom, t:'Jy het ' + geld(erfSom) + ' geërf' +
+    (deel.bates.length ? ' (' + deel.bates[0].n + ' inbegrepe)' : '') +
+    (deel.deelVan>1 ? ' — die boedel is tussen ' + deel.deelVan + ' kinders verdeel' : '') +
+    '.', k:'geld'});
+  else s.log.push({o:v.ouderdom, t:'Daar was niks om te erf nie.', k:'neutraal'});
+  if(ouBesigheid) s.log.push({o:v.ouderdom, t:'Jy het ' + ouBesigheid.naam +
+    ' oorgeneem.', k:'werk'});
+  if(geleer) s.log.push({o:v.ouderdom, t:oud.naam + ' het jou ' +
+    vaardigVan(geleer.id).n.toLowerCase() + ' geleer.', k:'goed'});
+  noteer('Jy is nou ' + s.ouderdom + ' jaar oud.','jaar');
+  stelVlag('generasiespeler', {ouer:oud.naam});
+  stoor();
+  return true;
+}
+/* Die sterkste vaardigheid van 'n lewe — wat 'n ouer vir sy kind
+   nalaat sonder om dit te bedoel. */
+function myVaardighedeVan(st){
+  var beste = null, hoog = 0;
+  VAARDIGHEDE.forEach(function(x){
+    var d = st.vaardighede ? st.vaardighede[x.id] : null;
+    if(d && (d.vlak||0) > hoog){ hoog = d.vlak; beste = x; }
+  });
+  return beste;
+}
+function generasieWoord(n){
+  var w = ['','eerste','tweede','derde','vierde','vyfde','sesde','sewende','agste',
+    'negende','tiende'];
+  return w[n] || (n + 'de');
+}
+/* Die reël vir die grafsteen en die Mense-blad. */
+function familielynTeks(){
+  if(!(s.familielyn||[]).length) return '';
+  return s.familielyn.map(function(r){
+    return r.naam + ' (' + r.ouderdom + ', ' + r.beroep.toLowerCase() + ')'; }).join(' → ');
 }

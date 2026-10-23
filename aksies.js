@@ -77,6 +77,14 @@ var AKTIWITEITE=[
      if(kans(35)) { s.geluk=klem(s.geluk-12); return ['Jy is gevang terwyl jy klas gebank het. Detensie.','sleg']; }
      return ['Jy het klas gebank en niemand het dit agtergekom nie.','neutraal']; }},
 
+  /* --- Vaardighede en stokperdjies (H3) --- */
+  /* Een inskrywing wat die hele lys oopmaak: jy kan twee vaardighede
+     per jaar oefen, en elkeen vra sy eie geld (of jou ouers se geld). */
+  {id:'vaardig', g:'Vaardighede', n:'Oefen ’n vaardigheid', e:'\u{1F3AF}',
+   min:6, maks:VAARDIG_PER_JAAR,
+   kosteTeks:'Jy kies watter een \u00b7 twee per jaar \u00b7 \u2019n kind kan sy ouers vra',
+   as:function(){ return !s.tronk; }, vloei:vaardigheidVloei},
+
   /* --- Geld --- */
   /* Lotto en casino is doelbewus sleg beleggings: oor baie kere verloor jy
      geld. Die prysstruktuur hier gee jou ongeveer R18 terug vir elke R30
@@ -136,6 +144,198 @@ function leesVloei(){
     }};
   }));
 }
+/* ==========================================================================
+   H3 — OEFEN 'N VAARDIGHEID
+   Die vloei agter die "Oefen 'n vaardigheid"-aktiwiteit. Jy sien al die
+   vaardighede wat jou ouderdom toelaat, met jou vlak by elkeen, en wat
+   die volgende vlak gaan oopmaak. Die geld loop deur betaalEnDoen(),
+   dus kan 'n kind sy ouers vra om vir die klasse te betaal.
+   ========================================================================== */
+function vaardigheidVloei(){
+  var opsies = [];
+  /* Die wat jy al begin het, staan eerste — dit is waar jy wil aanhou. */
+  var lys = VAARDIGHEDE.slice().sort(function(a,b){
+    return (vaardigVlak(b.id) - vaardigVlak(a.id)) || (a.g < b.g ? -1 : 1); });
+  lys.forEach(function(x){
+    if(s.ouderdom < x.min) return;
+    if(s.gedoen['v_'+x.id]) return;              /* nie twee keer dieselfde jaar nie */
+    var v = vaardigVlak(x.id);
+    var sub = (v ? 'Vlak ' + v + ' van 5 \u00b7 jy ' + x.vlakke[v] : x.sub) +
+      ' \u00b7 ' + geld(x.koste) + ' vir die jaar';
+    opsies.push({t:x.e + '  ' + x.n + (v ? '  \u2605' + v : ''), sub:sub, doen:function(){
+      betaalEnDoen(x.koste, x.n, function(){
+        s.gedoen['v_'+x.id] = 1;
+        var r = oefenJaar(x.id);
+        var teks = r && r.opgeklim
+          ? 'Jy het ’n jaar lank ' + x.n.toLowerCase() + ' geoefen \u2014 jy ' + r.naam + '.'
+          : 'Jy het ’n jaar lank ' + x.n.toLowerCase() + ' geoefen.';
+        klaarAkt('vaardig', teks, r && r.opgeklim ? 'goed' : 'neutraal');
+      }, false);
+    }});
+  });
+  if(!opsies.length){ wenk('Daar is nie nou ’n vaardigheid om te oefen nie.'); return; }
+  kiesLys('Vaardighede en stokperdjies',
+    'Elke jaar se oefening bou punte op; vyf vlakke en elke vlak maak iets oop. ' +
+    'Laat jy dit jare lank lê, roes dit.', opsies);
+}
+
+/* ==========================================================================
+   H4 — JOU EIE BESIGHEID
+   Die knoppies op die Werk-blad: begin, bemark, huur, koop toerusting,
+   verkoop of maak toe. Die jaar self loop in besigheidJaar() (lewe.js).
+   ========================================================================== */
+function besigheidVereis(x){
+  if(s.besigheid) return 'Jy loop al ’n besigheid';
+  if(s.tronk) return 'Jy is in die tronk';
+  if(s.dakloos && x.id!=='smous') return 'Sonder ’n adres begin niemand so iets nie';
+  if(s.ouderdom < x.min) return 'Jy moet ' + x.min + ' jaar oud wees';
+  if(s.swartlys>0 && x.kapitaal>100000) return 'Jy is gelys — niemand gee jou krediet nie';
+  if(s.geld < x.kapitaal) return 'Jy het ' + geld(x.kapitaal) + ' kontant nodig';
+  return null;
+}
+function wysBesighede(){
+  var opsies = [];
+  BESIGHEDE.forEach(function(x){
+    var rede = besigheidVereis(x);
+    var vv = x.vaardig ? vaardigVlak(x.vaardig) : 0;
+    var sub = x.sub + ' \u00b7 ' + geld(x.kapitaal) + ' om te begin, ' +
+      geld(x.vaste) + ' vaste koste per jaar';
+    if(x.vaardig) sub += ' \u00b7 ' + (vv ? 'jou ' + vaardigVan(x.vaardig).n.toLowerCase() +
+      ' is vlak ' + vv : 'sonder ' + vaardigVan(x.vaardig).n.toLowerCase() + ' is dit swaar');
+    if(rede){ sub = rede + ' \u00b7 ' + sub; }
+    opsies.push({t:x.e + '  ' + x.n, sub:sub, klas: rede ? 'grys' : '', doen:function(){
+      if(rede){ wenk(rede + '.'); return; }
+      bevestigBesigheid(x);
+    }});
+  });
+  kiesLys('Begin jou eie besigheid',
+    'Jou eie ding is ’n egte alternatief vir ’n werk: die wins is joune en dit word ' +
+    'soos ’n salaris belas — maar ’n verlies kom uit jou eie sak, en drie verliesjare ' +
+    'agtermekaar maak dit toe.', opsies);
+}
+function bevestigBesigheid(x){
+  var vv = x.vaardig ? vaardigVlak(x.vaardig) : 0;
+  wysModaal(x.n, 'Dit kos ' + geld(x.kapitaal) + ' om te begin en ' + geld(x.vaste) +
+    ' per jaar om oop te hou, of jy kliënte het of nie. Een kliënt bring ' +
+    geld(x.waarde[0]) + ' tot ' + geld(x.waarde[1]) + ' per jaar in, en jy kan ' +
+    x.basis + ' ' + x.wat + ' alleen hanteer.' +
+    (x.vaardig && !vv ? '\n\nJy het geen ' + vaardigVan(x.vaardig).n.toLowerCase() +
+      ' nie. Dit kan werk, maar jy gaan stadig groei.' : ''),
+    [{t:'Begin dit', klas:'groen', doen:function(){ beginBesigheid(x.id); }},
+     {t:'Nog nie', klas:'grys', doen:function(){ sluitModaal(); }}]);
+}
+function beginBesigheid(id){
+  var x = besigheidSoort(id);
+  if(!x) return;
+  var rede = besigheidVereis(x);
+  if(rede){ wenk(rede + '.'); sluitModaal(); return; }
+  s.geld -= x.kapitaal;
+  s.besigheid = {id:x.id, n:x.n, naam:besigheidNaam(x), kliente:0, werkers:0, span:[],
+    bemarking:0, toerusting:0, jare:0, omset:0, koste:0, wins:0, verliesJare:0,
+    totaalWins:0, beste:0, kapitaalIn:x.kapitaal};
+  s.geluk = klem(s.geluk + tussen(8,16));
+  stelVlag('besigheidBegin', {n:s.besigheid.naam});
+  noteer('Jy het ' + s.besigheid.naam + ' begin (' + x.n.toLowerCase() + ') vir ' +
+    geld(x.kapitaal) + '.','werk');
+  wenk(s.besigheid.naam + ' is oop!');
+  sluitModaal(); stoor(); renderAlles();
+}
+function besigAksie(wat, waarde){
+  var b = s.besigheid;
+  if(!b){ wenk('Jy het nie ’n besigheid nie.'); return; }
+  var x = besigheidSoort(b.id);
+  if(wat==='bemark'){
+    var bedrag = Number(waarde)||0;
+    if(bedrag > s.geld + s.spaar){ wenk('Jy het nie ' + geld(bedrag) + ' nie.'); return; }
+    b.bemarking = bedrag;
+    noteer('Jy het ' + (bedrag ? geld(bedrag) + ' vir bemarking opsy gesit'
+      : 'die bemarking gestop') + ' by ' + b.naam + '.','werk');
+    wenk(bedrag ? 'Bemarking: ' + geld(bedrag) + ' per jaar' : 'Geen bemarking nie');
+  }
+  else if(wat==='huur'){
+    if(s.geld < x.loon*0.25){ wenk('Jy kan nie nou ’n loon bekostig nie.'); return; }
+    var p = huurWerkerIn();
+    noteer(p.naam + ' ' + p.van + ' werk nou by ' + b.naam + ' teen ' + geld(x.loon) +
+      ' per jaar. Julle kan nou ' + Math.round(besigheidKapasiteit()) + ' ' + x.wat +
+      ' hanteer.','werk');
+    wenk(p.naam + ' is aangestel.');
+  }
+  else if(wat==='ontslaan'){
+    if(!(b.span||[]).length){ wenk('Jy het nie werkers nie.'); return; }
+    var kiesl = b.span.map(function(p, i){
+      return {t:p.naam + ' ' + p.van, sub:(p.jare||0) + ' jaar by ' + b.naam +
+        ' \u00b7 ' + geld(x.loon) + ' per jaar', doen:function(){
+        b.span.splice(i,1); b.werkers = b.span.length;
+        s.geluk = klem(s.geluk - tussen(2,7));
+        noteer('Jy het ' + p.naam + ' by ' + b.naam + ' laat gaan.','werk');
+        sluitModaal(); stoor(); renderAlles();
+      }};
+    });
+    kiesLys('Wie moet gaan?', 'Dit sny die loonrekening, maar ook wat julle kan hanteer.', kiesl);
+    return;
+  }
+  else if(wat==='toerusting'){
+    var som = Number(waarde)||0;
+    if(s.geld < som){ wenk('Jy het nie ' + geld(som) + ' nie.'); return; }
+    s.geld -= som;
+    b.toerusting = (b.toerusting||0) + som;
+    noteer('Jy het ' + geld(som) + ' se toerusting vir ' + b.naam + ' gekoop. ' +
+      'Julle kan nou ' + Math.round(besigheidKapasiteit()) + ' ' + x.wat + ' hanteer.','geld');
+    wenk('Kapasiteit: ' + Math.round(besigheidKapasiteit()) + ' ' + x.wat);
+  }
+  else if(wat==='verkoop'){
+    var prys = besigheidWaarde();
+    wysModaal('Verkoop ' + b.naam + '?',
+      (b.wins>0 ? 'Iemand bied ' + geld(prys) + ' \u2014 ongeveer ' + BESIG_VERKOOP +
+        ' keer verlede jaar se wins van ' + geld(b.wins) + '.'
+        : 'Die besigheid maak nie wins nie, dus bied niemand meer as ' + geld(prys) +
+          ' vir die toerusting nie.') + '\n\nDit is onomkeerbaar.',
+      [{t:'Verkoop vir ' + geld(prys), klas:'rooi', doen:function(){
+        sluitBesigheid('toe jy dit verkoop het');
+        sluitModaal(); stoor(); renderAlles(); }},
+       {t:'Hou dit', klas:'grys', doen:function(){ sluitModaal(); }}]);
+    return;
+  }
+  else if(wat==='sluit'){
+    wysModaal('Maak ' + b.naam + ' toe?',
+      'Jy kry net ' + geld(Math.round((b.toerusting||0)*BESIG_TOE_F)) +
+      ' vir die toerusting terug. Dit is onomkeerbaar.',
+      [{t:'Maak toe', klas:'rooi', doen:function(){
+        var kry = Math.round((b.toerusting||0)*BESIG_TOE_F);
+        s.geld += kry;
+        noteer(b.naam + ' het toegemaak. Jy het ' + geld(kry) + ' vir die toerusting gekry.','sleg');
+        s.besighedeGehad.push({n:b.naam, jare:b.jare||0, einde:'toe'});
+        s.besigheid = null;
+        sluitModaal(); stoor(); renderAlles(); }},
+       {t:'Hou aan', klas:'grys', doen:function(){ sluitModaal(); }}]);
+    return;
+  }
+  sluitModaal(); stoor(); renderAlles();
+}
+/* Die bemarkingsbegroting as 'n keuselys, want dit is vier vaste keuses. */
+function wysBemarking(){
+  var b = s.besigheid; if(!b) return;
+  kiesLys('Bemarking per jaar',
+    'Bemarking bring kliënte: elke R10 000 bring ongeveer ' + BESIG_BEMARK_F +
+    ' nuwe kliënte by. Dit is deel van jou koste, ook in ’n slegte jaar.',
+    BESIG_BEMARK.map(function(v){
+      return {t: v ? geld(v) + ' per jaar' : 'Niks \u2014 net mond-tot-mond',
+        sub: (b.bemarking===v ? 'dit is wat jy nou doen' : ''),
+        doen:function(){ besigAksie('bemark', v); }};
+    }));
+}
+function wysToerusting(){
+  var b = s.besigheid; if(!b) return;
+  var x = besigheidSoort(b.id);
+  kiesLys('Koop toerusting',
+    'Toerusting lig jou kapasiteit: elke R100 000 laat julle ongeveer ' +
+    Math.round(BESIG_TOERUSTING*100) + '% meer ' + x.wat + ' hanteer. Jy het nou ' +
+    geld(b.toerusting||0) + ' se toerusting.',
+    [25000, 100000, 400000].filter(function(v){ return s.geld >= v; }).map(function(v){
+      return {t:geld(v), sub:'kontant, nou', doen:function(){ besigAksie('toerusting', v); }};
+    }));
+}
+
 /* Kinders onder 13 en pensioenarisse betaal 'n kinderkaartjie. */
 function kaartjiePrys(f, ouderdom){
   return (ouderdom<13 || ouderdom>=60) ? f.kinderPrys : f.koste;
@@ -211,8 +411,17 @@ function kuierVloei(){
   kiesPersoon('By wie gaan kuier jy?','Kies iemand om tyd mee deur te bring:', saamFilter, function(v){
     betaalEnDoen(350, 'die kuier', function(){
       s.geluk = klem(s.geluk + tussen(4,10));
-      v.band = klem(v.band + tussen(6,14)); pasVriendskapAan(v);
-      klaarAkt('kuier','Jy het by ' + v.naam + ' gaan kuier.','goed');
+      v.band = klem(v.band + tussen(6,14));
+      /* H3 — wie kan kook, braai of speel, is ’n beter gas. Die beste
+         van die drie tel, nie al drie saam nie. */
+      var ekstra = Math.max(vaardigVlak('kook'), vaardigVlak('braai'),
+        vaardigVlak('klavier'), vaardigVlak('kitaar'));
+      if(ekstra){
+        v.band = klem(v.band + ekstra*2); s.geluk = klem(s.geluk + ekstra);
+      }
+      pasVriendskapAan(v);
+      klaarAkt('kuier','Jy het by ' + v.naam + ' gaan kuier' +
+        (ekstra>=3 ? ' — en die aand oorgeneem' : '') + '.','goed');
     });
   }, false);
 }
@@ -457,6 +666,9 @@ function doenAansoek(id){
       : 'Drie onderhoude per jaar is genoeg.'); return; }
   s.aansoeke++;
   var kansie = 48 + (s.slim - j.slim)/2 + (s.voorkoms-50)/5 + Math.min(20, s.jareGewerk*2) + (s.aansien||0)*4;
+  /* H3 — 'n ontwikkelaar wat self kodeer of 'n kok wat regtig kan kook,
+     kry die werk makliker. */
+  kansie += vaardigWerkBonus(j);
   if(s.rekord.length) kansie -= 15;
   /* B18 — sonder ’n adres, ’n foon en skoon klere kom jy skaars by die
      onderhoud. ’n NGO se adres en ’n ID maak die groot verskil. */

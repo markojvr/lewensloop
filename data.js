@@ -762,3 +762,206 @@ var GENE=[
    sub:'Byna almal aan jou ma se kant het dit gekry', neig:'diabetes'}
 ];
 var GENE_NEIG=3.2;             /* 'n familietoestand kom so baie keer makliker */
+
+/* ==========================================================================
+   H3 — VAARDIGHEDE EN STOKPERDJIES (Fase 6)
+   Elke vaardigheid het vyf vlakke. Jy oefen dit onder Aktiwiteite; elke
+   jaar se oefening gee punte, en by die drempels in VAARDIG_PUNTE klim
+   jy 'n vlak. 'n Vlak maak iets oop:
+
+     inkomste  — van 'vanaf' se vlak af verdien die vaardigheid self geld
+     kos       — dit sny jou lewenskoste (jy kook, plant of vang jou kos)
+     bele      — dit lig jou opbrengs op die JSE (jy verstaan waardasie)
+     werk      — dit help met 'n aansoek vir hierdie beroepe
+     besigheid — dit is die vaardigheid agter hierdie soort besigheid (H4)
+
+   'laas' hou by wanneer jy dit laas geoefen het: 'n vaardigheid wat jy
+   jare lank laat lê, roes (sien vaardigJaar in lewe.js).
+   ========================================================================== */
+var VAARDIGHEDE=[
+  /* --- Kuns --- */
+  {id:'klavier', n:'Klavier', e:'\u{1F3B9}', g:'Kuns', min:6, koste:9600,
+   sub:'R800 per maand vir klasse',
+   vlakke:['','kan toonlere speel','kan ’n liedjie speel','speel by troues',
+     'speel in ’n orkes','konsertpianis'],
+   stat:{slim:2, geluk:3}, inkomste:{vanaf:3, bedrag:[9000,70000]}},
+  {id:'kitaar', n:'Kitaar', e:'\u{1F3B8}', g:'Kuns', min:10, koste:3200,
+   sub:'’n Tweedehandse kitaar en YouTube',
+   vlakke:['','ken drie akkoorde','kan om die kampvuur speel','speel by ’n pub',
+     'speel in ’n band','tref by elke fees'],
+   stat:{geluk:4}, inkomste:{vanaf:3, bedrag:[6000,90000]}},
+  {id:'fotografie', n:'Fotografie', e:'\u{1F4F8}', g:'Kuns', min:12, koste:14000,
+   sub:'’n Kamera en lense kos geld',
+   vlakke:['','weet wat ’n sluiterspoed is','neem mooi foto’s','doen troue-foto’s',
+     'word in tydskrifte gepubliseer','bekende fotograaf'],
+   stat:{slim:2, geluk:2}, inkomste:{vanaf:3, bedrag:[14000,180000]},
+   besigheid:'foto'},
+  {id:'skryf', n:'Skryf', e:'\u{270D}', g:'Kuns', min:8, koste:600,
+   sub:'Net ’n notaboek en tyd',
+   vlakke:['','hou ’n dagboek','skryf kortverhale','word in ’n blad gepubliseer',
+     'het ’n boek uit','bekende skrywer'],
+   stat:{slim:4}, inkomste:{vanaf:4, bedrag:[12000,320000]},
+   werk:['joernalis']},
+  /* --- Kop --- */
+  {id:'kodeer', n:'Kodeer', e:'\u{1F4BB}', g:'Kop', min:10, koste:2400,
+   sub:'Data en ’n aanlynkursus',
+   vlakke:['','kan ’n bladsy opmaak','bou klein programme','bou ’n werkende webwerf',
+     'bou stelsels wat ander gebruik','senior ontwikkelaar'],
+   stat:{slim:5}, inkomste:{vanaf:3, bedrag:[18000,260000]},
+   werk:['ontwikkelaar','argitek','ingenieur'], besigheid:'webwerf'},
+  {id:'aandele', n:'Aandele en waardasie', e:'\u{1F4C8}', g:'Kop', min:14, koste:1200,
+   sub:'Jaarverslae lees kos niks behalwe tyd',
+   vlakke:['','weet wat ’n aandeel is','lees ’n jaarverslag','kan ’n besigheid waardeer',
+     'beleg met ’n plan','jou opbrengs klop die indeks'],
+   stat:{slim:4}, bele:{vanaf:3, bonus:[2,7]},
+   werk:['rekenmeester','uh']},
+  /* --- Liggaam --- */
+  {id:'karate', n:'Karate', e:'\u{1F94B}', g:'Liggaam', min:6, koste:7200,
+   sub:'Twee aande per week in die dojo',
+   vlakke:['','wit gordel','groen gordel','bruin gordel','swart gordel','sensei'],
+   stat:{gesondheid:4, geluk:1}},
+  {id:'sport', n:'Rugby of netbal', e:'\u{1F3C9}', g:'Liggaam', min:8, koste:2200,
+   sub:'Klubfooie en ’n paar stewels',
+   vlakke:['','speel in die derde span','eerste span','klubspeler','provinsiaal',
+     'byna beroepsvlak'],
+   stat:{gesondheid:4, geluk:2}},
+  /* --- Hande --- */
+  {id:'kook', n:'Kook', e:'\u{1F373}', g:'Hande', min:8, koste:1800,
+   sub:'Bestanddele om mee te oefen',
+   vlakke:['','kan ’n eier bak','kook ’n ete vir vier','almal wil by jou kom eet',
+     'kook soos ’n sjef','sou ’n restaurant kon loop'],
+   stat:{geluk:2, slim:1}, kos:{vanaf:2, sny:[0.05,0.14]},
+   werk:['kok'], besigheid:'spyseniering'},
+  {id:'braai', n:'Braai', e:'\u{1F356}', g:'Hande', min:14, koste:3600,
+   sub:'Hout, vleis en ’n Saterdagmiddag',
+   vlakke:['','maak die vuur','braai ’n goeie tjop','jou braai is ’n instelling',
+     'mense vra jou om te kom braai','kompetisievlak'],
+   stat:{geluk:4}},
+  {id:'motorwerk', n:'Motorwerktuigkunde', e:'\u{1F527}', g:'Hande', min:14, koste:4200,
+   sub:'Gereedskap en ’n ou enjin om op te oefen',
+   vlakke:['','kan ’n wiel omruil','kan ’n diens self doen','kan ’n enjin oopmaak',
+     'bou ’n motor op','meganikus sonder ’n winkel'],
+   stat:{slim:3}, besigheid:'werkswinkel'},
+  {id:'houtwerk', n:'Houtwerk', e:'\u{1FA91}', g:'Hande', min:12, koste:5200,
+   sub:'Hout, skroewe en ’n sirkelsaag',
+   vlakke:['','kan ’n rak opsit','bou ’n boekrak','bou ’n tafel wat hou',
+     'maak meubels op aanvraag','meubelmaker'],
+   stat:{slim:2, geluk:2}, inkomste:{vanaf:4, bedrag:[10000,120000]},
+   besigheid:'meubels'},
+  /* --- Buite --- */
+  {id:'visvang', n:'Visvang', e:'\u{1F3A3}', g:'Buite', min:6, koste:2600,
+   sub:'’n Stok, kuns en ’n permit',
+   vlakke:['','sit by die water','vang soms iets','weet waar hulle byt',
+     'vang altyd iets','kan van die see leef'],
+   stat:{geluk:3, gesondheid:1}, kos:{vanaf:3, sny:[0.03,0.08]}},
+  {id:'tuinmaak', n:'Tuinmaak', e:'\u{1F331}', g:'Buite', min:8, koste:1400,
+   sub:'Saad, kompos en ’n graaf',
+   vlakke:['','het ’n potplant','kweek kruie','’n hele groentetuin',
+     'die hele straat kom koop by jou','jy leef uit jou tuin'],
+   stat:{geluk:2, gesondheid:2}, kos:{vanaf:2, sny:[0.04,0.11]},
+   besigheid:'tuindienste'}
+];
+/* Hoeveel punte elke vlak vra. Oefen jy elke jaar, is vlak 5 sowat
+   sestien jaar se werk — dit is doelbewus 'n leeftyd se stokperdjie. */
+var VAARDIG_PUNTE=[0, 10, 28, 58, 102, 160];
+var VAARDIG_PER_JAAR=2;        /* hoeveel vaardighede jy per jaar kan oefen */
+var VAARDIG_JAAR=[5,9];        /* punte wat een jaar se oefening gee */
+var VAARDIG_SLIM=0.06;         /* plus hierdie per punt slimheid */
+var VAARDIG_KIND=1.35;         /* 'n kind leer vinniger as 'n grootmens */
+var VAARDIG_KIND_TOT=16;
+var VAARDIG_ROES_NA=8;         /* jare sonder oefening voor dit begin roes */
+var VAARDIG_ROES=[1,3];        /* punte wat jy dan per jaar verloor */
+var VAARDIG_WERK_BONUS=7;      /* elke vlak help so baie met 'n aansoek */
+
+/* ==========================================================================
+   H4 — JOU EIE BESIGHEID (Fase 6)
+   'n Besigheid is 'n egte alternatief vir 'n werk, met egte risiko. Dit
+   werk met kliënte: elke kliënt bring 'waarde' per jaar in, jy kan net
+   soveel kliënte hanteer as wat jou kapasiteit toelaat, en jou vaste
+   koste loop of jy kliënte het of nie.
+
+     kapitaal  — wat dit kos om te begin
+     vaste     — koste per jaar wat loop al verdien jy niks
+     waarde    — wat een kliënt per jaar inbring
+     basis     — hoeveel kliënte jy alleen kan hanteer
+     perWerker — hoeveel kliënte elke werker bo-op dit hanteer
+     loon      — wat een werker per jaar kos
+     groei     — kliënte wat 'n goeie jaar bring (voor al die faktore)
+     risiko    — kans per jaar op 'n slegte jaar
+     vaardig   — die vaardigheid (H3) wat hierdie besigheid dra
+     plaaslik  — die dorp se koste-faktor skaal die omset en die koste
+
+   Die wins loop deur brutoInkomste() en word dus net soos 'n salaris
+   belas; 'n verlies kom uit jou sak en kan jou in die skuld sit.
+   ========================================================================== */
+var BESIGHEDE=[
+  {id:'smous', n:'Straatstalletjie', e:'\u{1F34E}', min:16, kapitaal:9000, vaste:14000,
+   waarde:[2200,4200], basis:30, perWerker:26, loon:62000, groei:[4,11], risiko:22,
+   plaaslik:true, sub:'Vrugte, lekkers en koeldrank by die taxi-staanplek',
+   wat:'kliënte per week'},
+  {id:'webwerf', n:'Webwerwe vir klein besighede', e:'\u{1F4BB}', min:16, kapitaal:12000,
+   vaste:22000, waarde:[9000,21000], basis:14, perWerker:20, loon:240000,
+   groei:[2,5], risiko:12, vaardig:'kodeer',
+   sub:'R50–R100 per maand per klant, vir ’n kafee of ’n loodgieter',
+   wat:'klante op maandelikse kontrak'},
+  {id:'tuindienste', n:'Tuindienste', e:'\u{1F331}', min:18, kapitaal:28000, vaste:38000,
+   waarde:[7800,13000], basis:8, perWerker:12, loon:78000, groei:[2,6], risiko:14,
+   plaaslik:true, vaardig:'tuinmaak', sub:'’n Bakkie, ’n snyer en twee paar hande',
+   wat:'tuine elke twee weke'},
+  {id:'skoonmaak', n:'Skoonmaakdienste', e:'\u{1F9F9}', min:18, kapitaal:34000, vaste:46000,
+   waarde:[9500,16000], basis:6, perWerker:10, loon:84000, groei:[2,6], risiko:15,
+   plaaslik:true, sub:'Kantore en huise, kontrak vir kontrak',
+   wat:'kontrakte'},
+  {id:'spyseniering', n:'Spyseniering', e:'\u{1F372}', min:20, kapitaal:95000, vaste:72000,
+   waarde:[16000,34000], basis:9, perWerker:7, loon:96000, groei:[1,4], risiko:18,
+   plaaslik:true, vaardig:'kook', sub:'Troues, begrafnisse en kantoorfunksies',
+   wat:'funksies per jaar'},
+  {id:'foto', n:'Fotografiestudio', e:'\u{1F4F8}', min:20, kapitaal:140000, vaste:86000,
+   waarde:[12000,26000], basis:12, perWerker:12, loon:180000, groei:[1,5], risiko:17,
+   vaardig:'fotografie', sub:'Troues, matriekafskeide en besighede',
+   wat:'opdragte per jaar'},
+  {id:'meubels', n:'Meubelwerkswinkel', e:'\u{1FA91}', min:20, kapitaal:180000, vaste:104000,
+   waarde:[24000,52000], basis:7, perWerker:5, loon:132000, groei:[1,3], risiko:16,
+   vaardig:'houtwerk', sub:'Tafels en kaste wat ’n leeftyd hou',
+   wat:'opdragte per jaar'},
+  {id:'werkswinkel', n:'Motorwerkswinkel', e:'\u{1F527}', min:21, kapitaal:380000,
+   vaste:220000, waarde:[9000,17000], basis:22, perWerker:16, loon:168000,
+   groei:[3,9], risiko:16, plaaslik:true, vaardig:'motorwerk',
+   sub:'Dienste, remme en ’n hyser wat betaal moet word', wat:'motors per jaar'},
+  {id:'kafee', n:'Koffiewinkel', e:'\u{2615}', min:21, kapitaal:620000, vaste:240000,
+   waarde:[3200,6000], basis:90, perWerker:70, loon:92000, groei:[25,70], risiko:24,
+   plaaslik:true, vaardig:'kook', sub:'Huur in ’n goeie straat, en ’n masjien van R180 000',
+   wat:'gereelde kliënte'},
+  {id:'bou', n:'Klein bouaannemer', e:'\u{1F3D7}', min:24, kapitaal:450000, vaste:280000,
+   waarde:[120000,340000], basis:2, perWerker:1.2, loon:150000, groei:[0.6,2], risiko:26,
+   plaaslik:true, sub:'Aanbouings en dakke — een slegte kontrak kan jou breek',
+   wat:'projekte per jaar'},
+  {id:'boerdery', n:'Kleinboerdery', e:'\u{1F69C}', min:24, kapitaal:850000, vaste:320000,
+   waarde:[52000,120000], basis:5, perWerker:3, loon:72000, groei:[0.5,2], risiko:30,
+   plaaslik:true, vaardig:'tuinmaak', sub:'Grond, ’n trekker en die weer wat besluit',
+   wat:'hektaar onder kontrak'}
+];
+var BESIG_BEMARK=[0, 6000, 25000, 90000];   /* wat jy per jaar aan bemarking kan gee */
+var BESIG_BEMARK_F=0.9;        /* kliënte wat elke R10 000 bemarking bring */
+var BESIG_VAARDIG_F=0.22;      /* elke vlak van die vaardigheid lig die groei so baie */
+var BESIG_SLIM=0.008;          /* per punt slimheid bo 50 */
+var BESIG_AANSIEN=0.12;        /* per punt aansien */
+var BESIG_WERK_AANDAG=0.55;    /* het jy ook ’n voltydse werk, groei dit stadiger */
+var BESIG_TOERUSTING=0.12;     /* elke R100 000 toerusting gee so baie kapasiteit by */
+var BESIG_VERLOOP=[4,14];      /* persent van jou kliënte wat elke jaar wegval */
+var BESIG_SLEG=[0.35,0.72];    /* ’n slegte jaar hou net so baie van die omset oor */
+var BESIG_GOED=12;             /* kans per jaar op ’n uitstekende jaar */
+var BESIG_GOED_F=[1.2,1.6];
+var BESIG_VERLIES_MAKS=3;      /* so baie verliesjare agtermekaar, dan is dit klaar */
+var BESIG_VERKOOP=2.6;         /* ’n winsgewende besigheid verkoop vir 2,6 × die wins */
+var BESIG_TOE_F=0.35;          /* maak jy toe, kry jy net 35% van die toerusting terug */
+var BESIG_KAPASITEIT_MIN=0.75; /* onder hierdie vol-persentasie vra werkers te veel */
+
+/* ==========================================================================
+   H1 — DIE BOEDEL (Fase 6)
+   Wat 'n generasie vir die volgende oorhou. SARS vat boedelbelasting op
+   alles bo die vrystelling, en dit is die rede waarom 'n familie se geld
+   nie oor vyf geslagte eindeloos aangroei nie.
+   ========================================================================== */
+var BOEDEL_VRYSTELLING=3500000;   /* SA se abatement */
+var BOEDEL_BELASTING=0.20;        /* 20% op alles daarbo */

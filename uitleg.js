@@ -25,6 +25,8 @@ function statusLyn(){
   if(s.tronk) return 'In die tronk (' + (s.tronk.jare - s.tronk.gedien) + ' jaar oor)';
   if(s.dakloos) return 'Dakloos' + (s.dakloos.jare ? ' (jaar ' + s.dakloos.jare + ')' : '');
   if(s.beroep) return beroepTitel();
+  /* H4 — wie sy eie ding loop, is nie werkloos nie. */
+  if(s.besigheid) return 'Eienaar van ' + s.besigheid.naam;
   if(verslaaf()) return GEWOONTES.filter(function(g){
     return gewoonteVlak(g.id)>=3; })[0].vlakke[3];
   if(s.skool.vlak==='universiteit'||s.skool.vlak==='nagraads') return 'Student: ' + s.skool.studie;
@@ -139,6 +141,8 @@ function renderAkt(){
           jonk ? '\u{1F512}' : arm ? '<span class="slot">te duur</span>' : '\u276F') + '</div></div></div>';
     });
   });
+  /* H3 — wat jy al opgebou het. */
+  h += renderVaardighede();
   /* Troeteldiere */
   h += '<div class="titel">Troeteldiere</div>';
   h += '<div class="kaart klik" onclick="wysTroeteldierwinkel()"><div class="ry">'+
@@ -152,6 +156,92 @@ function renderAkt(){
     '<div class="klein">' + (s.ouderdom<15 ? 'Ouderdom 15+' : maat() ? 'Jy is al in \u2019n verhouding' :
       'Begin by mense wat jy ken') + '</div></div><div class="regs">\u276F</div></div></div>';
   h += renderMisdaad();
+  return h;
+}
+
+/* ---------- H3: jou vaardighede ---------- */
+/* Wat jy al opgebou het, met die vlak as 'n balkie. Dit staan onder
+   Aktiwiteite, reg onder die knoppie waarmee jy oefen. */
+function renderVaardighede(){
+  var myne = myVaardighede();
+  if(!myne.length) return '';
+  var h = '<div class="titel">Jou vaardighede</div>';
+  myne.forEach(function(x){
+    var v = vaardigVlak(x.id), d = vaardig(x.id);
+    var volgende = VAARDIG_PUNTE[v+1];
+    h += '<div class="kaart"><div class="ry"><div class="emo">' + x.e + '</div>'+
+      '<div class="groei"><div class="hoof">' + x.n + ' \u00b7 vlak ' + v + ' van 5</div>'+
+      '<div class="klein">Jy ' + (v ? x.vlakke[v] : x.sub) + ' \u00b7 ' + (d.jare||0) +
+      ' jaar geoefen' + (volgende ? ' \u00b7 ' + Math.max(0, volgende - d.punte) +
+        ' punte tot vlak ' + (v+1) : ' \u00b7 niks meer om te leer nie') + '</div>'+
+      '<div class="baan" style="margin-top:5px"><div class="vul" style="width:' +
+      Math.round(v/5*100) + '%;background:var(--pers)"></div></div></div>'+
+      '<div class="regs">\u2605' + v + '</div></div>'+
+      /* Wat hierdie vlak vir jou oopgemaak het. */
+      (x.inkomste && v>=x.inkomste.vanaf ? '<div class="klein">Dit bring nou self geld in.</div>' : '')+
+      (x.kos && v>=x.kos.vanaf ? '<div class="klein">Dit sny jou kosrekening.</div>' : '')+
+      (x.bele && v>=x.bele.vanaf ? '<div class="klein">Jou beleggings doen beter.</div>' : '')+
+      (x.werk && v ? '<div class="klein">Dit help met ’n aansoek as ' +
+        lysEn(x.werk.map(function(id){ var j=null; BEROEPE.forEach(function(q){ if(q.id===id) j=q; });
+          return j ? j.t.toLowerCase() : id; }), 'of') + '.</div>' : '')+
+      (x.besigheid && v ? '<div class="klein">Daarmee kan jy ’n besigheid loop: ' +
+        (besigheidSoort(x.besigheid)||{n:''}).n.toLowerCase() + '.</div>' : '')+
+      '</div>';
+  });
+  return h;
+}
+
+/* ---------- H4: jou eie besigheid ---------- */
+function renderBesigheid(){
+  var h = '';
+  if(s.besigheid){
+    var b = s.besigheid, x = besigheidSoort(b.id) || {wat:'kliënte', waarde:[0,0]};
+    var kap = besigheidKapasiteit();
+    h += '<div class="titel">Jou besigheid</div>';
+    h += '<div class="kaart"><div class="ry"><div class="emo">' + (x.e||'\u{1F4BC}') + '</div>'+
+      '<div class="groei"><div class="hoof">' + veilig(b.naam) + '</div>'+
+      '<div class="klein">' + veilig(x.n||'') + ' \u00b7 ' + (b.jare||0) + ' jaar oop \u00b7 ' +
+      (b.werkers||0) + ' werker' + ((b.werkers||0)===1?'':'s') + '</div></div>'+
+      '<div class="regs' + ((b.wins||0)<0 ? ' ' : '') + '" style="color:' +
+      ((b.wins||0)>=0 ? 'var(--groen)' : 'var(--rooi)') + '">' + kortGeld(b.wins||0) +
+      '<br><span class="klein">wins verlede jaar</span></div></div>';
+    h += '<div class="klein" style="margin-top:8px">' + Math.round(b.kliente||0) + ' van ' +
+      Math.round(kap) + ' ' + x.wat + ' \u00b7 omset ' + geld(b.omset||0) + ' \u00b7 koste ' +
+      geld(b.koste||0) + '</div>';
+    h += '<div class="baan" style="margin-top:5px"><div class="vul" style="width:' +
+      Math.round(Math.min(100, kap ? (b.kliente/kap)*100 : 0)) +
+      '%;background:var(--blou)"></div></div>';
+    if(kap && b.kliente/kap >= 0.95)
+      h += '<div class="slot">Jy is vol. Huur iemand of koop toerusting as jy wil groei.</div>';
+    if(b.verliesJare) h += '<div class="slot">' + b.verliesJare +
+      (b.verliesJare===1 ? ' verliesjaar' : ' verliesjare') + ' agtermekaar \u00b7 nog ' +
+      (BESIG_VERLIES_MAKS - b.verliesJare) + ' en dit is bankrot</div>';
+    h += '<div class="klein" style="margin-top:6px">Bemarking: ' +
+      (b.bemarking ? geld(b.bemarking) + ' per jaar' : 'niks') + ' \u00b7 toerusting: ' +
+      geld(b.toerusting||0) + ' \u00b7 wat dit werd is: ' + geld(besigheidWaarde()) + '</div>';
+    if((b.span||[]).length) h += '<div class="klein">Jou span: ' +
+      veilig(b.span.map(function(p){ return p.naam; }).join(', ')) + '</div>';
+    h += '<div class="knoppe"><button class="knop klein2" onclick="wysBemarking()">Bemarking</button>'+
+      '<button class="knop klein2 groen" onclick="besigAksie(\'huur\')">Huur iemand</button></div>'+
+      '<div class="knoppe"><button class="knop klein2" onclick="wysToerusting()">Koop toerusting</button>'+
+      '<button class="knop klein2 grys" onclick="besigAksie(\'ontslaan\')">Laat iemand gaan</button></div>'+
+      '<div class="knoppe"><button class="knop klein2 grys" onclick="besigAksie(\'verkoop\')">Verkoop</button>'+
+      '<button class="knop klein2 rooi" onclick="besigAksie(\'sluit\')">Maak toe</button></div>';
+    h += '</div>';
+    return h;
+  }
+  /* Nog geen besigheid nie — wys die deur, as dit nou oop is. */
+  if(s.ouderdom < 16 || s.tronk || s.afgetree) return '';
+  if(s.skool.vlak==='laerskool') return '';
+  h += '<div class="titel">Jou eie ding</div>';
+  h += '<div class="kaart klik" onclick="wysBesighede()"><div class="ry">'+
+    '<div class="emo">\u{1F680}</div><div class="groei"><div class="hoof">Begin jou eie besigheid</div>'+
+    '<div class="klein">Elf soorte, van ’n stalletjie van R9 000 tot ’n plaas. Die wins is ' +
+    'joune en word soos ’n salaris belas; ’n verlies kom uit jou sak.</div></div>'+
+    '<div class="regs">\u276F</div></div></div>';
+  if((s.besighedeGehad||[]).length)
+    h += '<div class="kaart klein">Voorheen: ' + veilig(s.besighedeGehad.map(function(q){
+      return q.n + ' (' + q.jare + ' jaar, ' + q.einde + ')'; }).join(', ')) + '</div>';
   return h;
 }
 
@@ -275,6 +365,9 @@ function renderWerk(){
         '.' : '') +
       '</div></div>';
   }
+  /* H4 — jou eie besigheid staan langs die werk, want dit is 'n
+     alternatief daarvoor. */
+  h += renderBesigheid();
   /* D3 — deeltydse werk en vakansiewerk. */
   h += renderDeeltyds();
   /* B17 — pensioen: wat in die fonds is, wat jy bydra, en aftrede. */
@@ -372,14 +465,34 @@ function persoonKaart(v){
     '%;background:var(--pienk)"></div></div></div>'+
     '<div class="regs">' + v.band + '%</div></div></div>';
 }
+/* H1 — die familielyn: hoeveelste geslag jy is, en wie voor jou was.
+   Dit staan bo-aan die Mense-blad, want dit is deel van wie jy is. */
+function renderFamilielyn(){
+  if((s.generasie||1) <= 1) return '';
+  var h = '<div class="titel">Familielyn</div>';
+  h += '<div class="kaart"><div class="hoof">' + generasieWoord(s.generasie) +
+    ' geslag van die ' + veilig(s.van) + '-familie</div>';
+  (s.familielyn||[]).forEach(function(r, i){
+    h += '<div class="eind-stat"><span>' + generasieWoord(r.generasie) + ' \u00b7 ' +
+      veilig(r.naam) + '</span><b>' + r.ouderdom + ' jaar \u00b7 ' + veilig(r.beroep) +
+      ' \u00b7 ' + kortGeld(r.netto) + ' nagelaat</b></div>';
+  });
+  h += '<div class="eind-stat"><span>' + generasieWoord(s.generasie) + ' \u00b7 ' +
+    veilig(s.naam + ' ' + s.van) + ' (jy)</span><b>' + s.ouderdom + ' jaar \u00b7 ' +
+    veilig(statusLyn()) + '</b></div>';
+  h += '</div>';
+  return h;
+}
 function renderMense(){
-  var h = '', enige = false;
+  var h = renderFamilielyn(), enige = false;
   var groepe = [
     {t:'Liefde', tipes:['eggenoot','lief']},
     {t:'Gesin', tipes:['ma','pa','broer','suster','seun','dogter']},
     /* E1 en E7 — drie geslagte in een lys. */
     {t:'Grootouers', tipes:['ouma','oupa']},
     {t:'Kleinkinders', tipes:['kleinkind']},
+    /* H1 — die generasiespel bring ooms, tantes, neefs en niggies in. */
+    {t:'Familie', tipes:['oom','tante','neef','niggie']},
     {t:'Vriende', tipes:['vriend']},
     {t:'By die skool', tipes:['klasmaat']},
     {t:'By die werk', tipes:['baas','kollega']}

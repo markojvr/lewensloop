@@ -14,8 +14,8 @@ met presies dieselfde gedrag — net makliker om in te werk:
 | `styl.css` | Al die uitleg en kleure. |
 | `hulp.js` | Klein hulpfunksies: `R()`, `kans()`, `geld()`, `klem()`. |
 | `data.js` | Al die lyste: name, skole, unies, beroepe, bates, misdade, flieks, diere. Onder "SKOOL EN STUDIE" staan die vakke, die APS-tabel en die slaagkanse; onder "EKONOMIE" staan al die geldgetalle bymekaar: dorpskoste, huurpryse, verbandkoerse, rente en pensioen; onder "GESIN EN GESONDHEID" staan die grootouer-dade, die voorbehoeding, die siektes (`TOESTANDE`), die mediese fondse, die gewoontes en die gene. |
-| `gebeure.js` | `GEBEURE` — die lukrake dinge wat met jou gebeur. |
-| `lewe.js` | Die status `s`, stoor/laai, en `wordOuer()` — die jaarmasjien. |
+| `gebeure.js` | `GEBEURE` — die lukrake dinge wat met jou gebeur. Ná Fase 6 is dit 197 gebeure, waarvan 53 ’n keuse het: die oorspronklike lys, dan blokke per lewensfase, dan blokke wat by die stelsels inhaak (siektes, gewoontes, die straat, jou besigheid, jou vaardighede, jou kinders), en heel onder die **vlagverhale** (H14) wat ’n vroeëre keuse later laat terugkom. |
+| `lewe.js` | Die status `s`, stoor/laai, en `wordOuer()` — die jaarmasjien. Fase 6 se drie nuwe blokke staan onderaan: die vlagstelsel (H14), vaardighede (H3), die besigheidsjaar (H4) en die generasie-oorgang (H1). |
 | `aksies.js` | Alles wat die speler self kies: aktiwiteite, misdaad, werk, studie, bates, verhoudings, diere. |
 | `uitleg.js` | Bou die HTML vir elke tab, insluitend die Gesond-blad (siektes, mediese fonds, leefstyl, voorbehoeding). |
 | `skerm.js` | Modale vensters, wenke, grafsteen, beginskerm. |
@@ -256,25 +256,33 @@ in `data.js` onder "GESIN EN GESONDHEID (Fase 5)": `TOESTANDE`, `MEDIESE_FONDSE`
 
 ## H. Nuwe stelsels wat die spel "voller" sal maak (P2)
 
-| # | Nuwe inhoud |
-|---|---|
-| H1 | **Generasiespel.** Gaan voort as jou kind wanneer jy sterf, met jou bates as erfenis. Dit is die enkele grootste ding wat 'n lewe-simulasie herspeelbaar maak. |
-| H2 | **Prestasies / bucket list** — doelwitte wat jy oor 'n leeftyd afmerk, en "ribbons" op die grafsteen (bv. "Miljoenêr voor 30", "Nooit 'n misdaad gepleeg nie"). |
-| H3 | **Vaardighede en stokperdjies** as 'n aparte stelsel: klavier, karate, kodeer, kook, visvang — elkeen met vlakke wat oor jare opbou en nuwe geleenthede oopmaak. |
-| H4 | **Eie besigheid:** begin iets, kry kliënte, huur mense, groei of gaan bankrot. (Jou website-besigheid as 'n spel-opsie.) |
-| H5 | **Sport- en kunsloopbane:** gekies op skool, geskeduleer, met 'n kort loopbaan en 'n groot inkomste — en wat jy doen ná 32. |
-| H6 | **Bekendheid / sosiale media:** volgelinge, inkomste, kanselleer-risiko. |
-| H7 | **Verhuising en emigrasie:** tussen SA-dorpe (ander kostes, ander werk, ander skole) en na die buiteland (visum, salaris in 'n ander geldeenheid, familie wat agterbly). |
-| H8 | **Eiendom as belegging:** koop om te verhuur, huurinkomste, slegte huurders, onderhoud, bond op 'n tweede eiendom. |
-| H9 | **Motor as stelsel:** leerlinglisensie → rylisensie (met 'n toets wat jy kan druip) → versekering → diens → ongelukke → verkoop. |
-| H10 | **Geloof en gemeenskap:** kerk, vrywilligerswerk, liefdadigheid (met 'n geluk- en aansien-effek). |
-| H11 | **Politiek:** stem, by 'n party aansluit, raadslid → LP → minister. |
-| H12 | **Kalender en geskiedenis.** Gee die spel 'n beginjaar en laat werklike SA-gebeurtenisse inkom volgens die jaar (beurtkrag, rand-insinking, Covid, 'n boom-jaar vir werk). |
-| H13 | **Meer gebeure.** Daar is net ± 36 lukrake gebeure en 10 keuse-gebeure vir 'n lewe van 80+ jaar — jy sien dieselfde goed herhaal. Mikpunt: 150+, en elkeen moet ten minste een keuse hê. |
-| H14 | **Gebeure wat onthou.** Niks wat jy kies, verander ooit 'n latere gebeurtenis nie. Nodig: vlae wat later gebeure oopsluit (jy het die boelie geslaan → hy kom op 30 weer voor). |
-| H15 | **Meer stats:** Dissipline, Karakter/Reputasie, Stres, Energie — sodat keuses wisselwerking het eerder as net vier stawe. |
-| H16 | **Troeteldiere uitgebrei:** teel, dieretarts-noodgevalle, 'n dier wat wegraak, meer soorte. |
-| H17 | **Volledige SA-detail wat flavour gee:** taxi's, braai, Woolworths vs Shoprite, rugby, 'n plaas, matriekafskeid, kus-vakansie — party is daar, maar dit kan baie dieper. |
+**Fase 6 (H1, H3, H4, H13, H14) is ✅ KLAAR (23 Oktober 2026).** Die kolom **Gedoen**
+sê kortliks wat verander het. Die ander items in hierdie afdeling wag nog.
+
+Nuwe velde in `s`: `vaardighede`, `besigheid`, `besighedeGehad`, `generasie` en
+`familielyn` — almal met verstekwaardes in `vulNuweVelde()`, sodat ou stoor-data in
+localStorage steeds laai. Die nuwe lyste staan in `data.js` onder "H3 —
+VAARDIGHEDE", "H4 — JOU EIE BESIGHEID" en "H1 — DIE BOEDEL".
+
+| # | Nuwe inhoud | Gedoen |
+|---|---|---|
+| H1 | **Generasiespel.** Gaan voort as jou kind wanneer jy sterf, met jou bates as erfenis. Dit is die enkele grootste ding wat 'n lewe-simulasie herspeelbaar maak. | ✅ By die grafsteen staan nou ’n groen knoppie vir elke lewende kind: sy ouderdom, waar hy in sy lewe is, en wat hy sou erf. `gaanVoortAsKind()` maak daardie kind die nuwe `s`: sy eie statte, sy skoolloopbaan en APS, sy werk, sy maat en sy `kl.geskiedenis` as sy lewensverhaal. Die familie skuif een plek op — jou eggenoot word sy ma of pa, jou ander kinders word sy broers en susters, **jou kleinkinders word sy kinders** (met hul eie `kl`), jou ouers word sy oumas en oupas, en jou broers en susters word sy ooms en tantes (`neef`/`niggie`/`oom`/`tante` is nuwe tipes in `rol()`). Die boedel word verdeel ná die bestaande verband- en skuldreëls: ’n lewende eggenoot kry die helfte, die res gaan gelyk tussen die kinders, SARS vat 20% boedelbelasting bo R3,5 m, en is ’n kind se deel groot genoeg (en die verband afbetaal), erf hy die huis self. ’n Kind van 16+ erf ook die besigheid. `s.generasie` tel die geslagte en `s.familielyn` hou elkeen se naam, ouderdom, beroep en nalatenskap by — dit wys op die grafsteen en in ’n "Familielyn"-paneel bo-aan die Mense-blad. Getoets tot agt geslagte in een lyn. |
+| H2 | **Prestasies / bucket list** — doelwitte wat jy oor 'n leeftyd afmerk, en "ribbons" op die grafsteen (bv. "Miljoenêr voor 30", "Nooit 'n misdaad gepleeg nie"). | |
+| H3 | **Vaardighede en stokperdjies** as 'n aparte stelsel: klavier, karate, kodeer, kook, visvang — elkeen met vlakke wat oor jare opbou en nuwe geleenthede oopmaak. | ✅ 14 vaardighede in `VAARDIGHEDE` (klavier, kitaar, fotografie, skryf, kodeer, aandele, karate, sport, kook, braai, motorwerk, houtwerk, visvang, tuinmaak), elk met vyf vlakke en ’n eie naam per vlak ("speel by troues", "bou ’n werkende webwerf"). Jy oefen twee per jaar onder Aktiwiteite → "Oefen ’n vaardigheid"; dit kos geld (’n kind kan sy ouers vra) en gee punte wat met jou slimheid skaal — ’n grootmens vat ± 17 jaar tot vlak 5, ’n kind ± 12. Elke vlak maak iets oop: **geld** (`vaardigInkomsteJaar()`, belas teen jou gewone koers), **laer lewenskoste** (`vaardigKosSny()` — kook, tuinmaak, visvang), **’n beter opbrengs op die JSE** (`vaardigBeleggingBonus()` — aandele en waardasie), **’n beter werksaansoek** (`vaardigWerkBonus()`), **’n besigheid wat dit kan dra** (H4), **’n beter gas by ’n kuier**, en ’n hele klomp gebeure wat net oopgaan as jy die vlak het. ’n Vaardigheid wat jy agt jaar laat lê, roes (`vaardigJaar()`). Dit staan as ’n paneel onder Aktiwiteite en op die grafsteen. |
+| H4 | **Eie besigheid:** begin iets, kry kliënte, huur mense, groei of gaan bankrot. (Jou website-besigheid as 'n spel-opsie.) | ✅ 11 soorte in `BESIGHEDE`, van ’n straatstalletjie van R9 000 tot ’n kleinboerdery van R850 000 — en ja, **"Webwerwe vir klein besighede" (R50–R100 per maand per klant)** is een daarvan. Dit loop op kliënte: `besigheidJaar()` laat kliënte bykom (bemarking, jou vaardigheid, jou slimheid) en wegval (`BESIG_VERLOOP`), beperk deur `besigheidKapasiteit()` = jyself + elke werker + toerusting. Omset − vaste koste − lone − bemarking = wins. **Dit haak in die bestaande finansiesketting in, nie langs dit nie:** die wins kom by `brutoInkomste()` en word saam met jou salaris belas, ’n verlies gaan deur `betaalWatJyKan()` en dus deur B6 se skuld, die balju en uiteindelik die straat, en `besigheidWaarde()` tel in `netoWaarde()`. Drie verliesjare agtermekaar is bankrot (`besigheidBankrot()` — krediteure, geluk, aansien, en ’n vlag wat later ’n tweede kans oopmaak). Jy kan bemark, mense huur en laat gaan (hulle het name), toerusting koop, verkoop (2,6 × die wins) of toemaak. Die tronk maak dit toe; op straat oorleef net die stalletjie. Het jy ook ’n voltydse werk, groei dit 45% stadiger. Gemeet oor 40 lopies van 20 jaar elk: webwerwe 0% bankrot, boerdery 40%. |
+| H5 | **Sport- en kunsloopbane:** gekies op skool, geskeduleer, met 'n kort loopbaan en 'n groot inkomste — en wat jy doen ná 32. | |
+| H6 | **Bekendheid / sosiale media:** volgelinge, inkomste, kanselleer-risiko. | |
+| H7 | **Verhuising en emigrasie:** tussen SA-dorpe (ander kostes, ander werk, ander skole) en na die buiteland (visum, salaris in 'n ander geldeenheid, familie wat agterbly). | |
+| H8 | **Eiendom as belegging:** koop om te verhuur, huurinkomste, slegte huurders, onderhoud, bond op 'n tweede eiendom. | |
+| H9 | **Motor as stelsel:** leerlinglisensie → rylisensie (met 'n toets wat jy kan druip) → versekering → diens → ongelukke → verkoop. | |
+| H10 | **Geloof en gemeenskap:** kerk, vrywilligerswerk, liefdadigheid (met 'n geluk- en aansien-effek). | |
+| H11 | **Politiek:** stem, by 'n party aansluit, raadslid → LP → minister. | |
+| H12 | **Kalender en geskiedenis.** Gee die spel 'n beginjaar en laat werklike SA-gebeurtenisse inkom volgens die jaar (beurtkrag, rand-insinking, Covid, 'n boom-jaar vir werk). | |
+| H13 | **Meer gebeure.** Daar is net ± 36 lukrake gebeure en 10 keuse-gebeure vir 'n lewe van 80+ jaar — jy sien dieselfde goed herhaal. Mikpunt: 150+, en elkeen moet ten minste een keuse hê. | ✅ Van 46 na **197 gebeure, waarvan 53 ’n keuse het** (was 10). Hulle is per lewensfase en per stelsel gegroepeer: kleintyd, laerskool, hoërskool, jong grootmens, middeljare, oud — plus blokke wat by die nuwe stelsels inhaak: siektes en die mediese fonds, drank/rook/dwelms, die straat, jou besigheid, jou vaardighede, jou kinders en kleinkinders. ’n Gebeurtenis se `as:` lees nou gerus `chronies()`, `gewoonteVlak()`, `s.dakloos`, `s.besigheid`, `vaardigVlak()` of `kindersTuis()`, sodat jy dinge sien wat by jóú lewe pas. |
+| H14 | **Gebeure wat onthou.** Niks wat jy kies, verander ooit 'n latere gebeurtenis nie. Nodig: vlae wat later gebeure oopsluit (jy het die boelie geslaan → hy kom op 30 weer voor). | ✅ ’n Vlagstelsel bo-op die bestaande `s.vlagge`: `stelVlag(naam, data)` hou die jaar, hoeveel keer, en wat ook al onthou moet word (gewoonlik ’n naam); `vlagRyp(naam, jare)` sê of genoeg jare verby is en of die verhaal nog oop is; `sluitVlag()` maak dit toe. `vlag()` hanteer ook die ou vlae wat blote getalle was, sodat ou stoor-data werk. Sowat 25 kettings loop nou: die boelie wat jy op tien geslaan het kom op dertig weer voor, die vriend wat jou R20 000 geskuld het daag op (of loop die ander kant toe), die borgskap wat jy geteken het kom as ’n dagvaarding terug, die kind by wie jy in Graad 5 gaan sit het beveel jou by ’n werk aan, die piramideskema-ou is terug met kripto, die eksamenvraestel kom by die werk op, die buurman se boom, die visum, die begrafnislening. Oor 120 lewens gemeet: 24 van 35 boelie-keuses, 25 van 27 borgskappe en 46 van 97 skemas het werklik later teruggekom. |
+| H15 | **Meer stats:** Dissipline, Karakter/Reputasie, Stres, Energie — sodat keuses wisselwerking het eerder as net vier stawe. | |
+| H16 | **Troeteldiere uitgebrei:** teel, dieretarts-noodgevalle, 'n dier wat wegraak, meer soorte. | |
+| H17 | **Volledige SA-detail wat flavour gee:** taxi's, braai, Woolworths vs Shoprite, rugby, 'n plaas, matriekafskeid, kus-vakansie — party is daar, maar dit kan baie dieper. | |
 
 ---
 
@@ -294,7 +302,7 @@ in `data.js` onder "GESIN EN GESONDHEID (Fase 5)": `TOESTANDE`, `MEDIESE_FONDSE`
 | I10 | Geen manier om 'n lewe doelbewus te eindig/herbegin sonder om te sterf nie. |
 | I11 | Die spel waarsku jou nooit voor 'n onomkeerbare keuse nie (bv. skool los, bedank, ontsnap). |
 | I12 | `wysModaal()` sit `titel` en `teks` ongefiltreerd in die HTML; dis veilig met interne teks, maar nie as jy later gebruikersteks daar deurgee nie. |
-| I13 | **Die oom se testament kan oor en oor vuur (nuut, 22 Okt 2026).** Die gebeurtenis is `min:25, max:120` sonder 'n eenmalig-vlag, en elke keer gee dit R40 000–R400 000 kontant of 'n plot van R300 000–R1,4 m. Oor 'n lang lewe kan dit 'n paar keer tref en jou netto waarde met miljoene opblaas sonder dat jy iets gedoen het. Nodig: 'n vlag sodat dit hoogstens een of twee keer gebeur. | `gebeure.js` |
+| I13 | ✅ **KLAAR (23 Okt 2026, saam met Fase 6.)** Die gebeurtenis dra nou die vlag `erfOom` en sy `as:` keer dat dit ’n tweede keer vuur. **Die oom se testament kon oor en oor vuur (nuut, 22 Okt 2026).** Die gebeurtenis is `min:25, max:120` sonder 'n eenmalig-vlag, en elke keer gee dit R40 000–R400 000 kontant of 'n plot van R300 000–R1,4 m. Oor 'n lang lewe kan dit 'n paar keer tref en jou netto waarde met miljoene opblaas sonder dat jy iets gedoen het. Nodig: 'n vlag sodat dit hoogstens een of twee keer gebeur. | `gebeure.js` |
 
 ---
 
@@ -317,10 +325,14 @@ greep — en die dood volg nou uit al daardie dinge plus die familiegeskiedenis 
 jy gebore is. *F9 was nie in die oorspronklike Fase 4-lysie nie, maar is bygevoeg: ’n
 siekte sonder ’n doodsverband beteken niks.*
 
-**Fase 6 — nuwe inhoud (H1, H13, H14, H3, H4).** Generasiespel, baie meer gebeure,
-vaardighede, eie besigheid. Die generasiespel (H1) hang direk aan E7 hierbo: ’n kind
-se `v.kl` is doelbewus gebou soos `s` self — eie slimheid, skool, beroep, maat, kinders,
-gewoontes, siektes en ’n eie lewensverhaal — sodat ’n mens as jou kind kan voortgaan.
+~~**Fase 6 — nuwe inhoud (H1, H13, H14, H3, H4).**~~ **✅ KLAAR (23 Oktober 2026).**
+Al vyf items is gedoen — sien die **Gedoen**-kolom in afdeling H. Die spel is nou
+herspeelbaar: as jy sterf, kies jy een van jou kinders en speel sy lewe verder, met sy
+deel van die boedel, sy eie geskiedenis en ’n familie wat een plek opgeskuif het.
+Langs ’n werk kan jy nou jou eie besigheid loop (11 soorte, wins word belas, verlies
+kom uit jou sak), en veertien vaardighede bou oor jare op en maak geld, werk, gebeure
+en ’n besigheid oop. Daar is 197 gebeure in plaas van 46, en ’n keuse wat jy op tien
+maak, kan jou op dertig weer in die gesig kyk.
 
 **Klaar tot dusver:**
 
@@ -341,8 +353,16 @@ gewoontes, siektes en ’n eie lewensverhaal — sodat ’n mens as jou kind kan
    mediese fonds teenoor die staatshospitaal, drank/rook/dwelms, en ’n dood wat
    uit alles daarvan volg.
 
-**Volgende aan die beurt: Fase 6** (H1, H13, H14, H3, H4 — die generasiespel,
-baie meer gebeure, vaardighede, ’n eie besigheid).
+7. **Fase 6 (H1, H3, H4, H13, H14)** — die generasiespel, vaardighede en
+   stokperdjies, ’n eie besigheid, 197 gebeure, en vlae wat onthou. I13 (die oom se
+   testament wat oor en oor kon vuur) is in dieselfde slag reggemaak.
+
+**Volgende aan die beurt:** niks is vasgestel nie. Die drie wat die meeste sal
+byvoeg, is waarskynlik **H2** (prestasies op die grafsteen — dit gee die
+generasiespel ’n telling om voor te speel), **H9** (die motor as ’n volle stelsel:
+lisensietoets, versekering, diens, ongeluk) en **H8** (eiendom om te verhuur, wat die
+enigste groot gaping in die ekonomie is noudat ’n besigheid bestaan). Sien ook die
+twee sterretjies hieronder wat Fase 3 en Fase 4 oopgelaat het.
 
 ⭐ **Twee dinge wat Fase 3 oopgelaat het en wat die moeite werd is om volgende te
 doen.** Eerstens **C3** (die drie NSC-slaagvlakke): die APS is nou daar, maar ’n
