@@ -210,6 +210,40 @@ var UITTREE_KOERS=0.36;       /* ... en die res word swaar belas */
    rykdomfaktor. 'n Fliekkaartjie kos R180, so dit moet sin maak. */
 var SAKGELD_WEEK=7;
 
+/* B18 — dakloosheid. Kan jy jou blyplek nie betaal nie, is daar niks
+   verkoopbaars oor nie en is daar geen familiehuis om na terug te gaan
+   nie, dan beland jy op die straat. Terwyl jy daar is, val jou
+   lewenskoste heeltemal weg — dit is die ekonomiese ontlaaiklep wat
+   B18 oplos. Die prys is jou gesondheid en jou gemoed, en werk kry word
+   baie swaar. Dit moet moeilik wees, maar daar moet 'n pad terug wees:
+   die meeste mense is binne 'n paar jaar weer onder 'n dak. */
+var DAKLOOS_GESONDHEID=[3,9];   /* gesondheid wat 'n jaar op straat kos */
+var DAKLOOS_GELUK=[6,14];       /* geluk wat 'n jaar op straat kos */
+var DAKLOOS_WERKKANS=0.20;      /* sonder adres en skoon klere: 'n vyfde van die normale kans */
+var DAKLOOS_NGO_KANS=0.55;      /* met 'n NGO se adres en 'n ID agter jou naam gaan dit beter */
+var DAKLOOS_TRAP='agterkamer';  /* die goedkoopste plek waar 'n verhuurder jou sal inneem */
+var DEPOSITO_MAANDE=2;          /* 'n verhuurder vra die eerste maand plus twee maande deposito */
+var DAKLOOS_HULP_KANS=8;        /* kans per jaar dat 'n maatskaplike werker jou by 'n plek kry ... */
+var DAKLOOS_HULP_GROEI=7;       /* ... plus so baie persent vir elke jaar wat jy al op straat is */
+var DAKLOOS_FAMILIE_BAND=72;    /* met 'n band hier bo sal familie jou intrek */
+var BEDEL_DAG=[25,90];          /* wat 'n dag by die verkeerslig inbring */
+var BEDEL_DAE=[40,95];          /* hoeveel dae jy dit uithou voor hulle jou wegjaag */
+var LOSWERK_DAG=[180,420];      /* 'n dag se los werk: tuinwerk, karwag, 'n vragmotor aflaai */
+var LOSWERK_DAE=[18,45];        /* hoeveel dae se werk jy in 'n jaar kan optel */
+var DAKLOOS_WERKE=['petrol','plaas','vullis','bou','kelner'];  /* wat 'n skuiling vir jou kan kry */
+/* Wat 'n jaar op straat met jou maak — een hiervan word party jare gelog. */
+var DAKLOOS_NAGTE=[
+  'Iemand het jou skoene gesteel terwyl jy geslaap het.',
+  'Die reën het drie nagte lank nie opgehou nie. Jy was deurnat.',
+  'Die sekuriteitswagte het julle voor dagbreek onder die afdak weggejaag.',
+  'Jy het twee dae lank niks geëet nie.',
+  'Jou hoes wil nie weggaan nie, en daar is geen geld vir ’n dokter nie.',
+  'Iemand wat jy nie ken nie, het jou ’n bord kos en ’n kombers gegee.',
+  'Die winter het jou tot in jou bene gevat.',
+  'Jy het die hele dag by die taxistaanplek gesit en wag dat iets gebeur.',
+  'Die munisipaliteit het julle goed op ’n vragmotor gelaai en weggevat.'
+];
+
 var ONTSNAPVOERTUIE=[
   {n:'Te voet', mod:14, sub:'Jy sal moet hardloop'},
   {n:'Op ’n fiets', mod:9, sub:'Stil, maar stadig'},

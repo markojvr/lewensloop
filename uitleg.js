@@ -20,6 +20,7 @@ function bar(naam, waarde, kleur){
 function statusLyn(){
   if(!s.lewe) return 'Oorlede';
   if(s.tronk) return 'In die tronk (' + (s.tronk.jare - s.tronk.gedien) + ' jaar oor)';
+  if(s.dakloos) return 'Dakloos' + (s.dakloos.jare ? ' (jaar ' + s.dakloos.jare + ')' : '');
   if(s.beroep) return beroepTitel();
   if(s.skool.vlak==='universiteit'||s.skool.vlak==='nagraads') return 'Student: ' + s.skool.studie;
   if(s.skool.vlak==='laerskool'||s.skool.vlak==='hoerskool') return 'Graad ' + s.skool.graad;
@@ -60,8 +61,48 @@ function renderLewe(){
 }
 
 /* ---------- Aktiwiteite ---------- */
+/* B18 — die paneel wat net wys terwyl jy dakloos is, presies soos die
+   tronkpaneel. Misdaad bly daaronder staan: dit is dikwels al wat oorbly. */
+function renderDakloos(){
+  var d = s.dakloos, uit = dakUitKoste();
+  var h = '<div class="titel">Op straat</div>';
+  h += '<div class="kaart"><div class="hoof">' + (d.jare ? 'Jaar ' + d.jare + ' sonder ’n dak'
+      : 'Jou eerste maande sonder ’n dak') + '</div>'+
+    '<div class="klein">Jy betaal geen huur of lewenskoste nie, maar elke jaar hier kos jou '+
+    'gesondheid en geluk. Skool en studie is toe, en werk kry is swaar' +
+    (d.ngo ? ' — die NGO se adres help darem' : ' sonder ’n adres') + '.</div>'+
+    '<div class="klein" style="margin-top:6px">' +
+    (s.geld<0 ? 'Jy is ' + geld(-s.geld) + ' in die skuld' : 'Jy het ' + geld(s.geld)) +
+    '. ’n Verhuurder wil ' + geld(uit) + ' vooruit sien' +
+    (s.geld>=uit ? ' — jy het genoeg!' : '.') + '</div>'+
+    '<button class="knop grys" onclick="dakloosAksie(\'bedel\')">Bedel by die verkeerslig</button>'+
+    '<button class="knop grys" onclick="dakloosAksie(\'loswerk\')">Soek los werk</button>'+
+    '<button class="knop grys" onclick="dakloosAksie(\'skuiling\')">Slaap by ’n skuiling</button>'+
+    (d.ngo ? '' : '<button class="knop groen" onclick="dakloosAksie(\'ngo\')">Meld by ’n NGO aan</button>')+
+    '<button class="knop pienk" onclick="dakloosAksie(\'familie\')">Vra familie om hulp</button>'+
+    (s.geld>=uit ? '<button class="knop groen" onclick="kiesBlyplek(\'' + dakTrappe()[0].id +
+      '\')">Huur ’n ' + dakTrappe()[0].n.toLowerCase() + '</button>' : '') +
+    '</div>';
+  return h;
+}
+/* Die misdaadlys. Dit staan apart sodat die gewone blad en die
+   dakloos-paneel albei dit kan wys. */
+function renderMisdaad(){
+  var h = '<div class="titel">Misdaad</div>';
+  if(s.ouderdom<12) return h + '<div class="kaart klein">Jy is nog te jonk vir die onderwereld.</div>';
+  MISDADE.forEach(function(m){
+    var gedaan = (s.gedoen['md_'+m.id]||0)>=2;
+    h += '<div class="kaart klik" onclick="doenMisdaad(\'' + m.id + '\')"><div class="ry">'+
+      '<div class="emo">' + m.e + '</div><div class="groei"><div class="hoof">' + m.n + '</div>'+
+      '<div class="klein">' + m.teikens.length + ' teikens' + (m.voertuig?' \u00b7 jy kies die ontsnapvoertuig':'') +
+      (m.maat?' \u00b7 jy kan iemand saamvat':'') + '</div></div>'+
+      '<div class="regs">' + (gedaan?'<span class="merkie">GENOEG</span>':'\u276F') + '</div></div></div>';
+  });
+  return h;
+}
 function renderAkt(){
   var h = '';
+  if(s.dakloos && !s.tronk) return renderDakloos() + renderMisdaad();
   if(s.tronk){
     h += '<div class="titel">Tronklewe</div>';
     h += '<div class="kaart"><div class="hoof">Jaar ' + s.tronk.gedien + ' van ' + s.tronk.jare + '</div>'+
@@ -105,20 +146,7 @@ function renderAkt(){
     '<div class="groei"><div class="hoof">Soek iemand om uit te vra</div>'+
     '<div class="klein">' + (s.ouderdom<15 ? 'Ouderdom 15+' : maat() ? 'Jy is al in \u2019n verhouding' :
       'Begin by mense wat jy ken') + '</div></div><div class="regs">\u276F</div></div></div>';
-  /* Misdaad */
-  h += '<div class="titel">Misdaad</div>';
-  if(s.ouderdom<12){
-    h += '<div class="kaart klein">Jy is nog te jonk vir die onderwereld.</div>';
-  } else {
-    MISDADE.forEach(function(m){
-      var gedaan = (s.gedoen['md_'+m.id]||0)>=2;
-      h += '<div class="kaart klik" onclick="doenMisdaad(\'' + m.id + '\')"><div class="ry">'+
-        '<div class="emo">' + m.e + '</div><div class="groei"><div class="hoof">' + m.n + '</div>'+
-        '<div class="klein">' + m.teikens.length + ' teikens' + (m.voertuig?' \u00b7 jy kies die ontsnapvoertuig':'') +
-        (m.maat?' \u00b7 jy kan iemand saamvat':'') + '</div></div>'+
-        '<div class="regs">' + (gedaan?'<span class="merkie">GENOEG</span>':'\u276F') + '</div></div></div>';
-    });
-  }
+  h += renderMisdaad();
   return h;
 }
 
@@ -179,8 +207,15 @@ function renderWerk(){
       'klaargemaak het, of dit verlaat (jy mag van 16 af).</div></div>';
   } else {
     h += '<div class="kaart"><div class="hoof">Werkloos</div><div class="klein">'+
-      'Doen aansoek vir ’n werk hieronder. Jy kry drie onderhoude per jaar (' +
-      (3-s.aansoeke) + ' oor).</div></div>';
+      'Doen aansoek vir ’n werk hieronder. Jy kry ' +
+      (aansoekPerk()===1 ? 'een onderhoud' : aansoekPerk() + ' onderhoude') + ' per jaar (' +
+      (aansoekPerk()-s.aansoeke) + ' oor).' +
+      /* B18 — sonder ’n adres kom jy skaars by die onderhoud. */
+      (s.dakloos ? ' Jy is dakloos: jou kans is net ' +
+        persent((s.dakloos.ngo ? DAKLOOS_NGO_KANS : DAKLOOS_WERKKANS)*100) +
+        '% van normaal' + (s.dakloos.ngo ? '' : ' — meld by ’n NGO aan onder Aktiwiteite') +
+        '.' : '') +
+      '</div></div>';
   }
   /* B17 — pensioen: wat in die fonds is, wat jy bydra, en aftrede. */
   if(s.ouderdom>=18 && !s.afgetree) h += renderPensioen();
@@ -296,7 +331,33 @@ function renderBlyplek(){
     return h + '<div class="kaart"><div class="hoof">Jou eie huis</div><div class="klein">'+
       'Jy betaal geen huur nie \u2014 net die verband, die erfbelasting en die herstelwerk.'+
       '</div></div>';
+  /* B18 — op straat wys die blad wat ’n verhuurder vooruit wil sien. */
+  if(s.dakloos){
+    h += '<div class="kaart"><div class="hoof">Jy is dakloos</div><div class="klein">'+
+      '’n Verhuurder sal jou inneem as jy die eerste jaar se huur en twee maande '+
+      'deposito vooruit betaal. ' +
+      (s.geld<0 ? 'Jy is ' + geld(-s.geld) + ' in die skuld.' : 'Jy het ' + geld(s.geld) + '.') +
+      '</div></div>';
+    dakTrappe().forEach(function(p){
+      var koste = dakIntrekKoste(p.id), kan = s.geld >= koste;
+      h += '<div class="kaart' + (kan?' klik':'') + '"' +
+        (kan?' onclick="kiesBlyplek(\'' + p.id + '\')"':'') +
+        ' style="' + (kan?'':'opacity:.55') + '"><div class="ry">'+
+        '<div class="emo">\u{1F511}</div><div class="groei"><div class="hoof">' + p.n + '</div>'+
+        '<div class="klein">' + geld(koste) + ' vooruit \u00b7 ' + p.sub + '</div></div>'+
+        '<div class="regs">' + (kan?'\u276F':'<span class="slot">te duur</span>') +
+        '</div></div></div>';
+    });
+    return h;
+  }
   var ouers = lewendeOuers().length;
+  var byFam = s.blyplek==='familie' ? huisMense('familie')[0] : null;
+  if(byFam)
+    h += '<div class="kaart"><div class="ry"><div class="emo">\u{1F46A}</div><div class="groei">'+
+      '<div class="hoof">By ' + veilig(byFam.naam) + '</div><div class="klein">' +
+      rol(byFam) + ' het jou ingetrek. ' +
+      geld(Math.round(OUERHUIS_MAAND*12*dorpFaktor())) + ' per jaar as jy verdien.' +
+      '</div></div><div class="regs"><span class="merkie">HIER</span></div></div></div>';
   h += '<div class="kaart' + (s.blyplek==='ouers'?'':' klik') + '"' +
     (s.blyplek==='ouers'?'':' onclick="kiesBlyplek(\'ouers\')"') +
     ' style="' + (ouers?'':'opacity:.55') + '"><div class="ry"><div class="emo">\u{1F46A}</div>'+

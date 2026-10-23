@@ -33,6 +33,7 @@ function nuweLewe(naam, van, geslag){
       uit:false, agter:0},
     laerskool:null, hoerskool:null, uni:null, aansien:0, diere:[], lisensie:false,
     verhoudings:[], bates:[], log:[], rekord:[], tronk:null, tronkJare:0,
+    dakloos:null, dakloosJare:0,
     kinders:0, kindersGebore:0, troues:0, gedoen:{}, vlagge:{}, tab:'lewe'
   };
   /* Familie */
@@ -92,6 +93,8 @@ function vulNuweVelde(){
   if(s.spaar===undefined) s.spaar = 0;
   if(s.swartlys===undefined) s.swartlys = 0;
   if(s.bond===undefined) s.bond = null;
+  if(s.dakloos===undefined) s.dakloos = null;          /* B18 */
+  if(s.dakloosJare===undefined) s.dakloosJare = 0;
   if(s.pensioenFonds===undefined) s.pensioenFonds = 0;
   if(s.pensioenKoers===undefined) s.pensioenKoers = 0.075;
   if(s.afgetree===undefined) s.afgetree = !!s.pensioen;
@@ -132,6 +135,7 @@ function wordOuer(){
   ouderdomDrywing();
   lisensieJaar();
   tronkJaar();
+  dakloosJaar();
   skoolJaar();
   beroepJaar();
   aftreeJaar();
@@ -181,18 +185,21 @@ function lisensieJaar(){
    eerder as om vir ewig in dieselfde graad vas te steek. */
 function skoolGraad(){ return s.ouderdom - 5 - (s.skool.agter||0); }
 
-/* 'n Jaar in die tronk tydens jou skooljare: jy val een jaar agter. */
-function tronkSkoolJaar(){
+/* 'n Jaar wat jy nie op skool was nie — in die tronk of op straat.
+   Jy val een jaar agter en haal later in waar jy opgehou het. */
+function skoolJaarVerloor(waar){
   var sk = s.skool;
   if(sk.uit || ['laerskool','hoerskool','kleuterskool'].indexOf(sk.vlak)<0) return;
   sk.agter = (sk.agter||0) + 1;
-  noteer('Jy het die skooljaar in die tronk verloor. Jy is nou ' + sk.agter +
+  noteer('Jy het die skooljaar ' + waar + ' verloor. Jy is nou ' + sk.agter +
     ' jaar agter met skool.','skool');
 }
 
 function skoolJaar(){
   var o = s.ouderdom, sk = s.skool;
-  if(s.tronk){ tronkSkoolJaar(); return; }
+  if(s.tronk){ skoolJaarVerloor('in die tronk'); return; }
+  /* B18 — op straat is skool en studie toe, net soos in die tronk. */
+  if(s.dakloos){ skoolJaarVerloor('op straat'); return; }
 
   if(sk.vlak==='universiteit' || sk.vlak==='nagraads'){
     var koste = sk.koste || 0;
@@ -508,6 +515,25 @@ function huurTarief(id){
   return p || HUURPLEKKE[1];
 }
 function huurPerJaar(id){ return Math.round(huurTarief(id).maand * 12 * dorpFaktor()); }
+/* B18 — 'n broer of suster wat oud genoeg is om jou in te neem as jy
+   nie meer 'n plek het nie. */
+function familieHuis(){
+  return s.verhoudings.filter(function(v){
+    return v.lewe && (v.tipe==='broer'||v.tipe==='suster') && v.ouderdom>=21; });
+}
+/* Waarheen jy terugval as jy nie meer vir 'n plek kan betaal nie: eers
+   die ouerhuis, dan 'n broer of suster se huis, anders moet jy huur. */
+function terugvalBlyplek(){
+  return lewendeOuers().length ? 'ouers' : (familieHuis().length ? 'familie' : 'huur');
+}
+/* Wie se huis is dit waarin jy bly? */
+function huisMense(wat){
+  return wat==='ouers' ? lewendeOuers() : wat==='familie' ? familieHuis() : [];
+}
+/* Is daar iets wat jy kan verkoop om 'n rekening te dek? */
+function hetIetsOmTeVerkoop(){
+  return s.bates.length>0 || s.belegging>0 || (s.spaar||0)>0;
+}
 /* Wat jy vanjaar op blyplek kan spandeer: jou inkomste plus 'n stukkie
    van wat jy gespaar het. */
 function blyVermoe(netto){
@@ -522,6 +548,10 @@ function pasHuurBy(vermoe){
 function blyplekJaar(netto){
   var o = s.ouderdom, vermoe = blyVermoe(netto);
   if(o<18){ s.blyplek='ouers'; return 0; }
+  /* B18 — is jy dakloos, is daar geen huur nie: dit is die ontlaaiklep.
+     Die pad terug loop deur dakloosJaar() en die aksies op die
+     Aktiwiteite-blad. */
+  if(s.dakloos){ s.blyplek='dakloos'; return 0; }
   /* Besit jy 'n huis, bly jy daarin. Die verband en die onderhoud word
      elders bereken; blyplek self kos jou dan niks. */
   if(hetHuis()){
@@ -529,27 +559,39 @@ function blyplekJaar(netto){
     if(!s.tronk) s.geluk = klem(s.geluk + 2);
     return 0;
   }
-  if(s.blyplek==='eie') s.blyplek = lewendeOuers().length ? 'ouers' : 'huur';
+  if(s.blyplek==='eie') s.blyplek = terugvalBlyplek();
   if(s.tronk){
     if(s.blyplek==='huur'){
-      s.blyplek = lewendeOuers().length ? 'ouers' : 'huur';
-      if(s.blyplek==='ouers') noteer('Jy het jou huurplek verloor terwyl jy in die tronk is.','sleg');
+      s.blyplek = terugvalBlyplek();
+      if(s.blyplek!=='huur') noteer('Jy het jou huurplek verloor terwyl jy in die tronk is.','sleg');
     }
     return 0;
   }
-  if(s.blyplek==='ouers'){
-    if(!lewendeOuers().length){
-      s.blyplek='huur'; s.huurPlek = pasHuurBy(vermoe);
-      noteer('Daar is niemand meer in die ouerhuis nie. Jy moes jou eie plek kry.','sleg');
-    } else {
+  /* By die familie: jou ouers se huis, of 'n broer of suster wat jou
+     ingetrek het. Dit kos byna niks, maar dit knaag aan jou. */
+  if(s.blyplek==='ouers' || s.blyplek==='familie'){
+    var saam = huisMense(s.blyplek);
+    if(!saam.length){
+      var waar = s.blyplek==='ouers' ? 'ouerhuis' : 'familie se huis';
+      s.blyplek = terugvalBlyplek();
+      saam = huisMense(s.blyplek);
+      if(!saam.length){
+        s.blyplek='huur'; s.huurPlek = pasHuurBy(vermoe);
+        noteer('Daar is niemand meer in die ' + waar + ' nie. Jy moes jou eie plek kry.','sleg');
+      }
+    }
+    if(saam.length){
       var by = netto>0 ? Math.round(OUERHUIS_MAAND*12*dorpFaktor()) : 0;
+      var wie = s.blyplek==='ouers' ? 'jou ouers' : saam[0].naam;
       if(by>0){ s.geld -= by;
-        noteer('Jy bly by jou ouers en dra ' + geld(by) + ' by tot die rekeninge.','geld'); }
-      /* Dis goedkoop, maar 'n grootmens wat nog in sy ouers se huis bly,
-         voel dit met die jare al hoe meer. */
+        noteer('Jy bly by ' + wie + ' en dra ' + geld(by) + ' by tot die rekeninge.','geld'); }
+      /* Dis goedkoop, maar 'n grootmens wat nog in iemand anders se huis
+         bly, voel dit met die jare al hoe meer. */
       if(o>=25){
         s.geluk = klem(s.geluk - tussen(1, Math.min(7, o-24)));
-        if(kans(40)) noteer('Jy is ' + o + ' en bly nog in jou ouers se huis. Dit knaag aan jou.','sleg');
+        if(kans(40)) noteer('Jy is ' + o + ' en bly nog in ' +
+          (s.blyplek==='ouers' ? 'jou ouers se huis' : wie + ' se spaarkamer') +
+          '. Dit knaag aan jou.','sleg');
       }
       vraBlyplek();
       return by;
@@ -557,11 +599,26 @@ function blyplekJaar(netto){
   }
   if(!s.huurPlek) s.huurPlek = pasHuurBy(vermoe);
   var huur = huurPerJaar(s.huurPlek), plek = huurTarief(s.huurPlek);
-  betaalWatJyKan(huur, 'jou huur');
+  /* B18 — het 'n maatskaplike werker jou vanjaar van die straat af
+     ingesit, is die eerste jaar se huur betaal. Sonder dit sou jy
+     dieselfde jaar weer uitgesit word, en dan was die hulp sinneloos. */
+  if(s.vlagge.huurBetaal === s.ouderdom){
+    noteer('Die NGO het vanjaar se huur van ' + geld(huur) + ' vir jou betaal.','goed');
+    return huur;
+  }
+  var betaal = betaalWatJyKan(huur, 'jou huur');
   noteer('Huur vir ' + plek.n.toLowerCase() + ' in ' + s.dorp + ': ' + geld(huur) + '.','geld');
   s.geluk = klem(s.geluk + Math.round(plek.geluk/5));
-  /* Vreet die huur meer as die helfte van alles op, kan jy nie daar bly nie. */
-  if(huur > vermoe*0.5) kleinerBlyplek();
+  /* B18 — kon jy nie eens die huur bybring nie, moet jy kleiner trek of
+     by familie gaan bly. Is daar nie 'n kleiner plek, geen familiehuis
+     en niks om te verkoop nie, is die straat al wat oorbly. */
+  if(betaal < huur){
+    if(!kleinerBlyplek() && !hetIetsOmTeVerkoop())
+      raakDakloos('Die verhuurder het jou uitgesit omdat jy nie die huur kon betaal nie');
+  } else if(huur > vermoe*0.5){
+    /* Vreet die huur meer as die helfte van alles op, kan jy nie daar bly nie. */
+    kleinerBlyplek();
+  }
   return huur;
 }
 /* Jy kan nie onbeperk op skuld leef nie — niemand gee jou meer krediet
@@ -580,6 +637,9 @@ function betaalWatJyKan(bedrag, wat){
     s.gesondheid = klem(s.gesondheid - tussen(1,4));
     noteer('Jy kon net ' + geld(betaal) + ' van ' + wat + ' se ' + geld(bedrag) +
       ' betaal. Jy het swaar gekry.','sleg');
+    /* B18 — besit jy nog iets, moet jy die kans kry om dit self te
+       verkoop voordat die balju dit teen 75% kom haal. */
+    vraVerkoop(bedrag - betaal, wat);
   }
   return betaal;
 }
@@ -606,6 +666,8 @@ function vraBlyplek(){
     vraag:'Jy is 18. Jy kan by jou ouers bly en spaar, of jou eie plek kry. ' +
       'Jy kan dit later op die Bates-blad verander.', opsies:opsies});
 }
+/* Trek kleiner, of gaan by familie bly. Gee terug of daar nog 'n trappie
+   oor was — is daar nie, dan wag die straat (B18). */
 function kleinerBlyplek(){
   var i = -1;
   HUURPLEKKE.forEach(function(p, n){ if(p.id===s.huurPlek) i=n; });
@@ -613,10 +675,16 @@ function kleinerBlyplek(){
     s.huurPlek = HUURPLEKKE[i-1].id; s.geluk = klem(s.geluk-6);
     noteer('Jy kon nie die huur hou nie en het na ’n ' +
       HUURPLEKKE[i-1].n.toLowerCase() + ' getrek.','sleg');
-  } else if(lewendeOuers().length && s.blyplek==='huur'){
-    s.blyplek='ouers'; s.geluk = klem(s.geluk-8);
-    noteer('Jy kon nie meer huur bekostig nie en het teruggetrek na jou ouers.','sleg');
+    return true;
   }
+  var val = terugvalBlyplek();
+  if(val!=='huur' && s.blyplek==='huur'){
+    var wie = val==='ouers' ? 'jou ouers' : huisMense(val)[0].naam;
+    s.blyplek = val; s.geluk = klem(s.geluk-8);
+    noteer('Jy kon nie meer huur bekostig nie en het teruggetrek na ' + wie + '.','sleg');
+    return true;
+  }
+  return false;
 }
 
 /* ---------- B2: die verband (huislening) ---------- */
@@ -689,6 +757,9 @@ function bankVatHuis(){
    bank eerste betaal en jy kry net wat oorbly. 'f' is watter deel van
    die waarde jy kry — 1 is die volle prys, minder by 'n gedwonge verkoping. */
 function verkoopBateUit(b, f){
+  /* Besit jy dit nie meer nie (die balju was netnou hier), is daar niks
+     om te verkoop — anders sou dieselfde huis twee keer geld inbring. */
+  if(s.bates.indexOf(b)<0) return 0;
   s.bates = s.bates.filter(function(x){ return x!==b; });
   var opbrengs = Math.round(b.waarde * (f===undefined ? 1 : f));
   s.geld += opbrengs;
@@ -725,7 +796,10 @@ function lewenskosteJaar(netto){
 }
 function uitgawesJaar(netto){
   var diereKoste = diereKosteJaar();
-  if(s.ouderdom<18 || s.tronk){
+  /* B18 — in die tronk en op straat is daar geen lewenskoste nie. Dit
+     is die ontlaaiklep: 'n mens sonder 'n dak kan nie 'n huishouding
+     bekostig nie, en daarom kan sy skuld ook nie eindeloos groei nie. */
+  if(s.ouderdom<18 || s.tronk || s.dakloos){
     if(diereKoste){ s.geld -= diereKoste;
       noteer('Jou diere het ' + geld(diereKoste) + ' gekos.','geld'); }
     return diereKoste;
@@ -826,7 +900,9 @@ function magSekwestreer(){
 }
 function skuldJaar(){
   if(s.geld<0) dekUitSpaar(-s.geld);
-  if(s.geld>=0) return;
+  /* Uit die skuld is 'n skoon blad: het jy vroeer geweier om te verkoop,
+     mag jy weer kies as dit weer so ver kom. */
+  if(s.geld>=0){ s.vlagge.weierVerkoop = 0; return; }
   var perk = skuldPerk();
   /* Is daar niks by jou te haal nie en is die skuld bo die perk, is dit
      klaar: of die hof skryf alles af, of die rekening bly net staan as
@@ -842,15 +918,31 @@ function skuldJaar(){
   s.geluk = klem(s.geluk-9);
   noteer('Jy is ' + geld(-s.geld) + ' in die skuld. Die rente van ' + geld(rente) +
     ' teen ' + Math.round(SKULD_KOERS*100) + '% maak dit elke jaar erger.','sleg');
-  if(-s.geld <= perk) return;
-  noteer('Jou skuld is bo die ' + geld(perk) + ' wat die bank wil dra. Hulle eis nou op.','sleg');
+  /* B18 — die balju tree op sodra die skuld die perk haal, nie net
+     daarbo nie. Anders bly iemand met 'n huis en geen inkomste vir ewig
+     op die plafon sit: hy betaal elke jaar 'n stukkie, ly swaar, en sy
+     netto waarde groei steeds. Jy kry wel eers 'n jaar se kans om self
+     te verkoop (vraVerkoop); het jy dit van die hand gewys, verkoop die
+     balju vir jou — teen 75%. */
+  /* Wag 'n vraag in die wagry of jy self wil verkoop, hou die balju
+     hierdie jaar sy hande tuis — anders vat hy die huis voordat jy kon
+     antwoord, en dan is die vraag sinneloos. */
+  if(hetIetsOmTeVerkoop() && !s.vlagge.weierVerkoop && s.gedoen.vraVerkoop) return;
+  var byPerk = s.vlagge.weierVerkoop && -s.geld >= perk;
+  if(-s.geld <= perk && !byPerk) return;
+  noteer('Jou skuld is ' + (byPerk?'by':'bo') + ' die ' + geld(perk) +
+    ' wat die bank wil dra. Hulle eis nou op.','sleg');
   if(s.belegging>0){
     var opge = Math.min(s.belegging, -s.geld);
     s.belegging -= opge; s.geld += opge;
     noteer('Beleggings van ' + geld(opge) + ' is opgeeis om die skuld te betaal.','sleg');
   }
-  while(-s.geld > perk && s.bates.length) baljuVat();
+  /* Hoeveel skuld hulle laat staan: normaalweg net wat bo die perk is,
+     maar het jy geweier om self te verkoop, eis hulle die hele skuld op. */
+  var los = byPerk ? 0 : perk;
+  while(-s.geld > los && s.bates.length) baljuVat();
   if(-s.geld > perk && magSekwestreer()) sekwestrasie();
+  if(!hetIetsOmTeVerkoop()) s.vlagge.weierVerkoop = 0;
 }
 /* Die balju vat die goedkoopste ding wat die skuld sal dek — hulle
    verkoop nie 'n strandhuis om 'n rekening van R40 000 te betaal nie.
@@ -879,6 +971,223 @@ function sekwestrasie(){
   noteer('Die hof het ’n boedelbevel teen jou toegestaan. ' + geld(skuld) +
     ' se skuld is afgeskryf, maar alles wat jy besit het, is weg.','sleg');
   noteer('Jy is vir tien jaar by die kredietburo gelys. Niemand sal jou geld leen nie.','sleg');
+}
+
+/* ==========================================================================
+   B18 — DAKLOOSHEID
+   Die ekonomie het 'n muur (jy kan nie meer uitgee as geld + skuldperk
+   nie) maar dit het nooit 'n bodem gehad nie. Dit is die bodem.
+
+   Jy raak dakloos as al drie geld: jy kan jou blyplek nie betaal nie, jy
+   het niks verkoopbaars oor nie, en daar is geen familiehuis om na terug
+   te gaan nie. Terwyl jy daar is, val jou lewenskoste weg — dit is die
+   ontlaaiklep — maar gesondheid en geluk daal elke jaar, skool en studie
+   is toe soos in die tronk, en werk kry is baie swaar.
+
+   Dit is doelbewus moeilik maar uitkombaar. Daar is vier paaie terug:
+   genoeg geld vir 'n deposito, familie wat jou intrek, werk deur 'n
+   skuiling, en 'n maatskaplike werker wat jou by 'n plek kry (die kans
+   groei elke jaar wat jy daar is).
+   ========================================================================== */
+
+/* B18 — kon jy nie jou rekeninge dek nie en besit jy nog iets, kry jy
+   die kans om dit self te verkoop. Doen jy dit, kry jy die volle prys;
+   wys jy dit van die hand, kom die balju dit haal teen 75% (sien die
+   'weierVerkoop'-vlag in skuldJaar). Dit is wat gekeer het dat iemand
+   met 'n strandhuis van R2,8 m en geen inkomste vir ewig op die
+   skuldplafon sit en honger ly terwyl sy netto waarde groei. */
+function vraVerkoop(kort, wat){
+  if(s.gedoen.vraVerkoop || s.vlagge.weierVerkoop || !hetIetsOmTeVerkoop()) return;
+  s.gedoen.vraVerkoop = 1;
+  var opsies = [];
+  if(s.belegging>0) opsies.push({t:'Verkoop jou beleggings',
+    sub:geld(s.belegging) + ' · jy kry die volle waarde',
+    doen:function(){
+      var w = s.belegging; s.geld += w; s.belegging = 0; s.vlagge.weierVerkoop = 0;
+      noteer('Jy het jou beleggings van ' + geld(w) + ' verkoop om die rekeninge te dek.','geld');
+    }});
+  s.bates.slice().sort(function(a,b){ return a.waarde - b.waarde; }).forEach(function(b){
+    opsies.push({t:'Verkoop ' + b.n.toLowerCase(),
+      sub:geld(b.waarde) + ' · jy kry die volle waarde, nie 75% nie',
+      doen:function(){
+        var naam = b.n, kry = verkoopBateUit(b, 1);
+        s.vlagge.weierVerkoop = 0;
+        noteer('Jy het ' + naam + ' self verkoop vir ' + geld(kry) + '.','geld');
+      }});
+  });
+  opsies.push({t:'Nee, ek hou alles', klas:'rooi',
+    sub:'Die balju kom dit volgende jaar haal — teen 75% van die waarde',
+    doen:function(){
+      s.vlagge.weierVerkoop = s.ouderdom;
+      noteer('Jy het geweier om iets te verkoop. Die skuld bly staan.','sleg');
+    }});
+  wagry.push({titel:'Jy kort ' + geld(kort),
+    vraag:'Jy kon nie ' + wat + ' volledig betaal nie en jy kort ' + geld(kort) +
+      '. Jy besit nog iets — verkoop jy dit self, of laat jy die balju kom?',
+    opsies:opsies});
+}
+
+/* Van watter trappie af kan jy weer huur? 'n Informele woning staan op
+   iemand anders se erf, en sonder 'n adres of 'n inkomste gee niemand jou
+   daar 'n plek nie — jou eerste trappie terug is 'n agterkamer. */
+function dakTrappe(){
+  var van = 0;
+  HUURPLEKKE.forEach(function(p, i){ if(p.id===DAKLOOS_TRAP) van = i; });
+  return HUURPLEKKE.slice(van);
+}
+/* Wat 'n verhuurder vooruit wil sien: die eerste jaar se huur plus twee
+   maande deposito — en het jy geen inkomste nie, ook genoeg vir kos,
+   anders is jy volgende jaar weer op straat. */
+function dakIntrekKoste(id){
+  var jaar = huurPerJaar(id);
+  return Math.round(jaar * (1 + DEPOSITO_MAANDE/12)) +
+    (brutoInkomste()>0 ? 0 : Math.round(KOSTE_MINIMUM * dorpFaktor()));
+}
+function dakUitKoste(){ return dakIntrekKoste(DAKLOOS_TRAP); }
+
+function raakDakloos(rede){
+  if(s.dakloos) return;
+  s.dakloos = {jare:0, ngo:false};
+  s.blyplek = 'dakloos';
+  s.huurPlek = DAKLOOS_TRAP;        /* waar jy weer wil begin as jy uitkom */
+  s.vlagge.weierVerkoop = 0;
+  s.geluk = klem(s.geluk - tussen(14,26));
+  s.gesondheid = klem(s.gesondheid - tussen(2,8));
+  noteer(rede + '. Jy het nie meer ’n dak oor jou kop nie.','sleg');
+  noteer('Jy slaap die eerste nag met jou goed in twee sakke onder ’n afdak in ' +
+    s.dorp + '.','sleg');
+  if(s.skool.vlak==='universiteit' || s.skool.vlak==='nagraads'){
+    noteer('Jou studies in ' + s.skool.studie + ' is gestaak — jy kon nie klasgeld ' +
+      'of ’n kamer betaal nie.','sleg');
+    s.skool.vlak = 'klaar'; s.skool.studie = null;
+  }
+  (s.diere||[]).slice().forEach(function(d){
+    s.geluk = klem(s.geluk - tussen(6,14));
+    noteer(d.naam + ' kon nie saam straat toe nie en is SPCA toe.','sleg');
+  });
+  s.diere = [];
+}
+
+/* Die pad terug. 'plekId' is die huurplek waarin jy trek, of null as
+   familie jou ingetrek het. */
+function uitDakloosheid(plekId, hoe){
+  if(!s.dakloos) return;
+  var jare = s.dakloos.jare;
+  s.dakloos = null;
+  if(plekId){ s.blyplek = 'huur'; s.huurPlek = plekId; }
+  s.geluk = klem(s.geluk + tussen(18,30));
+  noteer(hoe,'goed');
+  noteer('Jy was ' + (jare<1 ? 'minder as ’n jaar' : jare + ' jaar') +
+    ' op straat. Die eerste warm bad voel soos ’n nuwe lewe.','goed');
+}
+/* Familie trek jou in: 'n ouer se huis, of 'n broer of suster se spaarkamer. */
+function familieTrekJouIn(v){
+  var waar = (v.tipe==='ma' || v.tipe==='pa') ? 'ouers' : 'familie';
+  v.band = klem(v.band - tussen(0,6));
+  uitDakloosheid(null, v.naam + ' het jou kom haal en ’n kamer vir jou gemaak.');
+  s.blyplek = waar;
+}
+/* Wie van jou familie jou sou intrek, as jy hulle vra of as hulle jou
+   kom soek. Hoe sterker die band, hoe groter die kans. */
+function familieHelpers(){
+  return s.verhoudings.filter(function(v){
+    return v.lewe && ['ma','pa','broer','suster'].indexOf(v.tipe)>=0 &&
+      (v.tipe==='ma' || v.tipe==='pa' || v.ouderdom>=21);
+  }).sort(function(a,b){ return b.band - a.band; });
+}
+
+function dakloosJaar(){
+  if(!s.dakloos) return;
+  /* In die tronk het jy darem 'n dak en 'n bord kos — die jare op straat
+     tel dan nie, en jy kom net so dakloos weer uit. */
+  if(s.tronk) return;
+  var d = s.dakloos;
+  d.jare++;
+  s.dakloosJare = (s.dakloosJare||0) + 1;
+  s.gesondheid = klem(s.gesondheid - tussen(DAKLOOS_GESONDHEID[0], DAKLOOS_GESONDHEID[1]));
+  s.geluk = klem(s.geluk - tussen(DAKLOOS_GELUK[0], DAKLOOS_GELUK[1]));
+  noteer('Jaar ' + d.jare + ' op straat in ' + s.dorp + '.','sleg');
+  if(kans(45)) noteer(kies(DAKLOOS_NAGTE),'sleg');
+  /* Het jy weer 'n huis gekry (geerf of gekoop), trek jy dadelik in. */
+  if(hetHuis()){
+    uitDakloosheid(null, 'Jy het ’n huis van jou eie en het die dag ingetrek.');
+    s.blyplek = 'eie';
+    return;
+  }
+  /* Familie wat nog sterk aan jou vashou, kom jou soek. */
+  var fam = familieHelpers()[0];
+  if(fam && fam.band >= DAKLOOS_FAMILIE_BAND + 8 && kans(22)){
+    familieTrekJouIn(fam);
+    return;
+  }
+  /* 'n Skuiling of 'n maatskaplike werker kry jou aan die gang. Die kans
+     groei elke jaar wat jy daar is, en 'n NGO-registrasie help baie —
+     daarom is dit nie 'n doodloopstraat nie. Die orde maak saak: 'n dak
+     sonder 'n inkomste hou nie, so werk kom eerste. */
+  var hulp = DAKLOOS_HULP_KANS + d.jare*DAKLOOS_HULP_GROEI + (d.ngo ? 14 : 0);
+  if(kans(hulp)){
+    if(!s.beroep && skuilingWerk('’n Maatskaplike werker')) return;
+    if(brutoInkomste()>0 || s.geld>=0){
+      var plek = dakTrappe()[0];
+      s.vlagge.huurBetaal = s.ouderdom;
+      uitDakloosheid(plek.id, '’n Maatskaplike werker het ’n ' + plek.n.toLowerCase() +
+        ' vir jou gekry en die eerste jaar se huur betaal.');
+      return;
+    }
+    if(s.geld<0){
+      /* Niks om jou in te sit en geen werk nie — maar 'n skuldberader kry
+         die ou rekeninge afgeskryf, en dan het jy weer krediet-ruimte om
+         jouself uit te werk. */
+      var af = -s.geld; s.geld = 0; s.geluk = klem(s.geluk + tussen(5,12));
+      noteer('’n Skuldberader by ’n NGO het jou ' + geld(af) +
+        ' se ou rekeninge laat afskryf. Jy begin met ’n skoon blad.','goed');
+      return;
+    }
+  }
+  /* Het jy self genoeg bymekaargekry, vra die spel of jy wil intrek. */
+  if(s.geld >= dakUitKoste()) vraDakTerug();
+}
+/* Werk deur 'n skuiling — een van die paaie uit. Gee terug of dit
+   geluk het. 'wie' is net die naam in die log-reel. */
+function skuilingWerk(wie){
+  if(s.beroep) return false;
+  var oop = BEROEPE.filter(function(j){
+    return DAKLOOS_WERKE.indexOf(j.id)>=0 && !werkVereis(j); });
+  if(!oop.length) return false;
+  var j = kies(oop);
+  s.beroep = {id:j.id, t:j.t, basis:j.s, salaris:j.s, vlak:0,
+    prestasie:tussen(40,62), jare:0, k:j.k};
+  s.beroepeGehad.push(j.t);
+  s.geluk = klem(s.geluk + tussen(10,18));
+  noteer(wie + ' het jou by ’n werk gekry: ' + j.t + ' teen ' + geld(j.s) +
+    ' per jaar. Nou kan jy weer ’n plek bekostig.','werk');
+  maakKollegas();
+  return true;
+}
+
+/* Genoeg geld vir 'n deposito: waar trek jy in? */
+function vraDakTerug(){
+  if(s.gedoen.dakTerug) return;
+  var opsies = [];
+  dakTrappe().forEach(function(p){
+    var koste = dakIntrekKoste(p.id);
+    if(koste > s.geld) return;
+    opsies.push({t:'Trek in: ' + p.n.toLowerCase(),
+      sub:geld(koste) + ' vooruit · ' + p.sub,
+      doen:function(){
+        s.geld -= koste;
+        uitDakloosheid(p.id, 'Jy het ' + geld(koste) + ' vooruit betaal en in ’n ' +
+          p.n.toLowerCase() + ' ingetrek.');
+      }});
+  });
+  if(!opsies.length) return;
+  s.gedoen.dakTerug = 1;
+  opsies.push({t:'Hou die geld nog ’n jaar', klas:'grys',
+    sub:'Jy bly op straat, maar die geld bly joune', doen:function(){}});
+  wagry.push({titel:'Jy het genoeg vir ’n deposito',
+    vraag:'Jy het ' + geld(s.geld) + ' bymekaar. ’n Verhuurder sal jou inneem as jy ' +
+      'die eerste jaar se huur en ’n deposito vooruit betaal.',
+    opsies:opsies});
 }
 
 /* ---------- Verhoudings ---------- */

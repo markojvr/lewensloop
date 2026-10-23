@@ -312,6 +312,89 @@ function tronkAksie(wat){
   stoor(); renderAlles();
 }
 
+/* ==========================================================================
+   B18 — AKSIES OP STRAAT
+   Presies soos tronkAksie(): 'n klein, beperkte stel keuses wat net
+   bestaan terwyl s.dakloos aan is. Misdaad bly ook beskikbaar — dit haak
+   by die gewone misdaadstelsel in.
+   ========================================================================== */
+function dakloosAksie(wat){
+  if(!s.dakloos) return;
+  var maks = {bedel:2, loswerk:2, skuiling:1, ngo:1, familie:1}[wat] || 1;
+  if((s.gedoen['d_'+wat]||0) >= maks){
+    wenk(maks>1 ? maks + ' keer per jaar is al wat jy uithou.' : 'Een keer per jaar.'); return; }
+  s.gedoen['d_'+wat] = (s.gedoen['d_'+wat]||0) + 1;
+
+  if(wat==='bedel'){
+    var dae = tussen(BEDEL_DAE[0], BEDEL_DAE[1]);
+    var in1 = Math.round(dae * tussen(BEDEL_DAG[0], BEDEL_DAG[1]) * (0.7 + s.voorkoms/200));
+    s.geld += in1;
+    s.geluk = klem(s.geluk - tussen(3,9));
+    s.gesondheid = klem(s.gesondheid - tussen(0,3));
+    noteer('Jy het ' + dae + ' dae by die verkeerslig gestaan en ' + geld(in1) +
+      ' bymekaargemaak.','geld');
+    wenk('Jy het ' + geld(in1) + ' gebedel.');
+  }
+  else if(wat==='loswerk'){
+    if(s.gesondheid < 25){ wenk('Jy is te swak om te werk.'); return; }
+    var d2 = tussen(LOSWERK_DAE[0], LOSWERK_DAE[1]);
+    var in2 = Math.round(d2 * tussen(LOSWERK_DAG[0], LOSWERK_DAG[1]));
+    s.geld += in2; s.totaalVerdien += in2;
+    s.gesondheid = klem(s.gesondheid - tussen(2,7));
+    s.geluk = klem(s.geluk + tussen(1,5));
+    noteer('Jy het ' + d2 + ' dae se los werk gekry — tuinwerk, karwag, ’n vragmotor ' +
+      'aflaai — en ' + geld(in2) + ' verdien.','geld');
+    wenk('Los werk: ' + geld(in2));
+  }
+  else if(wat==='skuiling'){
+    s.gesondheid = klem(s.gesondheid + tussen(3,9));
+    s.geluk = klem(s.geluk + tussen(4,10));
+    noteer('Jy het die winter by ’n skuiling geslaap: ’n bed, ’n warm bad en kos.','goed');
+    /* Werk deur ’n skuiling — een van die paaie uit. Met ’n NGO agter jou
+       naam staan die deur verder oop. */
+    if(kans(s.dakloos.ngo ? 30 : 12) && skuilingWerk('Die skuiling'))
+      wenk('Die skuiling het jou werk gekry!');
+    else wenk('Jy het by ’n skuiling geslaap.');
+  }
+  else if(wat==='ngo'){
+    if(s.dakloos.ngo){ wenk('Jy is al aangemeld.'); return; }
+    s.dakloos.ngo = true;
+    s.geluk = klem(s.geluk + tussen(3,8));
+    noteer('Jy het by ’n NGO aangemeld. Hulle het jou gehelp om ’n ID te kry en ' +
+      'gee jou hul adres om op aansoekvorms te skryf.','goed');
+    wenk('Aangemeld. Werk kry word makliker.');
+  }
+  else if(wat==='familie'){
+    var lys = familieHelpers();
+    if(!lys.length){ wenk('Daar is niemand om te vra nie.'); return; }
+    kiesLys('Wie gaan jy vra?','’n Sterk band maak die verskil. Vra jy iemand wat jou ' +
+      'kwalik neem, maak dit net erger.', lys.slice(0,8).map(function(v){
+      return {t:v.naam + ' ' + v.van, sub:rol(v) + ' · band ' + v.band + '%',
+        doen:function(){ vraFamilieHulp(v); }};
+    }));
+    return;
+  }
+  stoor(); renderAlles();
+}
+function vraFamilieHulp(v){
+  sluitModaal();
+  if(v.band >= DAKLOOS_FAMILIE_BAND && kans(v.band)){
+    familieTrekJouIn(v);
+    wenk(v.naam + ' het jou ingetrek.');
+  } else if(kans(v.band)){
+    var hulp = Math.round(tussen(1500, 9000) * (0.5 + v.band/100));
+    s.geld += hulp; v.band = klem(v.band - tussen(2,8));
+    noteer(v.naam + ' kon jou nie inneem nie, maar het ' + geld(hulp) + ' gegee.','geld');
+    wenk(v.naam + ' het ' + geld(hulp) + ' gegee.');
+  } else {
+    v.band = klem(v.band - tussen(4,12));
+    s.geluk = klem(s.geluk - tussen(4,10));
+    noteer(v.naam + ' het gesê hulle kan nie help nie. Dit was ’n swaar oproep.','sleg');
+    wenk(v.naam + ' het nee gesê.');
+  }
+  stoor(); renderAlles();
+}
+
 /* ---------- Werk ---------- */
 var EDU_TEKS=['','Matriek nodig','Universiteitsgraad nodig','Nagraadse kwalifikasie nodig'];
 function werkVereis(j){
@@ -330,6 +413,8 @@ function werkVereis(j){
   if(j.skoon && s.rekord.length) return 'Geen kriminele rekord toegelaat';
   return null;
 }
+/* Hoeveel onderhoude jy vanjaar kan kry. */
+function aansoekPerk(){ return s.dakloos ? 1 : 3; }
 function doenAansoek(id){
   var j = null;
   BEROEPE.forEach(function(x){ if(x.id===id) j=x; });
@@ -337,10 +422,17 @@ function doenAansoek(id){
   if(s.tronk){ wenk('Jy is in die tronk.'); return; }
   var rede = werkVereis(j);
   if(rede){ wenk(rede + '.'); return; }
-  if(s.aansoeke>=3){ wenk('Drie onderhoude per jaar is genoeg.'); return; }
+  /* B18 — sonder ’n foon, vervoer en skoon klere kom jy by een
+     onderhoud per jaar uit, nie drie nie. */
+  if(s.aansoeke >= aansoekPerk()){
+    wenk(s.dakloos ? 'Een onderhoud per jaar is al waarby jy kom.'
+      : 'Drie onderhoude per jaar is genoeg.'); return; }
   s.aansoeke++;
   var kansie = 48 + (s.slim - j.slim)/2 + (s.voorkoms-50)/5 + Math.min(20, s.jareGewerk*2) + (s.aansien||0)*4;
   if(s.rekord.length) kansie -= 15;
+  /* B18 — sonder ’n adres, ’n foon en skoon klere kom jy skaars by die
+     onderhoud. ’n NGO se adres en ’n ID maak die groot verskil. */
+  if(s.dakloos) kansie *= (s.dakloos.ngo ? DAKLOOS_NGO_KANS : DAKLOOS_WERKKANS);
   if(kans(kansie)){
     s.beroep = {id:j.id, t:j.t, basis:j.s, salaris:j.s, vlak:0, prestasie:tussen(45,68), jare:0, k:j.k};
     s.beroepeGehad.push(j.t);
@@ -680,6 +772,9 @@ function kiesBlyplek(id){
   if(s.ouderdom<18){ wenk('Jy bly by jou ouers.'); return; }
   if(hetHuis()){ wenk('Jy besit ’n huis — verkoop dit eers.'); return; }
   if(s.tronk){ wenk('Jy is in die tronk.'); return; }
+  /* B18 — is jy dakloos, moet jy die deposito en die eerste jaar se huur
+     vooruit betaal voordat ’n verhuurder jou inneem. */
+  if(s.dakloos){ dakloosHuur(id); return; }
   if(id==='ouers'){
     if(!lewendeOuers().length){ wenk('Daar is niemand meer in die ouerhuis nie.'); return; }
     if(s.blyplek==='ouers'){ wenk('Jy bly reeds daar.'); return; }
@@ -695,6 +790,20 @@ function kiesBlyplek(id){
       geld(huurPerJaar(id)) + ' huur per jaar.','geld');
     wenk('Ingetrek: ' + p.n);
   }
+  stoor(); renderAlles();
+}
+/* B18 — van die straat af ’n plek huur. */
+function dakloosHuur(id){
+  if(id==='ouers' || id==='familie'){
+    wenk('Vra familie onder Aktiwiteite om jou in te neem.'); return; }
+  var trap = dakTrappe().filter(function(p){ return p.id===id; })[0];
+  if(!trap){ wenk('Sonder ’n adres gee niemand jou ’n plek op sy erf nie.'); return; }
+  var koste = dakIntrekKoste(id);
+  if(s.geld < koste){ wenk('Jy kort ' + geld(koste - s.geld) + ' vir die deposito.'); return; }
+  s.geld -= koste;
+  uitDakloosheid(id, 'Jy het ' + geld(koste) + ' vooruit betaal en in ’n ' +
+    trap.n.toLowerCase() + ' ingetrek.');
+  wenk('Jy het ’n dak oor jou kop.');
   stoor(); renderAlles();
 }
 function bele(bedrag){

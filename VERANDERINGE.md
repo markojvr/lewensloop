@@ -60,10 +60,14 @@ steeds laai.
 **Fase 2 (B1, B2, B5, B6, B13, B14, B17) is ✅ KLAAR (22 Oktober 2026).** Die kolom
 **Gedoen** sê kortliks wat verander het. Die ander items in hierdie afdeling wag nog.
 
+**B18 en B19 (dakloosheid) is ✅ KLAAR (23 Oktober 2026).**
+
 Nuwe velde in `s`: `spaar`, `blyplek`, `huurPlek`, `bond`, `swartlys`, `pensioenFonds`,
-`pensioenKoers`, `afgetree` — almal met verstekwaardes in `vulNuweVelde()`, sodat ou
-stoor-data in localStorage steeds laai (ook 'n lewe wat al op pensioen was).
-Al die nuwe getalle staan bymekaar in `data.js` onder "EKONOMIE".
+`pensioenKoers`, `afgetree`, `dakloos`, `dakloosJare` — almal met verstekwaardes in
+`vulNuweVelde()`, sodat ou stoor-data in localStorage steeds laai (ook 'n lewe wat al
+op pensioen was). `s.blyplek` het twee nuwe waardes by: `'familie'` (’n broer of suster
+het jou ingetrek) en `'dakloos'`. Al die nuwe getalle staan bymekaar in `data.js` onder
+"EKONOMIE".
 
 | # | Verandering | Gedoen |
 |---|---|---|
@@ -84,7 +88,42 @@ Al die nuwe getalle staan bymekaar in `data.js` onder "EKONOMIE".
 | B15 | **Geen begrafnis, testament of boedel.** As jy sterf, verdwyn alles. Nodig: 'n testament, boedelbelasting en 'n erfenis wat na jou kinders gaan (sien H1). | |
 | B16 | **Geen staatstoelae.** Geen kindertoelaag, geen UIF as jy afgedank word, geen ouderdomspensioen (SASSA) as jy nooit 'n pensioenfonds gehad het nie. | |
 | B17 | **Pensioen is 'n gratis geskenk:** `s.pensioen = salaris * 0,35` vir ewig, sonder dat jy ooit bygedra het, en net beskikbaar as jy op 60 nog 'n werk het. Is jy op 60 werkloos, kan jy nooit aftree nie. Nodig: jaarlikse bydraes wat opbou in 'n fonds. | ✅ `pensioenBydraeJaar()`, `pensioenFondsJaar()`, `treeAf()` en `aftreeJaar()`. Jy dra 0%, 5%, 7,5% of 15% by (knoppies op die Werk-blad), jou werkgewer pas dit tot 7,5%, en die bydrae is belastingaftrekbaar. Die fonds groei 0–12% per jaar en **bly joune as jy die werk verloor** — jy kan dus aftree al is jy op 60 werkloos. Van 55 af kan jy aftree: alles in 'n lewende annuïteit (5,5% per jaar), of eers 'n derde kontant (die eerste R550 000 vry). Op 65 vra die spel self. Jy kan die fonds ook vroeg uittrek — en dan vat SARS 36% bo R27 500, wat die les is. |
-| B18 | **Ryk maar brandarm (nuut, 22 Okt 2026).** `betaalWatJyKan()` beperk wat jy kan uitgee tot `geld + skuldPerk()`, maar `skuldJaar()` eis eers op as die skuld **bo** die perk is. Iemand met 'n huis van R2,8 m en geen inkomste bly dus vir altyd op die skuldplafon vassteek: hy betaal elke jaar R25 000 van R100 000, kry elke jaar geluk en gesondheid af, verkoop nooit die huis nie — en sy netto waarde **styg** steeds. Oor 14 jaar getoets: R4,16 m → R5,21 m terwyl hy honger ly. Nodig: kan jy nie jou lewenskoste dek nie en besit jy iets verkoopbaars, vra die speler om te verkoop (of laat die balju optree *by* die perk, nie net daarbo nie). | `lewe.js` — `betaalWatJyKan()`, `skuldJaar()` |
+| B19 | **Dakloosheid (nuut, 23 Okt 2026).** Die ekonomie het ’n muur gehad (`betaalWatJyKan()` laat jou nie meer uitgee as `geld + skuldPerk()` nie) maar nooit ’n bodem nie: iemand sonder inkomste het net elke jaar swaar gekry sonder dat iets kon verander. `s.dakloos` is daardie bodem — ’n toestand soos `s.tronk`, met sy eie jaarfunksie, sy eie aksies en sy eie paneel. | ✅ Sien die blok onder die tabel. |
+| B18 | **Ryk maar brandarm (nuut, 22 Okt 2026).** `betaalWatJyKan()` beperk wat jy kan uitgee tot `geld + skuldPerk()`, maar `skuldJaar()` eis eers op as die skuld **bo** die perk is. Iemand met 'n huis van R2,8 m en geen inkomste bly dus vir altyd op die skuldplafon vassteek: hy betaal elke jaar R25 000 van R100 000, kry elke jaar geluk en gesondheid af, verkoop nooit die huis nie — en sy netto waarde **styg** steeds. Oor 14 jaar getoets: R4,16 m → R5,21 m terwyl hy honger ly. Nodig: kan jy nie jou lewenskoste dek nie en besit jy iets verkoopbaars, vra die speler om te verkoop (of laat die balju optree *by* die perk, nie net daarbo nie). ✅ Twee dinge. (a) Kon jy nie ’n rekening dek nie en besit jy nog iets, **vra die spel jou om te verkoop** (`vraVerkoop()`): jy kry die volle waarde, en die balju hou daardie jaar sy hande tuis sodat die vraag sin maak. (b) Wys jy dit van die hand, tree die balju **by** die perk op, nie net daarbo nie (die `weierVerkoop`-vlag in `skuldJaar()`), en dan eis hulle die hele skuld op, nie net die deel bo die perk nie. Kom jy uit die skuld, is dit ’n skoon blad en mag jy weer kies. `verkoopBateUit()` keer ook nou dat dieselfde bate twee keer geld inbring as die balju dit reeds gevat het. Getoets: R2,8 m-strandhuis sonder inkomste — verkoop jy self, kry jy R2,94 m; weier jy, kom die balju die volgende jaar en die veiling bring R1,52 m in. Die netto waarde **daal** nou in albei gevalle, in plaas van R4,16 m → R5,21 m. |
+
+### Die dakloosheid-modus (B19) in kort
+
+**Hoe jy daar beland.** Al drie moet geld: jy kan jou blyplek nie betaal nie, jy het
+niks verkoopbaars oor nie, en daar is geen familiehuis om na terug te gaan nie.
+`blyplekJaar()` probeer eers kleiner trek (`kleinerBlyplek()` gee nou terug of daar nog
+’n trappie oor was) en dan by familie gaan bly; is albei toe, roep dit `raakDakloos()`.
+
+**Wat dit met jou doen.** Jou lewenskoste val heeltemal weg — dit is die ekonomiese
+ontlaaiklep wat B18 oplos, want ’n mens sonder ’n dak kan nie ’n huishouding bekostig
+nie, en daarom kan sy skuld ook nie eindeloos groei nie. Die prys: gesondheid –3 tot
+–9 en geluk –6 tot –14 **elke jaar**, skool en studie toe soos in die tronk
+(`skoolJaarVerloor()` word nou deur albei gebruik), jou diere SPCA toe, en werk kry word
+baie swaar — een onderhoud per jaar in plaas van drie, en jou kans is net 20% van
+normaal (55% as jy by ’n NGO aangemeld het).
+
+**Wat jy kan doen** (`dakloosAksie()`, parallel met `tronkAksie()`): bedel by die
+verkeerslig, los werk soek, by ’n skuiling slaap, by ’n NGO aanmeld (eenmalig: ’n ID en
+’n adres) en familie om hulp vra. Misdaad bly ook beskikbaar — `renderMisdaad()` is
+afgesonder sodat die gewone blad en die dakloos-paneel albei dit wys.
+
+**Die vier paaie uit.** (1) Genoeg geld vir ’n deposito plus die eerste jaar se huur
+(’n informele woning tel nie — dit staan op iemand anders se erf). (2) Familie wat jou
+intrek. (3) Werk deur ’n skuiling (`skuilingWerk()`). (4) ’n Maatskaplike werker, met ’n
+kans wat elke jaar groei — hy kry eers werk vir jou, want ’n dak sonder ’n inkomste hou
+nie, en sit hy jou in, betaal die NGO die eerste jaar se huur.
+
+**Die balans** (2 000 afgedwonge dakloos-lewens gemeet). ’n Speler wat die paneel
+gebruik: mediaan **1 jaar** op straat, 90ste persentiel 2, maks 4. ’n Speler wat net
+“+1 jaar” druk: mediaan **4 jaar**, 90ste persentiel 7, maks 11. Minder as **1%** sterf
+daar, en **niemand** sit ná 40 jaar nog vas. In lukrake lewens raak 1–3% van die mense
+wat nooit werk nie ooit dakloos — ’n speler met ’n werk of ’n familiehuis sien dit
+nooit. Dit is dus moeilik maar uitkombaar, en nie ’n stadige dood nie.
+
 ---
 
 ## C. Skool en studie — SA-akkuraatheid (P1)
@@ -244,6 +283,9 @@ Al die nuwe getalle staan bymekaar in `data.js` onder "EKONOMIE".
 2. **Fase 1 (A1–A16)** — al die P0-foute.
 3. **Fase 2 (B1, B2, B5, B6, B13, B14, B17)** — huur, verband, rente, skuld,
    lewenskoste, sakgeld en pensioen.
+4. **B18 + B19 (23 Okt 2026)** — die bodem van die ekonomie: die spel vra jou om te
+   verkoop voordat die balju kom, en wie niks oor het nie, beland op straat met ’n egte
+   pad terug. Sien die dakloosheid-blok in afdeling B.
 
 **Volgende aan die beurt: Fase 3** (C1, C2, C4, C9, D3, D6 — vakkeuses, APS,
 regte graadlengtes, druip, deeltydse werk en 'n plafon op salarisse).

@@ -103,6 +103,8 @@ function wysGrafskrif(){
       ((s.kindersGebore||s.kinders) > s.kinders ? ' van ' + s.kindersGebore + ' gebore' : '') + '</b></div>'+
     '<div class="eind-stat"><span>Troues</span><b>' + s.troues + '</b></div>'+
     '<div class="eind-stat"><span>Jare in die tronk</span><b>' + (s.tronkJare||0) + '</b></div>'+
+    (s.dakloosJare ? '<div class="eind-stat"><span>Jare op straat</span><b>' +
+      s.dakloosJare + '</b></div>' : '')+
     '<div class="eind-stat"><span>Geluk by die einde</span><b>' + s.geluk + '%</b></div>';
   var m = el('modaal');
   m.innerHTML = '<div class="mk graf">' + h + '<div class="m-lys" id="m-lys"></div></div>';
