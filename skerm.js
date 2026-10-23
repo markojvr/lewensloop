@@ -108,7 +108,27 @@ function wysGrafskrif(){
       s.deeltydsJare + '</b></div>' : '')+
     '<div class="eind-stat"><span>Kinders</span><b>' + s.kinders +
       ((s.kindersGebore||s.kinders) > s.kinders ? ' van ' + s.kindersGebore + ' gebore' : '') + '</b></div>'+
+    /* E7 — die derde geslag, en wat van jou kinders geword het. */
+    ((s.kleinkinders||0) ? '<div class="eind-stat"><span>Kleinkinders</span><b>' +
+      s.kleinkinders + '</b></div>' : '')+
+    (kindOpsomming() ? '<div class="eind-stat"><span>Jou kinders</span><b>' +
+      veilig(kindOpsomming()) + '</b></div>' : '')+
     '<div class="eind-stat"><span>Troues</span><b>' + s.troues + '</b></div>'+
+    /* F1/F2 — met watter toestande het jy geleef, en wie het betaal. */
+    (chronies().length ? '<div class="eind-stat"><span>Chroniese toestande</span><b>' +
+      chronies().map(function(x){ var tt=toestandVan(x.id); return tt?tt.n:''; }).join(', ') +
+      '</b></div>' : '')+
+    (s.siekJare ? '<div class="eind-stat"><span>Jare met ’n chroniese toestand</span><b>' +
+      s.siekJare + '</b></div>' : '')+
+    '<div class="eind-stat"><span>Mediese sorg</span><b>' +
+      (s.mediesefonds ? mediesefonds().n + ' (' + s.fondsJare + ' jaar)' :
+        'staatshospitaal') + '</b></div>'+
+    /* F4 — die gewoontes wat jy saamgedra het. */
+    (gewoonteOpsomming() ? '<div class="eind-stat"><span>Leefstyl</span><b>' +
+      veilig(gewoonteOpsomming()) + '</b></div>' : '')+
+    /* F9 — waaruit jy kom. */
+    (s.gene ? '<div class="eind-stat"><span>Familiegeskiedenis</span><b>' +
+      veilig(s.gene.n) + '</b></div>' : '')+
     '<div class="eind-stat"><span>Jare in die tronk</span><b>' + (s.tronkJare||0) + '</b></div>'+
     (s.dakloosJare ? '<div class="eind-stat"><span>Jare op straat</span><b>' +
       s.dakloosJare + '</b></div>' : '')+
@@ -162,4 +182,30 @@ function beginLewe(){
   nuweLewe(naam||null, van||null, beginGeslag);
   el('begin').classList.remove('wys');
   renderAlles(); naOnder();
+}
+
+/* E7 — 'n reël vir die grafsteen: wat van jou kinders geword het. */
+function kindOpsomming(){
+  var lys = s.verhoudings.filter(function(v){
+    return (v.tipe==='seun'||v.tipe==='dogter') && v.kl; });
+  if(!lys.length) return '';
+  return lys.map(function(v){
+    var k = v.kl;
+    var wat = k.beroep ? k.beroep.t.toLowerCase()
+      : k.skool.vlak==='universiteit' ? 'studeer'
+      : k.skool.grade.length ? k.skool.grade[0].toLowerCase()
+      : v.ouderdom<18 ? 'Graad ' + Math.max(0, k.skool.graad)
+      : k.skool.matriek ? 'matriek' : 'geen matriek';
+    return v.naam + ' (' + wat + (v.lewe ? '' : ', oorlede') + ')';
+  }).join(', ');
+}
+/* F4 — net die gewoontes wat nog by jou was, of wat jy afgeskud het. */
+function gewoonteOpsomming(){
+  var r = [];
+  GEWOONTES.forEach(function(g){
+    var v = gewoonteVlak(g.id);
+    if(v) r.push(g.vlakke[v]);
+    else if(s.opgehou && s.opgehou[g.id]) r.push('opgehou met ' + g.n.toLowerCase());
+  });
+  return r.join(', ');
 }

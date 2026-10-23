@@ -7,6 +7,9 @@
 var TABS=[
   {id:'lewe', n:'Lewe', i:'\u{1F9EC}'}, {id:'akt', n:'Aktiwiteite', i:'\u{1F3AF}'},
   {id:'werk', n:'Werk', i:'\u{1F4BC}'}, {id:'mense', n:'Mense', i:'\u{1F49E}'},
+  /* Fase 5 — die liggaam kry sy eie blad: siektes, die mediese fonds,
+     drank/rook/dwelms en voorbehoeding. */
+  {id:'gesond', n:'Gesond', i:'\u{1FA7A}'},
   {id:'bates', n:'Bates', i:'\u{1F3E1}'}
 ];
 var IKONE={goed:'✨', sleg:'\u{1F4A5}', geld:'\u{1F4B0}', skool:'\u{1F4D8}',
@@ -22,6 +25,8 @@ function statusLyn(){
   if(s.tronk) return 'In die tronk (' + (s.tronk.jare - s.tronk.gedien) + ' jaar oor)';
   if(s.dakloos) return 'Dakloos' + (s.dakloos.jare ? ' (jaar ' + s.dakloos.jare + ')' : '');
   if(s.beroep) return beroepTitel();
+  if(verslaaf()) return GEWOONTES.filter(function(g){
+    return gewoonteVlak(g.id)>=3; })[0].vlakke[3];
   if(s.skool.vlak==='universiteit'||s.skool.vlak==='nagraads') return 'Student: ' + s.skool.studie;
   if(s.skool.vlak==='laerskool'||s.skool.vlak==='hoerskool') return 'Graad ' + s.skool.graad;
   if(s.skool.vlak==='kleuterskool') return 'Kleuterskool';
@@ -337,11 +342,32 @@ function renderWerk(){
 }
 
 /* ---------- Mense ---------- */
+/* E7/E12 — 'n kind se eie lewe en 'n eggenoot se beroep staan op sy
+   kaart, want dit is wat jy van hom wil weet. */
+function persoonSub(v){
+  if(v.tipe==='eggenoot'){
+    if(v.afgetree) return 'op pensioen';
+    if(v.werk) return v.werk.t.toLowerCase() + ' \u00b7 ' + kortGeld(v.werk.salaris) + '/jaar';
+    if(v.tuis) return 'tuis by die kinders';
+    return 'werk nie';
+  }
+  if(v.tipe==='seun'||v.tipe==='dogter'||v.tipe==='kleinkind'){
+    var k = v.kl; if(!k) return '';
+    if(k.skool.vlak==='laerskool'||k.skool.vlak==='hoerskool') return 'Graad ' + k.skool.graad;
+    if(k.skool.vlak==='universiteit') return 'studeer ' + k.skool.studie;
+    if(k.beroep) return k.beroep.t.toLowerCase();
+    if(v.ouderdom>=18) return k.skool.matriek ? 'matriek, werk nie' : 'geen matriek';
+    return '';
+  }
+  return '';
+}
 function persoonKaart(v){
+  var sub = persoonSub(v);
   return '<div class="kaart klik" onclick="oopPersoon(' + v.id + ')"><div class="ry">'+
     '<div class="emo">' + emoVan(v) + '</div><div class="groei">'+
     '<div class="hoof">' + veilig(v.naam + ' ' + v.van) + '</div>'+
-    '<div class="klein">' + rol(v) + ' \u00b7 ' + v.ouderdom + ' jaar</div>'+
+    '<div class="klein">' + rol(v) + ' \u00b7 ' + v.ouderdom + ' jaar' +
+      (sub ? ' \u00b7 ' + veilig(sub) : '') + '</div>'+
     '<div class="baan" style="margin-top:5px"><div class="vul" style="width:' + v.band +
     '%;background:var(--pienk)"></div></div></div>'+
     '<div class="regs">' + v.band + '%</div></div></div>';
@@ -351,6 +377,9 @@ function renderMense(){
   var groepe = [
     {t:'Liefde', tipes:['eggenoot','lief']},
     {t:'Gesin', tipes:['ma','pa','broer','suster','seun','dogter']},
+    /* E1 en E7 — drie geslagte in een lys. */
+    {t:'Grootouers', tipes:['ouma','oupa']},
+    {t:'Kleinkinders', tipes:['kleinkind']},
     {t:'Vriende', tipes:['vriend']},
     {t:'By die skool', tipes:['klasmaat']},
     {t:'By die werk', tipes:['baas','kollega']}
@@ -532,7 +561,110 @@ function renderAlles(){
   else if(s.tab==='akt') h = renderAkt();
   else if(s.tab==='werk') h = renderWerk();
   else if(s.tab==='mense') h = renderMense();
+  else if(s.tab==='gesond') h = renderGesond();
   else h = renderBates();
   el('blad').innerHTML = h;
   el('verjaar').style.display = s.lewe ? 'flex' : 'none';
+}
+
+/* ==========================================================================
+   DIE GESONDHEIDSBLAD (Fase 5 — F1, F2, F4 en E4)
+   Alles wat met die liggaam te doen het op een plek: wat jy het, hoe jy
+   daarvoor betaal, wat jy daaraan doen, en die drie gewoontes.
+   ========================================================================== */
+function renderGesond(){
+  var h = '';
+  /* --- Hoe dit met jou gaan --- */
+  var ch = chronies().length;
+  h += '<div class="titel">Jou liggaam</div>';
+  h += '<div class="kaart"><div class="hoof">Gesondheid ' + s.gesondheid + '/100</div>'+
+    '<div class="klein">' + (s.gene ? 'Jy kom uit ' + veilig(s.gene.n) +
+      (s.gene.sub ? ' — ' + veilig(s.gene.sub) : '') + '.' : '') + '</div>'+
+    '<div class="klein" style="margin-top:6px">' +
+      (ch ? 'Jy leef met ' + ch + ' chroniese toestand' + (ch>1?'e':'') +
+        (s.siekJare ? ', al ' + s.siekJare + ' jaar' : '') + '.'
+          : 'Jy het geen chroniese toestand nie.') + '</div></div>';
+
+  /* --- F1: jou toestande --- */
+  h += '<div class="titel">Siektes en toestande</div>';
+  if(!(s.siektes||[]).length){
+    h += '<div class="kaart klein">Jy is op die oomblik gesond.</div>';
+  } else {
+    s.siektes.forEach(function(x){
+      var tt = toestandVan(x.id); if(!tt) return;
+      var koste = behandelKoste(x);
+      var stat = !x.behandel ? 'Onbehandeld'
+        : x.wag>0 ? 'Op die staatshospitaal se waglys'
+        : x.pad==='fonds' ? 'Deur jou mediese fonds'
+        : x.pad==='staat' ? 'By die staatshospitaal'
+        : 'Privaat, uit jou eie sak';
+      h += '<div class="kaart"><div class="ry"><div class="emo">' + tt.e + '</div>'+
+        '<div class="groei"><div class="hoof">' + tt.n + '</div>'+
+        '<div class="klein">' + (tt.soort==='chronies' ? 'Chronies' : 'Akuut') +
+        ' · jaar ' + x.jare + ' · ' + stat +
+        (koste ? ' · ' + geld(koste) + ' per jaar' : '') + '</div>'+
+        '<div class="klein">' + tt.sub + '</div></div></div>'+
+        (!x.behandel ? '<button class="knop groen" onclick="behandelNou(\'' + x.id +
+          '\')">Laat dit behandel</button>' : '') + '</div>';
+    });
+  }
+
+  /* --- F2: die mediese fonds --- */
+  h += '<div class="titel">Mediese sorg</div>';
+  if(s.ouderdom<18){
+    h += '<div class="kaart klein">Jy is op jou ouers se plan — of by die ' +
+      'staatshospitaal, soos die meeste kinders. Van 18 af kies jy self.</div>';
+  } else if(s.mediesefonds){
+    var f = mediesefonds();
+    h += '<div class="kaart klik" onclick="wysMedieseFondse()"><div class="ry">'+
+      '<div class="emo">\u{1F3E5}</div><div class="groei">'+
+      '<div class="hoof">' + f.n + '</div>'+
+      '<div class="klein">' + geld(fondsPremieJaar()) + ' per jaar · dek ' +
+      Math.round(f.dek*100) + '% · lid vir ' + s.fondsJare + ' jaar</div>'+
+      '<div class="klein">' + f.sub + '</div></div><div class="regs">❯</div></div></div>';
+  } else {
+    h += '<div class="kaart klik" onclick="wysMedieseFondse()"><div class="ry">'+
+      '<div class="emo">\u{1F3E5}</div><div class="groei">'+
+      '<div class="hoof">Jy het geen mediese fonds nie</div>'+
+      '<div class="klein">Dit is die staatshospitaal, of ’n privaat rekening ' +
+      'wat jou kan ruïneer</div></div><div class="regs">❯</div></div></div>';
+  }
+
+  /* --- F4: die drie gewoontes --- */
+  h += '<div class="titel">Leefstyl</div>';
+  GEWOONTES.forEach(function(g){
+    var v = gewoonteVlak(g.id);
+    var jonk = s.ouderdom < g.min;
+    h += '<div class="kaart"><div class="ry"><div class="emo">' + g.e + '</div>'+
+      '<div class="groei"><div class="hoof">' + g.n + '</div>'+
+      '<div class="klein">Jy ' + g.vlakke[v] + (v ? ' · ' + geld(g.koste[v]) +
+        ' per jaar' : '') + (s.gewoonteJare[g.id] ? ' · ' + s.gewoonteJare[g.id] +
+        ' jaar' : '') + '</div>'+
+      '<div class="klein">' + g.sub + '</div></div>'+
+      '<div class="regs">' + (jonk ? '\u{1F512}' : '') + '</div></div>'+
+      (jonk ? '' :
+        '<button class="knop grys" onclick="beginGewoonte(\'' + g.id + '\')">' +
+        (g.id==='drink' ? (v ? 'Gaan uit vir ’n dop' : 'Probeer ’n dop')
+         : g.id==='rook' ? (v ? 'Koop ’n pakkie' : 'Probeer ’n sigaret')
+         : (v ? 'Gebruik weer' : 'Probeer dit')) + '</button>') +
+      (v ? '<button class="knop groen" onclick="wysOphou(\'' + g.id +
+        '\')">Probeer ophou</button>' : '') + '</div>';
+  });
+  if(s.lisensieWeg)
+    h += '<div class="kaart klein">Jou rylisensie is nog ' + s.lisensieWeg +
+      ' jaar opgeskort weens dronkbestuur.</div>';
+
+  /* --- E4: voorbehoeding --- */
+  if(s.ouderdom>=14){
+    var vb = voorbehoedingVan();
+    h += '<div class="titel">Voorbehoeding</div>';
+    h += '<div class="kaart klik" onclick="wysVoorbehoeding()"><div class="ry">'+
+      '<div class="emo">\u{1F48A}</div><div class="groei">'+
+      '<div class="hoof">' + vb.n + '</div>'+
+      '<div class="klein">' + Math.round(vb.f*100) + '% effektief' +
+      (vb.koste ? ' · ' + geld(vb.koste) + ' per jaar' : '') + '</div>'+
+      '<div class="klein">' + vb.sub + '</div></div>'+
+      '<div class="regs">❯</div></div></div>';
+  }
+  return h;
 }

@@ -42,8 +42,20 @@ function nuweLewe(naam, van, geslag){
     laerskool:null, hoerskool:null, uni:null, aansien:0, diere:[], lisensie:false,
     verhoudings:[], bates:[], log:[], rekord:[], tronk:null, tronkJare:0,
     dakloos:null, dakloosJare:0,
-    kinders:0, kindersGebore:0, troues:0, gedoen:{}, vlagge:{}, tab:'lewe'
+    kinders:0, kindersGebore:0, troues:0, gedoen:{}, vlagge:{}, tab:'lewe',
+    /* F1/F2 — die liggaam: watter toestande jy het, en hoe jy daarvoor betaal */
+    siektes:[], mediesefonds:null, fondsJare:0, siekJare:0,
+    /* F4 — drank, sigarette en dwelms, elk op vlak 0 tot 3 */
+    gewoontes:{drink:0, rook:0, dwelms:0}, gewoonteJare:{}, gewoonteLaas:{}, opgehou:{},
+    rehabs:0, lisensieWeg:0, dronkbestuur:0,
+    /* E4 — voorbehoeding en hoeveel swangerskappe daar was */
+    voorbehoeding:'geen', swangerskappe:0,
+    /* F9 — jou familiegeskiedenis, by geboorte gerol */
+    gene:null, kleinkinders:0
   };
+  /* F9 — die gene word heel eerste gerol, want elke ander stelsel kan
+     daarna daarna kyk (watter siekte in die familie is, hoe lank jy leef). */
+  s.gene = rolGene();
   /* Familie */
   var maVan = s.van, ma = nuweMens('v', tussen(19,41), maVan); ma.tipe='ma'; ma.band=tussen(70,100);
   s.verhoudings.push(ma);
@@ -57,9 +69,12 @@ function nuweLewe(naam, van, geslag){
     b.band = tussen(40,95);
     s.verhoudings.push(b);
   }
+  maakGrootouers();
   noteer('Jy is in ' + s.dorp + ' gebore in ’n ' + ryk.n + ' gesin.','goed');
   noteer('Jou naam is ' + s.naam + ' ' + s.van + '.','neutraal');
   if(s.vlagge.geenPa) noteer('Jou pa was nie in die prentjie nie.','sleg');
+  noteer('Jy kom uit ' + s.gene.n + '.', s.gene.f<1 ? 'goed' : s.gene.f>1 ? 'sleg' : 'neutraal');
+  grootouerGeboorte();
   stoor();
 }
 
@@ -74,13 +89,20 @@ function rol(v){
   var m={ma:'Ma', pa:'Pa', broer:'Broer', suster:'Suster',
     lief: v.geslag==='m'?'Kerel':'Meisie', eggenoot: v.geslag==='m'?'Man':'Vrou',
     seun:'Seun', dogter:'Dogter', vriend: v.geslag==='m'?'Vriend':'Vriendin',
-    klasmaat:'Klasmaat', kollega:'Kollega', baas:'Jou baas'};
-  return m[v.tipe] || 'Vriend';
+    klasmaat:'Klasmaat', kollega:'Kollega', baas:'Jou baas',
+    /* E1 en E7 */
+    ouma:'Ouma', oupa:'Oupa',
+    kleinkind: v.geslag==='m'?'Kleinseun':'Kleindogter'};
+  var n = m[v.tipe] || 'Vriend';
+  if((v.tipe==='ouma'||v.tipe==='oupa') && v.kant)
+    n += v.kant==='ma' ? ' (ma se kant)' : ' (pa se kant)';
+  return n;
 }
 function emoVan(v){
   var m={ma:'\u{1F469}', pa:'\u{1F468}', broer:'\u{1F466}', suster:'\u{1F467}',
     lief:'\u{1F495}', eggenoot:'\u{1F48D}', seun:'\u{1F9D2}', dogter:'\u{1F9D2}',
-    klasmaat:'\u{1F392}', kollega:'\u{1F454}', baas:'\u{1F9D1}'};
+    klasmaat:'\u{1F392}', kollega:'\u{1F454}', baas:'\u{1F9D1}',
+    ouma:'\u{1F475}', oupa:'\u{1F474}', kleinkind:'\u{1F476}'};
   return m[v.tipe] || (v.geslag==='m'?'\u{1F9D1}':'\u{1F469}');
 }
 function maat(){ return s.verhoudings.filter(function(v){
@@ -128,6 +150,32 @@ function vulNuweVelde(){
      inkomste kan dra, anders sou jou pensioen sommer verdwyn. */
   if(s.afgetree && s.pensioen>0 && !s.pensioenFonds)
     s.pensioenFonds = Math.round(s.pensioen / ANNUITEIT_TREK);
+  /* Fase 5 — gesin en gesondheid. 'n Lewe wat voor hierdie fase gestoor
+     is, het geen siektes, geen gewoontes, geen gene en geen grootouers
+     nie; elke veld kry hier sy verstek sodat so 'n lewe steeds laai. */
+  if(!s.siektes) s.siektes = [];                        /* F1 */
+  if(s.mediesefonds===undefined) s.mediesefonds = null; /* F2 */
+  if(!s.fondsJare) s.fondsJare = 0;
+  if(!s.siekJare) s.siekJare = 0;
+  if(!s.gewoontes) s.gewoontes = {drink:0, rook:0, dwelms:0};  /* F4 */
+  if(!s.gewoonteJare) s.gewoonteJare = {};
+  if(!s.gewoonteLaas) s.gewoonteLaas = {};
+  if(!s.opgehou) s.opgehou = {};
+  if(!s.rehabs) s.rehabs = 0;
+  if(!s.lisensieWeg) s.lisensieWeg = 0;
+  if(!s.dronkbestuur) s.dronkbestuur = 0;
+  if(!s.voorbehoeding) s.voorbehoeding = 'geen';        /* E4 */
+  if(!s.swangerskappe) s.swangerskappe = 0;
+  if(!s.kleinkinders) s.kleinkinders = 0;               /* E7 */
+  if(!s.fiks) s.fiks = 0;
+  if(!s.gene) s.gene = rolGene();                       /* F9 */
+  /* E7 — 'n ou kind het nog nie 'n eie lewe nie. kindLewe() bou dit
+     agteruit uit sy ouderdom, sodat 'n 30-jarige seun nie skielik weer
+     in Graad 1 begin nie. E12 doen dieselfde vir 'n eggenoot. */
+  s.verhoudings.forEach(function(v){
+    if(v.tipe==='seun'||v.tipe==='dogter'||v.tipe==='kleinkind') kindLewe(v);
+    if(v.tipe==='eggenoot' && v.werk===undefined) maatBeroepKies(v);
+  });
   if(!s.huurPlek) s.huurPlek = 'kommune';
   if(!s.blyplek)
     s.blyplek = s.bates.some(function(b){ return b.t==='huis'; }) ? 'eie'
@@ -156,6 +204,9 @@ function wordOuer(){
   if(!s || !s.lewe) return;
   if(el('modaal').classList.contains('wys')) return;
   s.ouderdom++;
+  /* F1 — wat jy VERLEDE jaar vir jou liggaam gedoen het, hou hierdie
+     jaar se plafon op gesondheid hoër (sien herstelJaar). */
+  s.fiks = (s.gedoen.gim?1:0) + (s.gedoen.draf?1:0) + (s.gedoen.dokter?1:0);
   s.gedoen = {}; s.aansoeke = 0;
   noteer('Jy is nou ' + s.ouderdom + ' jaar oud.','jaar');
   ouderdomDrywing();
@@ -165,8 +216,12 @@ function wordOuer(){
   skoolJaar();
   beroepJaar();
   aftreeJaar();
-  finansiesJaar();
+  gewoonteJaar();                  /* F4 — drank, rook en dwelms vreet eerste */
+  siekteJaar();                    /* F1 — nuwe toestande, en wat hulle doen */
+  herstelJaar();                   /* F1/F9 — en dan herstel die liggaam */
+  finansiesJaar();                 /* F2 se premie en rekeninge sit hierin */
   verhoudingsJaar();
+  grootouerJaar();                 /* E1 */
   lukrakeGebeure();
   s.tab = 'lewe';
   speelWagry(eindeJaar);
@@ -178,18 +233,82 @@ function eindeJaar(){
   stoor(); renderAlles(); naOnder();
 }
 
+/* F9 — hoe die liggaam oor die jare verval.
+   Die ou weergawe het elke jaar ná 56 een tot drie punte, en ná 70 twee
+   tot vyf punte afgehaal. Dit het beteken dat ELKE mens se gesondheid
+   kort ná 70 op nul was, en nul gesondheid is dood — daarom het almal
+   tussen 56 en 72 gesterf, al het hulle niks verkeerd gedoen nie.
+   Nou is die verval sagter, en onder 30 punte stabiliseer die liggaam
+   op 'n lae vlak in plaas van om reguit na nul te val. Dit maak die
+   doodskans in doodKontrole() die werklike oorsaak van die dood, en
+   daarmee ook jou gene, jou siektes en jou leefstyl. */
 function ouderdomDrywing(){
   var o = s.ouderdom, d;
   if(o<=12)      d = tussen(-1,2);
   else if(o<=25) d = tussen(-1,1);
   else if(o<=40) d = -tussen(0,1);
   else if(o<=55) d = -tussen(0,2);
-  else if(o<=70) d = -tussen(1,3);
-  else           d = -tussen(2,5);
+  else if(o<=70) d = -tussen(0,2);
+  else           d = -tussen(1,3);
+  /* 'n Taai familie verweer die jare beter; 'n familie met hartsiekte of
+     kanker verloor gesondheid vinniger. */
+  if(d<0 && s.gene && s.gene.f>1.1 && kans(40)) d -= 1;
+  if(d<0 && s.gene && s.gene.f<0.85 && kans(40)) d += 1;
+  /* Die liggaam hou onder 30 punte sy lae vlak: 'n ou mens is swak,
+     maar nie elke jaar swakker nie. */
+  if(d<0 && s.gesondheid<30 && kans(55)) d = Math.ceil(d/2);
   s.gesondheid = klem(s.gesondheid + d);
+  /* F4 — rook en dwelms vat jou gesig, nie net jou longe nie. */
+  if(o>=20 && (s.gewoontes.rook>=2 || s.gewoontes.dwelms>=2) && kans(55))
+    s.voorkoms = klem(s.voorkoms - tussen(1,3));
   if(o>=28) s.voorkoms = klem(s.voorkoms - tussen(0, o>=58?3:1));
   if(o>=5 && s.geluk>32) s.geluk = klem(s.geluk - tussen(0,2));
   if(s.tronk) s.geluk = klem(s.geluk - tussen(5,14));
+}
+
+/* ==========================================================================
+   F1/F9 — DIE LIGGAAM HERSTEL
+   Dit was die ander helfte van die rede waarom almal tussen 56 en 72
+   gesterf het: 'gesondheid' het net EEN rigting geken. Elke gebeurtenis,
+   elke slegte jaar het 'n punt of twee afgehaal en niks het dit ooit
+   teruggegee nie, so die stat het by elke speler teen sowat 70 by nul
+   uitgekom — en nul gesondheid is dood.
+
+   Nou het die liggaam 'n natuurlike vlak vir jou ouderdom. 'n Slegte
+   jaar stoot jou daaronder en jy klim weer terug; 'n chroniese toestand,
+   'n pakkie sigarette per dag of 'n jaar op straat trek die vlak self
+   af. Dit is hier waar F1, F2, F4 en jou gene op jou gesondheid uitkom.
+   ========================================================================== */
+function natuurlikeVlak(){
+  var o = s.ouderdom;
+  var v = o<=25 ? 92 : o<=40 ? 86 : o<=55 ? 76 : o<=70 ? 62 : o<=82 ? 46 : 32;
+  /* F1/F2 — elke toestand trek die vlak af, 'n behandelde een minder. */
+  (s.siektes||[]).forEach(function(x){
+    var tt = toestandVan(x.id); if(!tt) return;
+    var krag = behandelKrag(x);
+    v -= Math.round((tt.soort==='chronies' ? 9 : 5) * tt.erns * (1 - krag*0.75));
+  });
+  /* F4 */
+  v -= (s.gewoontes.rook||0)*5 + (s.gewoontes.drink||0)*4 + (s.gewoontes.dwelms||0)*6;
+  if(s.dakloos) v -= 14;
+  if(s.tronk) v -= 6;
+  /* F9 — jou gene, en of iemand na jou kyk. */
+  if(s.gene) v -= Math.round((s.gene.f - 1) * 14);
+  if(sorgVlak()===2) v += 4;
+  else if(sorgVlak()===0) v -= 4;
+  return klem(v, 4, 100);
+}
+function herstelJaar(){
+  var doel = natuurlikeVlak();
+  /* Oefening lig die plafon: 'n fiks mens van 60 is gesonder as sy
+     natuurlike vlak — maar hy is nie 'n twintigjarige nie. Sonder
+     hierdie plafon hou gym en draf elke speler op 100 en word niemand
+     ooit oud genoeg om te sterf nie. */
+  var plafon = klem(doel + (s.fiks||0)*4 + 4);
+  if(s.gesondheid < doel)
+    s.gesondheid = klem(s.gesondheid + Math.min(tussen(1,4), doel - s.gesondheid));
+  else if(s.gesondheid > plafon)
+    s.gesondheid = klem(s.gesondheid - Math.min(tussen(1,3), s.gesondheid - plafon));
 }
 
 /* ---------- Rylisensie ---------- */
@@ -197,8 +316,17 @@ function ouderdomDrywing(){
    Vir nou is dit net 'n ouderdomsvereiste om 'n motor te besit en te
    bestuur; die volle motorstelsel (toetse, versekering, licence disc)
    is item H9 vir later. */
-function magBestuur(){ return s.ouderdom>=18; }
+/* F4 — 'n lisensie wat weens dronkbestuur opgeskort is, maak bestuur
+   onwettig totdat die jare verby is. */
+function magBestuur(){ return s.ouderdom>=18 && !s.lisensieWeg; }
 function lisensieJaar(){
+  if(s.lisensieWeg>0){
+    s.lisensieWeg--;
+    if(s.lisensieWeg<=0){ s.lisensie = true;
+      noteer('Jy het jou rylisensie terug. Hou dit dié keer.','goed'); }
+    else noteer('Jou lisensie is nog ' + s.lisensieWeg + ' jaar opgeskort.','sleg');
+    return;
+  }
   if(s.lisensie || s.ouderdom<18) return;
   s.lisensie = true;
   noteer('Jy het jou rylisensie by die verkeersdepartement gekry.','goed');
@@ -722,7 +850,7 @@ function diereKosteJaar(){
   var ouers = lewendeOuers();
   if(s.ouderdom>=18 || !ouers.length){
     /* B13 — het jy self niks, kan jy ook nie 'n dier aanhou nie. */
-    if(som > Math.max(0,s.geld) + (s.spaar||0) + brutoInkomste()*0.35){
+    if(som > Math.max(0,s.geld) + (s.spaar||0) + huishoudingBruto()*0.35){
       var los = s.diere[s.diere.length-1];
       s.diere = s.diere.filter(function(x){ return x!==los; });
       s.geluk = klem(s.geluk - tussen(10,20));
@@ -757,6 +885,8 @@ function finansiesJaar(){
   sakgeldJaar();                   /* B14 */
   blyplekJaar(netto);              /* B1  — huur, of by jou ouers */
   bondJaar();                      /* B2  — die huislening */
+  fondsJaar();                     /* F2  — die mediese fonds se premie */
+  siekteKosteJaar();               /* F1/F2 — die jaar se behandelings */
   uitgawesJaar(netto);             /* B13 — lewenskoste */
   spaarRenteJaar();                /* B5  — rente op spaargeld */
   pensioenFondsJaar();             /* B17 — die fonds groei of betaal uit */
@@ -776,6 +906,13 @@ function brutoInkomste(){
   if(s.pensioen) b += s.pensioen;
   return b;
 }
+/* E12 — wat jou eggenoot vanjaar verdien. 'n Huishouding is twee
+   inkomste as albei werk; die bank en die krediteure kyk na die som. */
+function maatSalaris(){
+  var m = maat();
+  return (m && m.tipe==='eggenoot' && m.werk && !m.afgetree) ? m.werk.salaris : 0;
+}
+function huishoudingBruto(){ return brutoInkomste() + maatSalaris(); }
 /* Die skale is nog grof — B8 maak hulle later marginaal, met rebates. */
 function belastingKoers(bedrag){
   return bedrag>900000 ? 0.36 : bedrag>450000 ? 0.30 : bedrag>250000 ? 0.22 : 0.14;
@@ -783,14 +920,25 @@ function belastingKoers(bedrag){
 function studeerTans(){ return s.skool.vlak==='universiteit' || s.skool.vlak==='nagraads'; }
 
 function inkomsteJaar(){
-  var bruto = brutoInkomste();
-  if(bruto<=0) return 0;
-  var bydrae = pensioenBydraeJaar();        /* B17 — aftrekbaar voor belasting */
-  var belasbaar = Math.max(0, bruto - bydrae);
-  var netto = Math.round(belasbaar * (1 - belastingKoers(belasbaar)));
-  s.geld += netto; s.totaalVerdien += netto;
-  noteer('Jy het ' + geld(netto) + ' verdien (na belasting' +
-    (bydrae ? ' en jou pensioenbydrae' : '') + ').','geld');
+  var netto = 0, bruto = brutoInkomste();
+  if(bruto>0){
+    var bydrae = pensioenBydraeJaar();      /* B17 — aftrekbaar voor belasting */
+    var belasbaar = Math.max(0, bruto - bydrae);
+    netto = Math.round(belasbaar * (1 - belastingKoers(belasbaar)));
+    s.geld += netto; s.totaalVerdien += netto;
+    noteer('Jy het ' + geld(netto) + ' verdien (na belasting' +
+      (bydrae ? ' en jou pensioenbydrae' : '') + ').','geld');
+  }
+  /* E12 — SARS belas elke mens apart, dus word haar salaris apart
+     bereken en dan by die huishouding se kontant gegooi. */
+  var mSal = maatSalaris();
+  if(mSal>0){
+    var m = maat();
+    var mNetto = Math.round(mSal * (1 - belastingKoers(mSal)));
+    s.geld += mNetto; s.totaalVerdien += mNetto; netto += mNetto;
+    noteer(m.naam + ' het ' + geld(mNetto) + ' verdien as ' +
+      m.werk.t.toLowerCase() + ' (na belasting).','geld');
+  }
   return netto;
 }
 
@@ -954,7 +1102,7 @@ function vraBlyplek(){
   if(s.vlagge.blyplekGevra || s.ouderdom<18) return;
   if(s.skool.vlak==='laerskool' || s.skool.vlak==='hoerskool') return;
   s.vlagge.blyplekGevra = 1;
-  var vermoe = blyVermoe(brutoInkomste());
+  var vermoe = blyVermoe(huishoudingBruto());
   var opsies = [{t:'Bly by my ouers',
     sub:'Goedkoop, maar dit begin na \u2019n paar jaar aan jou knaag',
     doen:function(){ s.blyplek='ouers'; }}];
@@ -1189,11 +1337,11 @@ function bateWaardesJaar(){
 /* ---------- B6: skuld en sy gevolge ---------- */
 /* Hoeveel skuld laat die bank toe voor hulle goed kom vat? */
 function skuldPerk(){
-  return Math.max(SKULD_MIN_PERK, Math.round(brutoInkomste() * SKULD_INKOMSTE_PERK));
+  return Math.max(SKULD_MIN_PERK, Math.round(huishoudingBruto() * SKULD_INKOMSTE_PERK));
 }
 /* Is daar enigiets wat 'n skuldeiser kan vat? */
 function hetIetsOmTeVat(){
-  return s.bates.length>0 || s.belegging>0 || (s.spaar||0)>0 || brutoInkomste()>0;
+  return s.bates.length>0 || s.belegging>0 || (s.spaar||0)>0 || huishoudingBruto()>0;
 }
 /* 'n Boedelbevel is net die moeite werd as die skuld groot genoeg is, en
    dit kan net een keer elke tien jaar — daarna moet jy eers
@@ -1543,17 +1691,34 @@ function verhoudingsJaar(){
     var p = 0;
     if(v.ouderdom>62) p = (v.ouderdom-62)*0.45;
     if(v.ouderdom>85) p += (v.ouderdom-85)*2.6;
+    /* E1 — 'n grootouer is al oud wanneer jy hom leer ken, en dié
+       kromme moet by die een pas waarmee jy self doodgaan. */
+    if((v.tipe==='ouma'||v.tipe==='oupa') && v.ouderdom>70) p += (v.ouderdom-70)*0.8;
     if(kans(p)){
       v.lewe = false;
       if(v.tipe==='seun'||v.tipe==='dogter') s.kinders = Math.max(0, s.kinders-1);
+      if(v.tipe==='kleinkind') s.kleinkinders = Math.max(0, (s.kleinkinders||0)-1);
       noteer(v.naam + ' (' + rol(v) + ') is oorlede op ouderdom ' + v.ouderdom + '.','sleg');
-      s.geluk = klem(s.geluk - (v.tipe==='ma'||v.tipe==='pa'||v.tipe==='eggenoot' ? tussen(18,32) : tussen(6,16)));
+      s.geluk = klem(s.geluk - (v.tipe==='ma'||v.tipe==='pa'||v.tipe==='eggenoot' ? tussen(18,32) :
+        (v.tipe==='ouma'||v.tipe==='oupa') ? tussen(10,22) : tussen(6,16)));
       if(v.tipe==='ma'||v.tipe==='pa'||v.tipe==='eggenoot'){
         var erf = Math.round(tussen(0,220000) * s.rykf);
         if(erf>2000){ s.geld += erf; noteer('Jy het ' + geld(erf) + ' geerf.','geld'); }
       }
+      /* E1 — 'n grootouer los gewoonlik minder, en dit word tussen baie
+         kleinkinders verdeel, maar vir 'n jong mens beteken dit baie. */
+      if(v.tipe==='ouma'||v.tipe==='oupa'){
+        var erfG = Math.round(tussen(GROOTOUER_ERF[0],GROOTOUER_ERF[1]) * s.rykf * (v.band/70));
+        if(erfG>1500){ s.geld += erfG;
+          noteer('Uit ' + v.naam + ' se boedel het jy ' + geld(erfG) + ' gekry.','geld'); }
+      }
       return;
     }
+    /* E7 — 'n kind (of kleinkind) leef sy eie jaar: skool, matriek,
+       werk, 'n maat en eendag sy eie kinders. */
+    if(v.tipe==='seun'||v.tipe==='dogter'||v.tipe==='kleinkind') kindJaar(v);
+    /* E12 — jou eggenoot se loopbaan loop ook aan. */
+    if(v.tipe==='eggenoot') maatWerkJaar(v);
     if(v.tipe==='eggenoot' && v.band<22 && kans(16)){
       v.tipe='vriend'; v.band=klem(v.band-10); s.geluk=klem(s.geluk-20);
       noteer(v.naam + ' het van jou geskei.','sleg');
@@ -1567,9 +1732,6 @@ function verhoudingsJaar(){
       v.weg=true;
       noteer('Jy en ' + v.naam + ' het heeltemal uitmekaar gedryf.','neutraal');
     }
-    if((v.tipe==='seun'||v.tipe==='dogter') && v.ouderdom===18){
-      noteer(v.naam + ' het matriek klaargemaak en huis verlaat.','goed'); s.geluk=klem(s.geluk+6);
-    }
   });
   s.verhoudings = s.verhoudings.filter(function(v){ return !v.weg; });
   /* nuwe boetie of sussie */
@@ -1580,6 +1742,7 @@ function verhoudingsJaar(){
     s.verhoudings.push(b);
     noteer('Jou ma het ’n baba gekry: ' + b.naam + ' is jou nuwe ' + rol(b).toLowerCase() + '.','goed');
   }
+  onbeplanJaar();      /* E4 */
   troeteldierJaar();
 }
 
@@ -1665,15 +1828,104 @@ var OORSAKE=['ouderdom','’n hartaanval','’n beroerte','longontsteking','natu
 var ONGELUKKE=['’n motorongeluk','’n val van ’n leer','’n swemongeluk',
   '’n blitsslag','’n ongeluk met ’n braaidrom','’n haaiaanval'];
 
+/* ==========================================================================
+   F9 — DIE DOOD
+   Die ou weergawe was een ouderdomskromme plus 'n vaste 0,09%
+   ongelukskans: oor 40 lewens het almal tussen 56 en 72 gesterf. Nou is
+   die kans om in 'n jaar dood te gaan 'n Gompertz-kromme (dit verdubbel
+   ongeveer elke agt jaar) wat deur ses dinge vermenigvuldig word:
+     1. jou gene              (by geboorte gerol — GENE in data.js)
+     2. jou gesondheid        (die statte wat die hele spel beweeg)
+     3. jou siektes           (F1 — behandel of nie)
+     4. rook, drank, dwelms   (F4)
+     5. of jy mediese sorg kan bekostig (F2)
+     6. waar jy is            (tronk, straat)
+   Daarby kom ongelukke en geweld, wat in SA veral jong mans vat.
+   Die uitkoms is 'n egte verspreiding: 'n mens met kanker, sigarette en
+   geen fonds haal selde 60, en 'n gesonde mens uit 'n taai familie met
+   'n omvattende plan haal gereeld 90.
+   ========================================================================== */
+/* Hoe goed kan jy jou gesondheid laat oppas? 2 = 'n mediese fonds,
+   1 = jy kan 'n staatshospitaal of 'n dokter uit jou sak bykom,
+   0 = daar is niks en niemand nie. */
+function sorgVlak(){
+  if(s.mediesefonds) return 2;
+  if(s.dakloos) return 0;
+  if(s.geld + (s.spaar||0) > 3000 || huishoudingBruto() > 80000) return 1;
+  return 0;
+}
+/* Al die siektes se erns bymekaar, elk gedemp deur sy behandeling. */
+function siekteErns(){
+  var e = 0;
+  (s.siektes||[]).forEach(function(x){
+    var tt = toestandVan(x.id); if(!tt) return;
+    e += tt.erns * (x.behandel ? DOOD_BEHANDEL : DOOD_ONBEHANDEL) *
+      (x.behandel && x.pad==='staat' ? 1.6 : 1);
+  });
+  return e;
+}
+/* Die kans, in persent, dat hierdie jaar jou laaste is — en waaraan. */
+function doodsKans(){
+  var o = s.ouderdom;
+  /* Kindersterftes: in SA sterf ongeveer een uit 'n paar honderd babas. */
+  if(o===0) return {p:DOOD_KIND[0], oorsaak:kies(OORSAKE), soort:'kind'};
+  var basis = o<=5 ? DOOD_KIND[1]
+    : DOOD_BASIS * Math.exp(DOOD_KROM * (o - 20));
+  /* 1. gene */
+  basis *= (s.gene ? s.gene.f : 1);
+  /* 2. gesondheid */
+  basis *= Math.max(DOOD_GESOND_MIN, 1 + (70 - s.gesondheid)/DOOD_GESOND_F);
+  /* 3. siektes */
+  basis *= (1 + siekteErns());
+  /* 4. leefstyl */
+  basis *= DOOD_ROOK[s.gewoontes.rook||0];
+  basis *= DOOD_DRINK[s.gewoontes.drink||0];
+  basis *= DOOD_DWELMS[s.gewoontes.dwelms||0];
+  /* 5. mediese sorg */
+  var sorg = sorgVlak();
+  if(sorg===0) basis *= DOOD_GEEN_SORG;
+  else if(sorg===2) basis *= DOOD_GOEIE_SORG;
+  /* 6. waar jy is */
+  if(s.dakloos) basis *= 1.5;
+  /* Die oorsaak kom by voorkeur uit jou ergste siekte. */
+  var ergste = null, erg = 0;
+  (s.siektes||[]).forEach(function(x){
+    var tt = toestandVan(x.id);
+    if(tt && tt.erns > erg && (!x.behandel || kans(35))){ erg = tt.erns; ergste = tt; }
+  });
+  var oorsaak = (ergste && erg>=0.8 && kans(72)) ? ergste.n.toLowerCase() : kies(OORSAKE);
+  return {p:basis, oorsaak:oorsaak, soort:'siekte'};
+}
+/* Ongelukke en geweld: 'n aparte kans, want dit tref 'n gesonde mens
+   net so hard. In SA is dit die grootste rede waarom 'n jong man nie
+   oud word nie. */
+function ongelukKans(){
+  var p = DOOD_ONGELUK;
+  if(s.ouderdom>=DOOD_JONKMAN[0] && s.ouderdom<=DOOD_JONKMAN[1])
+    p += (s.geslag==='m' ? DOOD_JONKMAN_M : DOOD_JONKMAN_V);
+  if(s.tronk) p += DOOD_TRONK;
+  if(s.dakloos) p += DOOD_DAKLOOS;
+  /* F4 — dronk agter die stuur, en dwelms, maak elke jaar gevaarliker. */
+  if(s.gewoontes.drink>=2) p += s.gewoontes.drink===3 ? 0.42 : 0.14;
+  if(s.gewoontes.dwelms>=2) p += s.gewoontes.dwelms===3 ? 0.65 : 0.20;
+  if(s.rekord.length) p += 0.10;      /* die onderwereld bly aan jou vashou */
+  return p;
+}
 function doodKontrole(){
-  if(s.gesondheid<=0){ sterf(kies(SIEKTES)); return; }
-  var p = 0, o = s.ouderdom;
-  if(o>58) p += (o-58)*0.32;
-  if(o>80) p += (o-80)*1.4;
-  if(o>95) p += (o-95)*4;
-  p *= (1 + (70 - s.gesondheid)/90);
-  if(p>0 && kans(p)){ sterf(kies(OORSAKE)); return; }
-  if(kans(0.09 + (s.tronk?0.3:0))){ sterf(kies(ONGELUKKE)); return; }
+  if(s.gesondheid<=0){
+    /* F1 — is daar 'n siekte, is dit waaraan jy sterf, nie 'n vae
+       "swak gesondheid" nie. */
+    var erg = null, e = 0;
+    (s.siektes||[]).forEach(function(x){
+      var tt = toestandVan(x.id);
+      if(tt && tt.erns > e){ e = tt.erns; erg = tt; }
+    });
+    sterf(erg ? erg.n.toLowerCase() : kies(SIEKTES));
+    return;
+  }
+  var d = doodsKans();
+  if(d.p>0 && kans(d.p)){ sterf(d.oorsaak); return; }
+  if(kans(ongelukKans())){ sterf(kies(ONGELUKKE)); return; }
 }
 function sterf(oorsaak){
   s.lewe = false; s.oorsaak = oorsaak;
@@ -1681,3 +1933,861 @@ function sterf(oorsaak){
   geskiedenisBy(); stoor();
 }
 
+
+/* ==========================================================================
+   FASE 5 — GESIN (E1, E4, E7, E12)
+   Grootouers wat 'n kinderlewe vul, 'n baba wat ook buite 'n huwelik kan
+   kom, kinders met 'n egte lewensloop, en 'n eggenoot wat self verdien.
+   ========================================================================== */
+
+/* ---------- F9: jou familiegeskiedenis ---------- */
+/* Word een keer by geboorte gerol en verander nooit weer. Dit raak jou
+   doodskans (GENE se 'f'), jou gesondheid se drywing, en watter siekte
+   in jou familie loop ('neig'). */
+function rolGene(){
+  var g = kiesGeweeg(GENE, function(x){ return x.kans; }) || GENE[2];
+  return {n:g.n, f:g.f, sub:g.sub, neig:g.neig || null};
+}
+
+/* ---------- E1: oupas en oumas ---------- */
+/* Jou ouers se ouers. Elkeen is 20 tot 38 jaar ouer as sy eie kind, en
+   elkeen word apart gerol — party is al dood voor jy gebore word. */
+function maakGrootouer(ouer, tipe, kant){
+  var o = ouer.ouderdom + tussen(OUMA_OUER[0], OUMA_OUER[1]);
+  var g = nuweMens(tipe==='ouma'?'v':'m', o, kant==='pa' ? ouer.van : kies(VANNE));
+  g.tipe = tipe; g.kant = kant;
+  g.band = tussen(55,100);
+  /* Dood voor jou geboorte, of al oud genoeg dat die kromme hom vat. */
+  if(kans(GROOTOUER_DOOD) || o>92){ g.lewe = false; g.voorGeboorte = 1; }
+  s.verhoudings.push(g);
+  return g;
+}
+function maakGrootouers(){
+  var ma = s.verhoudings.filter(function(v){ return v.tipe==='ma'; })[0];
+  var pa = s.verhoudings.filter(function(v){ return v.tipe==='pa'; })[0];
+  if(ma){ maakGrootouer(ma,'ouma','ma'); maakGrootouer(ma,'oupa','ma'); }
+  /* Is daar geen pa in die prentjie nie, ken jy sy ouers meestal ook nie. */
+  if(pa && kans(84)){ maakGrootouer(pa,'ouma','pa'); maakGrootouer(pa,'oupa','pa'); }
+}
+function grootouers(){
+  return s.verhoudings.filter(function(v){
+    return v.lewe && (v.tipe==='ouma'||v.tipe==='oupa'); });
+}
+/* Die log-reël by jou geboorte: wie is daar, en wie is nie meer nie. */
+function grootouerGeboorte(){
+  var lewe = grootouers();
+  var weg = s.verhoudings.filter(function(v){ return v.voorGeboorte; });
+  if(lewe.length) noteer('Jou grootouers is ' + lewe.map(function(v){
+    return v.naam + ' (' + rol(v).toLowerCase() + ')'; }).join(', ') + '.','goed');
+  if(weg.length) noteer(weg.map(function(v){ return 'jou ' + rol(v).toLowerCase(); }).join(' en ') +
+    ' is voor jou geboorte oorlede.','neutraal');
+}
+/* Een keer per jaar doen 'n grootouer iets met jou. Dit is die hart van
+   E1: 'n kind se lewe staan vol sulke middae. */
+function grootouerJaar(){
+  var lys = grootouers();
+  if(!lys.length) return;
+  var g = kies(lys);
+  /* 'n Grootouer wat jou nie meer ken nie, kan ook jou sorg nodig kry. */
+  if(g.ouderdom>=78 && s.ouderdom>=22 && kans(13)){
+    g.band = klem(g.band + tussen(3,9));
+    if(s.geld>=6000 && kans(55)){
+      var help = tussen(3000, 18000);
+      s.geld -= help; s.geluk = klem(s.geluk + tussen(1,5));
+      noteer('Jy het ' + geld(help) + ' bygedra vir ' + g.naam +
+        ' se sorg in die ouetehuis.','geld');
+    } else {
+      s.geluk = klem(s.geluk - tussen(2,6));
+      noteer(g.naam + ' word oud en daar is niemand om te help nie.','sleg');
+    }
+    return;
+  }
+  var dade = GROOTOUER_DADE.filter(function(d){
+    return s.ouderdom>=d.min && s.ouderdom<=d.maks && g.band>=d.band; });
+  if(!dade.length || !kans(58)) return;
+  var d = kies(dade);
+  if(d.geld){ var r = Math.round(tussen(d.geld[0],d.geld[1]) * s.rykf); s.geld += r; }
+  if(d.slim) s.slim = klem(s.slim + tussen(d.slim[0],d.slim[1]));
+  if(d.geluk) s.geluk = klem(s.geluk + tussen(d.geluk[0],d.geluk[1]));
+  if(d.gesondheid) s.gesondheid = klem(s.gesondheid + tussen(d.gesondheid[0],d.gesondheid[1]));
+  g.band = klem(g.band + tussen(1,5));
+  noteer(g.naam + ' ' + d.t + '.','goed');
+}
+
+/* ---------- E12: jou eggenoot se beroep ---------- */
+/* Mense trou met mense soos hulself, daarom hang haar opleiding aan
+   joune. Daarna kry sy 'n pos uit BEROEPE wat by haar opleiding,
+   ouderdom en 'n bietjie geluk pas. */
+function maatBeroepKies(v){
+  v.werk = null;
+  v.afgetree = v.ouderdom >= MAAT_AFTREE;
+  if(v.afgetree){
+    noteer(v.naam + ' is al op pensioen.','neutraal');
+    return;
+  }
+  /* Is daar klein kinders in die huis, bly een ouer soms by hulle. */
+  if(kindersTuis()>0 && kans(MAAT_HUISVROU)){
+    v.tuis = 1;
+    noteer(v.naam + ' bly by die kinders tuis en werk nie.','neutraal');
+    return;
+  }
+  var e = klem(eduVlak() + tussen(-1,1), 0, 3);
+  var kan = BEROEPE.filter(function(b){
+    return b.edu<=e && b.min<=v.ouderdom && !b.ervaring; });
+  if(!kan.length) kan = BEROEPE.filter(function(b){ return b.edu===0; });
+  var b = kiesGeweeg(kan, function(x){ return 1 + x.edu*2; }) || kan[0];
+  v.werk = {id:b.id, t:b.t, plafon:b.plafon, jare:0,
+    salaris: Math.round(b.s * tussen(MAAT_SALARIS_F[0],MAAT_SALARIS_F[1]) / 100)};
+  noteer(v.naam + ' werk as ' + b.t.toLowerCase() + ' en verdien ' +
+    geld(v.werk.salaris) + ' per jaar.','werk');
+}
+/* Haar loopbaan loop ook aan: verhogings, 'n plafon, soms 'n afdanking,
+   en op 62 is sy klaar. */
+function maatWerkJaar(v){
+  if(v.werk===undefined){ maatBeroepKies(v); return; }
+  if(v.afgetree) return;
+  if(v.ouderdom>=MAAT_AFTREE){
+    v.afgetree = true;
+    if(v.werk){ noteer(v.naam + ' het op ' + v.ouderdom + ' uit haar pos as ' +
+      v.werk.t.toLowerCase() + ' getree.','werk'); }
+    v.werk = null; return;
+  }
+  if(v.werk){
+    v.werk.jare++;
+    v.werk.salaris = Math.round(v.werk.salaris * (1 + tussen(MAAT_GROEI[0],MAAT_GROEI[1])/100));
+    if(v.werk.plafon && v.werk.salaris > v.werk.plafon) v.werk.salaris = v.werk.plafon;
+    if(kans(MAAT_WERKLOOS_KANS)){
+      noteer(v.naam + ' het haar werk as ' + v.werk.t.toLowerCase() + ' verloor.','sleg');
+      v.werk = null; v.band = klem(v.band - tussen(2,8)); s.geluk = klem(s.geluk - tussen(4,10));
+    }
+    return;
+  }
+  /* Sonder werk: sy soek, of sy is by die kinders tuis tot hulle groot is. */
+  if(v.tuis && kindersTuis()>0) return;
+  if(v.tuis) v.tuis = 0;
+  if(kans(MAAT_WERK_KANS)){
+    var e = klem(eduVlak() + tussen(-1,1), 0, 3);
+    var kan = BEROEPE.filter(function(b){
+      return b.edu<=e && b.min<=v.ouderdom && !b.ervaring; });
+    if(!kan.length) return;
+    var b = kiesGeweeg(kan, function(x){ return 1 + x.edu*2; }) || kan[0];
+    v.werk = {id:b.id, t:b.t, plafon:b.plafon, jare:0,
+      salaris: Math.round(b.s * tussen(MAAT_SALARIS_F[0],MAAT_SALARIS_F[1]) / 100)};
+    s.geluk = klem(s.geluk + tussen(2,7));
+    noteer(v.naam + ' het weer werk gekry, as ' + b.t.toLowerCase() + ' teen ' +
+      geld(v.werk.salaris) + ' per jaar.','werk');
+  }
+}
+
+/* ==========================================================================
+   E4 — 'N BABA, BINNE OF BUITE 'N HUWELIK
+   Voorheen was 'n baba net vir 'n eggenoot en net as jy die knoppie
+   druk. Nou kan 'n lief-verhouding ook 'n kind gee, kan 'n swangerskap
+   onbeplan wees, en is voorbehoeding 'n keuse met 'n prys.
+   ========================================================================== */
+function voorbehoedingVan(id){
+  var r = null;
+  VOORBEHOEDING.forEach(function(x){ if(x.id===(id||s.voorbehoeding)) r=x; });
+  return r || VOORBEHOEDING[0];
+}
+function voorbehoedingF(){ return voorbehoedingVan().f; }
+/* Die kans om swanger te raak as julle doelbewus probeer. */
+function babaKans(){
+  var k = 12;
+  for(var i=0;i<BABA_KANS.length;i++)
+    if(s.ouderdom<=BABA_KANS[i][0]){ k = BABA_KANS[i][1]; break; }
+  /* Elke kind wat jy al het, maak die volgende minder waarskynlik — en
+     'n gesin van tien is ook nie 'n gesin van 2026 nie. */
+  return k * Math.pow(BABA_AFNAME, s.kindersGebore||0);
+}
+/* Die een plek waar 'n baba in die spel kom. 'onbeplan' bepaal die
+   boodskap en die gevolge. */
+function swangerskap(v, onbeplan){
+  s.swangerskappe = (s.swangerskappe||0) + 1;
+  var tiener = s.ouderdom < 18;
+  /* F2 — waar die baba gebore word, hang aan jou mediese sorg. */
+  var koste = s.mediesefonds
+    ? Math.round(KRAAM_KOSTE[1] * (1 - mediesefonds().dek))
+    : (sorgVlak()>=1 && s.geld > KRAAM_KOSTE[1]*1.5 ? KRAAM_KOSTE[1] : KRAAM_KOSTE[0]);
+  var waar = s.mediesefonds ? 'in ’n privaat kraamsaal'
+    : (koste>=KRAAM_KOSTE[1] ? 'in ’n privaat kraamsaal, kontant' : 'in die staatshospitaal');
+  kryBabaMet(v, onbeplan);
+  if(koste>0 && s.ouderdom>=18) betaalWatJyKan(koste, 'die kraamkoste');
+  noteer('Die baba is ' + waar + ' gebore (' + geld(koste) + ').','geld');
+  if(tiener){
+    s.geluk = klem(s.geluk - tussen(10,24));
+    lewendeOuers().forEach(function(p){ p.band = klem(p.band - tussen(10,30)); });
+    noteer('Jy is ’n ouer op ' + s.ouderdom + '. Jou ouers het dit swaar gevat.','sleg');
+    /* Die skool is die eerste ding wat daaronder deurloop. */
+    if(['laerskool','hoerskool'].indexOf(s.skool.vlak)>=0){
+      if(kans(42)) skoolJaarVerloor('weens die baba');
+      else noteer('Jy het aangehou skoolgaan, met ’n baba by die huis.','skool');
+    }
+  }
+  if(onbeplan && v.tipe==='lief'){
+    v.band = klem(v.band + (kans(55) ? tussen(4,14) : -tussen(6,20)));
+  }
+}
+/* Die onbeplande swangerskap: elke jaar in 'n verhouding, gedemp deur
+   wat jy ook al vir voorbehoeding gekies het. */
+function onbeplanJaar(){
+  var m = maat();
+  if(!m || !m.lewe) return;
+  if(s.ouderdom<14 || s.ouderdom>50 || s.tronk) return;
+  /* E6 bly oop (geslag word elders geïgnoreer), maar 'n onbeplande
+     swangerskap kan net tussen 'n man en 'n vrou gebeur. */
+  if(m.geslag===s.geslag) return;
+  var basis = s.ouderdom<18 ? ONBEPLAN_TIENER
+    : s.ouderdom<30 ? ONBEPLAN_JONK
+    : s.ouderdom<=42 ? ONBEPLAN_OUER : 3;
+  if(m.tipe==='eggenoot') basis *= 0.55;   /* 'n egpaar beplan meer */
+  if(s.ouderdom>44) basis *= 0.4;
+  var p = basis * (1 - voorbehoedingF());
+  /* F4 — drank en dwelms laat mense vergeet. */
+  if(s.gewoontes.drink>=2 || s.gewoontes.dwelms>=2) p *= 1.4;
+  if(!kans(p)) return;
+  var vb = voorbehoedingVan();
+  wagry.push({titel:'Julle gaan ’n baba kry',
+    vraag: m.naam + ' is swanger. Dit was nie beplan nie' +
+      (vb.id==='geen' ? ' — en julle het niks gebruik nie.' :
+       ' — ' + vb.n.toLowerCase() + ' werk nie elke keer nie.') +
+      (s.ouderdom<18 ? '\nJy is ' + s.ouderdom + ' jaar oud.' : ''),
+    opsies:[{t:'Dit is wat dit is', doen:function(){ swangerskap(m, true); }}]});
+}
+
+/* ==========================================================================
+   E7 — 'N KIND SE EIE LEWE
+   Voorheen het 'n kind net ouer geword en op 18 "die huis verlaat".
+   Nou het hy sy eie lewensloop: skool, matriek met 'n APS, studie of
+   werk, 'n maat, en sy eie kinders — jou kleinkinders.
+
+   Die datastruktuur ('v.kl') is doelbewus ruim en lyk soos 's' self,
+   sodat Fase 6 se generasiespel 'n kind as die volgende speler kan
+   oorneem sonder om dit te herbou.
+   ========================================================================== */
+function kindLewe(v){
+  if(v.kl) return v.kl;
+  v.kl = {
+    slim: klem(tussen(25,80) + Math.round((s.slim-50)/4)),
+    geluk: tussen(55,95), gesondheid: tussen(70,100),
+    voorkoms: klem(tussen(25,90) + Math.round((s.voorkoms-50)/5)),
+    dorp: s.dorp,
+    skool:{vlak:'baba', graad:0, matriek:false, aps:0, studie:null, grade:[], jareOor:0},
+    beroep:null, salaris:0, jareGewerk:0,
+    maat:null, kinders:[], gewoontes:{drink:0, rook:0, dwelms:0}, siektes:[],
+    uitHuis:false, studieBetaal:0, geskiedenis:[]
+  };
+  if(v.ouderdom>0) kindInhaal(v);
+  return v.kl;
+}
+/* Ou stoor-data: 'n kind van 30 moet nie skielik weer in Graad 1 begin
+   nie. Hier word sy lewe stil-stil opgebou tot by sy huidige ouderdom. */
+function kindInhaal(v){
+  var k = v.kl, o = v.ouderdom;
+  if(o>=6 && o<=12){ k.skool.vlak='laerskool'; k.skool.graad = o-5; }
+  else if(o>=13 && o<=17){ k.skool.vlak='hoerskool'; k.skool.graad = o-5; }
+  else if(o>=18){
+    k.skool.vlak='klaar';
+    k.skool.aps = kindAps(v);
+    k.skool.matriek = k.skool.aps >= 20;
+    k.uitHuis = true;
+    if(k.skool.aps>=KIND_UNI_APS && o>=22 && kans(45)){
+      k.skool.grade.push(kies(STUDIES).n);
+    }
+    if(o>=19) kindWerkKies(v, true);
+    if(o>=KIND_TROU_OUDERDOM[0]+2 && kans(62)) kindMaat(v, true);
+  }
+}
+function kindNoteer(v, t, ook, soort){
+  /* Moenie dieselfde klein ding twee keer agtermekaar vertel nie. */
+  var vorige = v.kl.geskiedenis[v.kl.geskiedenis.length-1];
+  if(vorige && vorige.t===t) return;
+  v.kl.geskiedenis.push({o:v.ouderdom, t:t});
+  if(ook) noteer(v.naam + ' ' + t + '.', soort||'goed');
+}
+/* Die APS wat 'n kind in matriek haal: sy eie kop, plus wat jy as ouer
+   bygedra het (die band met jou, en of jy met huiswerk gehelp het). */
+function kindAps(v){
+  var k = v.kl;
+  return klem(Math.round(KIND_APS_BASIS + k.slim*KIND_APS_SLIM +
+    v.band*KIND_APS_OUER + tussen(-3,3)), 6, APS_MAKS);
+}
+function kindMatriek(v){
+  var k = v.kl;
+  k.skool.aps = kindAps(v);
+  k.skool.vlak = 'klaar';
+  if(k.skool.aps >= 20){
+    k.skool.matriek = true;
+    kindNoteer(v,'het matriek geslaag met ’n APS van ' + k.skool.aps + ' uit ' + APS_MAKS, true, 'skool');
+    s.geluk = klem(s.geluk + tussen(5,12));
+    /* Oor JOU kind se graad besluit jy; 'n kleinkind se ouers besluit
+       self, en jy hoor net wat hy gaan doen. */
+    if(k.skool.aps < KIND_UNI_APS) kindWerkKies(v);
+    else if(v.tipe==='kleinkind') kindStudieSelf(v);
+    else kindStudieVraag(v);
+  } else {
+    kindNoteer(v,'het matriek gedruip en die skool verlaat', true, 'sleg');
+    s.geluk = klem(s.geluk - tussen(3,9));
+    kindWerkKies(v);
+  }
+}
+/* E7/E8 — die een oomblik waar jou geld en jou keuse jou kind se hele
+   lewe verander: betaal jy vir sy graad of nie? */
+function kindStudieVraag(v){
+  var k = v.kl, koste = Math.round(tussen(KIND_STUDIE_KOSTE[0],KIND_STUDIE_KOSTE[1]));
+  var st = kies(STUDIES.filter(function(x){ return x.aps <= k.skool.aps; }) || STUDIES) || STUDIES[0];
+  var beurs = k.skool.aps >= 34;
+  var opsies = [{t:'Ja, ek betaal sy klasgeld', sub:geld(koste) + ' per jaar vir ' +
+      st.jare + ' jaar', doen:function(){
+    k.skool.vlak='universiteit'; k.skool.studie=st.n; k.skool.jareOor=st.jare;
+    k.studieBetaal = koste;
+    kindNoteer(v,'het ' + st.n + ' op universiteit begin', true, 'skool'); }}];
+  if(beurs) opsies.push({t:'Hy kry ’n beurs', sub:'Met ’n APS van ' + k.skool.aps +
+    ' bied NSFAS of die universiteit self aan', doen:function(){
+      k.skool.vlak='universiteit'; k.skool.studie=st.n; k.skool.jareOor=st.jare;
+      k.studieBetaal = 0;
+      kindNoteer(v,'het ’n beurs gekry en ' + st.n + ' begin studeer', true, 'skool'); }});
+  opsies.push({t:'Hy moet gaan werk', klas:'grys',
+    sub:'Daar is nie geld vir ’n graad nie', doen:function(){
+      v.band = klem(v.band - tussen(4,14));
+      kindNoteer(v,'moes gaan werk in plaas van studeer', true, 'sleg');
+      kindWerkKies(v); }});
+  wagry.push({titel:v.naam + ' se APS is ' + k.skool.aps,
+    vraag:v.naam + ' kan universiteit toe gaan. ’n Graad in ' + st.n + ' duur ' +
+      st.jare + ' jaar en kos ongeveer ' + geld(koste) + ' per jaar.' +
+      (beurs ? '\nSy punte is goed genoeg vir ’n beurs.' : ''),
+    opsies:opsies});
+}
+/* 'n Kleinkind (of 'n kind van 'n ou gestoorde lewe) se eie besluit. */
+function kindStudieSelf(v){
+  var k = v.kl;
+  var moontlik = STUDIES.filter(function(x){ return x.aps <= k.skool.aps; });
+  var st = kies(moontlik.length ? moontlik : STUDIES);
+  if(k.skool.aps >= 32 || kans(45)){
+    k.skool.vlak='universiteit'; k.skool.studie=st.n; k.skool.jareOor=st.jare;
+    k.studieBetaal = 0;
+    kindNoteer(v,'het ' + st.n + ' begin studeer', true, 'skool');
+  } else kindWerkKies(v);
+}
+/* Watter werk 'n kind kry, met die opleiding wat hy het. */
+function kindWerkKies(v, stil){
+  var k = v.kl;
+  var e = k.skool.grade.length ? 2 : (k.skool.matriek ? 1 : 0);
+  var kan = BEROEPE.filter(function(b){
+    return b.edu<=e && b.min<=v.ouderdom && !b.ervaring && b.slim <= k.slim + 12; });
+  if(!kan.length) kan = BEROEPE.filter(function(b){ return b.edu===0 && b.min<=v.ouderdom; });
+  if(!kan.length) return;
+  var b = kiesGeweeg(kan, function(x){ return 1 + x.edu*3; }) || kan[0];
+  k.beroep = {id:b.id, t:b.t, plafon:b.plafon};
+  k.salaris = Math.round(b.s * tussen(78,116) / 100);
+  if(!stil) kindNoteer(v,'werk nou as ' + b.t.toLowerCase() + ' teen ' +
+    geld(k.salaris) + ' per jaar', true, 'werk');
+}
+function kindMaat(v, stil){
+  var k = v.kl;
+  var g = kans(50) ? 'm' : 'v';
+  k.maat = {naam: kies(g==='m'?MANSNAME:VROUENAME), van: kies(VANNE), geslag:g,
+    ouderdom: Math.max(18, v.ouderdom + tussen(-5,5)), getroud:1};
+  if(!stil){
+    kindNoteer(v,'is getroud met ' + k.maat.naam + ' ' + k.maat.van, true, 'liefde');
+    s.geluk = klem(s.geluk + tussen(6,14));
+  }
+}
+/* 'n Kleinkind word 'n egte mens in jou lewe: hy staan onder Mense, jy
+   kan met hom gesels, en hy loop sy eie kinderjare deur. */
+function kleinkindBy(v){
+  var k = v.kl;
+  var kk = nuweMens(null, 0, k.maat ? k.maat.van : v.van);
+  kk.tipe = 'kleinkind'; kk.ouerId = v.id; kk.band = tussen(70,100);
+  kindLewe(kk);
+  s.verhoudings.push(kk);
+  k.kinders.push({id:kk.id, naam:kk.naam});
+  s.kleinkinders = (s.kleinkinders||0) + 1;
+  s.geluk = klem(s.geluk + tussen(8,16));
+  noteer(v.naam + ' het ’n baba gekry: ' + kk.naam + '. Jy is nou ’n ' +
+    (s.geslag==='m' ? 'oupa' : 'ouma') + '!','liefde');
+  kindNoteer(v,'het ’n ' + (kk.geslag==='m'?'seun':'dogter') + ' gekry: ' + kk.naam);
+}
+/* Een jaar in 'n kind (of kleinkind) se lewe. */
+function kindJaar(v){
+  var k = kindLewe(v), o = v.ouderdom;
+  /* --- die kinderjare --- */
+  if(o<6){
+    if(kans(30)) kindNoteer(v, kies(['het sy eerste woorde gesê','het leer loop',
+      'het leer fiets ry','het die hele huis omgekeer','het kleuterskool begin']));
+    return;
+  }
+  if(o===6){ k.skool.vlak='laerskool'; kindNoteer(v,'het Graad 1 begin', true, 'skool'); }
+  if(o===13 && k.skool.vlak==='laerskool'){ k.skool.vlak='hoerskool';
+    kindNoteer(v,'is nou in die hoërskool', true, 'skool'); }
+  if(k.skool.vlak==='laerskool' || k.skool.vlak==='hoerskool'){
+    k.skool.graad = o - 5;
+    /* 'n Sterk band met jou laat hom beter doen — dit is die ouer se deel. */
+    if(kans(35 + v.band/4)) k.slim = klem(k.slim + tussen(0,3));
+    if(kans(18)) kindNoteer(v, kies(['het in die skoolspan gekom',
+      'het ’n sertifikaat vir wiskunde gekry','het met die onderwyser gesukkel',
+      'het ’n nuwe beste vriend','het in die skoolkonsert gespeel',
+      'het die hele kwartaal se huiswerk betyds ingegee','het ’n prys op prysuitdeling gekry',
+      'het sy eerste rugbywedstryd gespeel','het van skool af weggebly',
+      'het ’n liefdesbriefie by die huis laat lê','het leer swem by die skoolgala']));
+    if(o===18 && !k.skool.matriek) kindMatriek(v);
+    return;
+  }
+  /* --- 18 en die huis uit --- */
+  if(o>=18 && !k.uitHuis){
+    k.uitHuis = true;
+    noteer(v.naam + ' is 18 en het die huis verlaat.','goed');
+    s.geluk = klem(s.geluk + 6);
+  }
+  /* --- studie --- */
+  if(k.skool.vlak==='universiteit'){
+    k.skool.jareOor--;
+    if(k.studieBetaal>0 && s.ouderdom>=18){
+      betaalWatJyKan(k.studieBetaal, v.naam + ' se klasgeld');
+    }
+    if(k.skool.jareOor<=0){
+      k.skool.grade.push(k.skool.studie);
+      k.skool.vlak='klaar';
+      kindNoteer(v,'het sy graad in ' + k.skool.studie + ' gekry', true, 'skool');
+      s.geluk = klem(s.geluk + tussen(8,16));
+      kindWerkKies(v);
+    } else kindNoteer(v,'is in sy ' + (1 + (kindStudieJaar(k))) + 'e jaar van ' + k.skool.studie);
+    return;
+  }
+  /* --- aftrede. 'n Kind van 70 werk nie nog as kelner nie. --- */
+  if(o>=MAAT_AFTREE && k.beroep){
+    kindNoteer(v,'het uit sy pos as ' + k.beroep.t.toLowerCase() + ' getree', true, 'werk');
+    k.beroep = null; k.salaris = 0; k.afgetree = 1;
+  }
+  /* --- werk --- */
+  if(o>=18 && o<MAAT_AFTREE && !k.beroep && !k.afgetree && kans(55)) kindWerkKies(v);
+  if(k.beroep){
+    k.jareGewerk++;
+    k.salaris = Math.round(k.salaris * 1.045);
+    if(k.beroep.plafon && k.salaris > k.beroep.plafon) k.salaris = k.beroep.plafon;
+    if(kans(4)){
+      kindNoteer(v,'het sy werk as ' + k.beroep.t.toLowerCase() + ' verloor', true, 'sleg');
+      k.beroep = null; k.salaris = 0;
+    } else if(kans(7)){
+      kindNoteer(v,'is bevorder by die werk');
+      k.salaris = Math.round(k.salaris * 1.22);
+      if(k.beroep.plafon && k.salaris > k.beroep.plafon) k.salaris = k.beroep.plafon;
+    }
+  }
+  /* --- sy eie liefde --- */
+  if(!k.maat && o>=KIND_TROU_OUDERDOM[0] && o<=KIND_TROU_OUDERDOM[1] && kans(17)) kindMaat(v);
+  /* --- jou kleinkinders. 'n Kleinkind kry nie self kinders nie; dit hou
+     die boom begrens en laat Fase 6 die volgende generasie oorneem. --- */
+  if(k.maat && v.tipe!=='kleinkind' && o>=KIND_KIND_OUDERDOM[0] && o<=KIND_KIND_OUDERDOM[1] &&
+     k.kinders.length<KIND_KINDERS_MAKS && kans(KIND_KIND_KANS)) kleinkindBy(v);
+  /* --- sy eie slegte jare --- */
+  if(o>=20 && kans(3)){
+    var gw = kies(['drink','rook','dwelms']);
+    if(k.gewoontes[gw]<2){ k.gewoontes[gw]++;
+      kindNoteer(v, gw==='drink' ? 'drink te veel deesdae'
+        : gw==='rook' ? 'het begin rook' : 'het by die verkeerde mense beland', true, 'sleg'); }
+  }
+  if(k.maat && kans(2)){
+    kindNoteer(v,'en ' + k.maat.naam + ' is geskei', true, 'sleg');
+    k.maat = null; s.geluk = klem(s.geluk - tussen(3,8));
+  }
+}
+function kindStudieJaar(k){
+  var st = studieVanNaam(k.skool.studie);
+  return st ? (st.jare - k.skool.jareOor) : 1;
+}
+/* Al jou kinders se kinders bymekaar — vir die grafsteen en die paneel. */
+function kleinkinderLys(){
+  return s.verhoudings.filter(function(v){ return v.tipe==='kleinkind'; });
+}
+
+/* ==========================================================================
+   FASE 5 — GESONDHEID (F1, F2, F4)
+   Drie stelsels wat in mekaar inhaak. F1 gee jou regte toestande: akuut
+   (griep, 'n gebreekte been) teenoor chronies (diabetes, kanker). F2 sê
+   hoe jy daarvoor betaal: 'n mediese fonds, die staatshospitaal, of 'n
+   privaat rekening wat jou kan ruïneer. F4 is drank, sigarette en
+   dwelms, wat die kans op 'n toestand vermeerder. En F9 se doodKontrole
+   lees al drie, want 'n siekte sonder 'n doodsverband beteken niks.
+   ========================================================================== */
+
+/* ---------- F1: watter toestande jy het ---------- */
+function toestandVan(id){
+  var r = null;
+  TOESTANDE.forEach(function(x){ if(x.id===id) r=x; });
+  return r;
+}
+function hetToestand(id){
+  return (s.siektes||[]).some(function(x){ return x.id===id; });
+}
+function chronies(){
+  return (s.siektes||[]).filter(function(x){
+    var tt = toestandVan(x.id); return tt && tt.soort==='chronies'; });
+}
+/* Die kans om vanjaar énige nuwe toestand te kry. Dit styg met jou
+   ouderdom, met swak gesondheid, met elke gewoonte, en op straat of in
+   die tronk. */
+function siekteKansJaar(){
+  var p = SIEK_BASIS;
+  if(s.ouderdom>30) p += (s.ouderdom-30) * SIEK_OUDERDOM;
+  if(s.gesondheid<65) p += (65 - s.gesondheid) * SIEK_SWAK;
+  p += SIEK_ROOK[s.gewoontes.rook||0];
+  p += SIEK_DRINK[s.gewoontes.drink||0];
+  p += SIEK_DWELMS[s.gewoontes.dwelms||0];
+  if(s.dakloos) p += SIEK_DAKLOOS;
+  if(s.tronk) p += SIEK_TRONK;
+  /* 'n Mediese fonds betaal vir die jaarlikse ondersoek wat dinge vroeg
+     vang; sonder sorg loop 'n klein ding tot 'n groot een aan. */
+  if(s.mediesefonds) p *= 0.88;
+  return Math.min(SIEK_MAKS, p);
+}
+/* Hoe waarskynlik elke toestand is. 'n Roker se longe, 'n drinker se
+   lewer en die siekte wat in jou familie loop weeg baie swaarder. */
+function toestandGewig(tt){
+  if(s.ouderdom < tt.min) return 0;
+  /* 'n Chroniese toestand kry jy net een keer. */
+  if(tt.soort==='chronies' && hetToestand(tt.id)) return 0;
+  if(hetToestand(tt.id)) return 0;
+  var g = tt.gewig || 10;
+  var h = 1;
+  if(ROOK_TOESTANDE.indexOf(tt.id)>=0)  h = Math.max(h, 0.35 + (s.gewoontes.rook||0)*1.4);
+  if(DRINK_TOESTANDE.indexOf(tt.id)>=0) h = Math.max(h, 0.35 + (s.gewoontes.drink||0)*1.2);
+  if(DWELM_TOESTANDE.indexOf(tt.id)>=0) h = Math.max(h, 0.35 + (s.gewoontes.dwelms||0)*1.5);
+  g *= h;
+  /* F9 — die siekte wat in jou familie loop, kom baie makliker. */
+  if(s.gene && s.gene.neig===tt.id) g *= GENE_NEIG;
+  /* Chroniese toestande kom met die jare — gemeet aan jou ouderdom, nie
+     aan hoe lank die toestand al moontlik is nie. */
+  if(tt.soort==='chronies') g *= 1 + Math.max(0, s.ouderdom - 40) * 0.035;
+  /* Op straat en in die tronk is dit TB en longontsteking, nie artritis nie. */
+  if((s.dakloos||s.tronk) && ['tb','longontsteking','maag'].indexOf(tt.id)>=0) g *= 4;
+  return g;
+}
+/* ---------- F2: mediese fonds, staat of privaat ---------- */
+function mediesefonds(){
+  var r = null;
+  MEDIESE_FONDSE.forEach(function(x){ if(s.mediesefonds && x.id===s.mediesefonds.id) r=x; });
+  return r || MEDIESE_FONDSE[0];
+}
+/* Die premie per jaar: jy, plus 80% vir 'n maat en 40% per kind. 'n Mens
+   met 'n chroniese toestand betaal meer. */
+function fondsPremieVan(f){
+  var m = maat(), lede = 1;
+  if(m && m.tipe==='eggenoot') lede += FONDS_MAAT_F;
+  lede += kindersTuis() * FONDS_KIND_F;
+  var premie = f.premie * 12 * lede;
+  if(chronies().length) premie *= FONDS_SIEK_PREMIE;
+  return Math.round(premie);
+}
+function fondsPremieJaar(){
+  return s.mediesefonds ? fondsPremieVan(mediesefonds()) : 0;
+}
+/* Elke jaar word die premie betaal. Kan jy dit nie meer nie, verval die
+   plan — en dan val elke behandeling wat daaraan hang saam om. */
+function fondsJaar(){
+  if(!s.mediesefonds || s.ouderdom<18) return 0;
+  s.fondsJare = (s.fondsJare||0) + 1;
+  var premie = fondsPremieJaar();
+  var kan = Math.max(0, s.geld) + (s.spaar||0);
+  if(premie > kan + Math.max(0, huishoudingBruto()*0.25)){
+    noteer('Jy kon nie meer ' + mediesefonds().n.toLowerCase() + ' se ' + geld(premie) +
+      ' per jaar bekostig nie. Jou mediese fonds het verval.','sleg');
+    s.mediesefonds = null; s.fondsJare = 0;
+    /* Elke behandeling wat die fonds betaal het, is nou 'n privaat rekening. */
+    (s.siektes||[]).forEach(function(x){ if(x.pad==='fonds') x.pad = 'privaat'; });
+    return 0;
+  }
+  if(s.geld < premie) dekUitSpaar(premie - s.geld);
+  s.geld -= premie;
+  noteer('Mediese fonds (' + mediesefonds().n.toLowerCase() + '): ' + geld(premie) +
+    ' vir die jaar.','geld');
+  return premie;
+}
+/* Wat hierdie behandeling jou vanjaar uit jou eie sak kos, op die pad
+   wat jy gekies het. */
+function behandelKoste(x){
+  var tt = toestandVan(x.id);
+  if(!tt || !x.behandel) return 0;
+  if(x.pad==='staat') return 0;
+  if(x.pad==='fonds'){
+    if(!s.mediesefonds){ x.pad = 'privaat'; return Math.round(tt.koste * PRIVAAT_F); }
+    /* Nuwe lid met 'n bestaande toestand: die wagperiode. */
+    if(s.fondsJare <= FONDS_WAGPERIODE && x.voorFonds) return Math.round(tt.koste * PRIVAAT_F);
+    return Math.round(tt.koste * (1 - mediesefonds().dek));
+  }
+  return Math.round(tt.koste * PRIVAAT_F);
+}
+/* Hoe goed die behandeling werk. Die staatshospitaal se uitkoms is
+   slegter, en 'n jaar op die waglys werk glad nie. */
+function behandelKrag(x){
+  var tt = toestandVan(x.id);
+  if(!tt || !x.behandel || x.wag>0) return 0;
+  var k = tt.behandelF;
+  if(x.pad==='staat') k *= tt.dringend ? STAAT_DRINGEND : STAAT_UITKOMS;
+  return k;
+}
+/* Die keuse wat die speler kry sodra 'n toestand opduik. Dit is die hart
+   van F2: dieselfde siekte, drie heel verskillende lewens daarna. */
+function vraBehandeling(x){
+  var tt = toestandVan(x.id);
+  var vol = tt.koste;
+  var opsies = [];
+  if(s.mediesefonds){
+    var gap = Math.round(vol * (1 - mediesefonds().dek));
+    opsies.push({t:'Gebruik jou mediese fonds',
+      sub: gap>0 ? 'Jy betaal ' + geld(gap) + ' uit jou eie sak' : 'Volledig gedek',
+      doen:function(){ x.behandel=1; x.pad='fonds';
+        noteer('Jou mediese fonds dek ' + tt.n.toLowerCase() + '.','geld');
+        eersteRekening(x); }});
+  }
+  opsies.push({t:'Gaan staatshospitaal toe',
+    sub: tt.staatGratis ? 'Gratis — die staat se program is goed hiervoor'
+      : 'Gratis, maar die waglys is lank en die uitkoms swakker',
+    doen:function(){ x.behandel=1; x.pad='staat';
+      if(!tt.staatGratis && kans(STAAT_WAG)){
+        x.wag = 1;
+        noteer('Jy is op die waglys gesit. Die behandeling kom eers volgende jaar.','sleg');
+      } else noteer('Die staatshospitaal het jou vir ' + tt.n.toLowerCase() + ' behandel.','neutraal');
+    }});
+  if(vol>0) opsies.push({t:'Betaal self, privaat',
+    sub: geld(vol) + ' per jaar' + (vol > Math.max(0,s.geld)+(s.spaar||0) ?
+      ' — jy het dit nie' : ''),
+    klas: vol > Math.max(0,s.geld)+(s.spaar||0) ? 'rooi' : '',
+    doen:function(){ x.behandel=1; x.pad='privaat';
+      noteer('Jy het besluit om ' + tt.n.toLowerCase() + ' privaat te laat behandel.','neutraal');
+      eersteRekening(x); }});
+  opsies.push({t:'Doen niks daaraan', klas:'grys',
+    sub: tt.dringend ? 'Dit is gevaarlik' : 'Dit kos niks, maar dit gaan nie weg nie',
+    doen:function(){ x.behandel=0; x.pad=null;
+      noteer('Jy het ' + tt.n.toLowerCase() + ' onbehandeld gelaat.','sleg'); }});
+  wagry.push({titel:tt.e + ' ' + tt.n,
+    vraag: tt.sub + '.\n' + (tt.soort==='chronies'
+      ? 'Dit gaan nie weg nie. Die behandeling kos ' + geld(vol) + ' per jaar.'
+      : 'Die behandeling kos ' + geld(vol) + '.') +
+      (tt.dringend ? '\nDit is dringend.' : ''),
+    opsies:opsies});
+}
+/* Die rekening van die jaar waarin jy die keuse maak, word dadelik
+   betaal — anders is die eerste jaar van 'n siekte gratis, want
+   siekteKosteJaar() het vroeër in die jaar al geloop. */
+function eersteRekening(x){
+  var koste = behandelKoste(x);
+  if(koste<=0) return;
+  var tt = toestandVan(x.id);
+  x.betaalJaar = s.ouderdom;
+  betaalWatJyKan(koste, tt.n.toLowerCase() + ' se behandeling');
+}
+/* ---------- F1: die siektejaar ---------- */
+function siekteJaar(){
+  if(!s.siektes) s.siektes = [];
+  /* Vir die grafsteen: hoeveel van jou lewe het jy met 'n chroniese
+     toestand saamgeleef? */
+  if(chronies().length) s.siekJare = (s.siekJare||0) + 1;
+  /* 1. wat jy al het, doen sy werk */
+  s.siektes.slice().forEach(function(x){
+    var tt = toestandVan(x.id);
+    if(!tt){ s.siektes = s.siektes.filter(function(y){ return y!==x; }); return; }
+    x.jare = (x.jare||0) + 1;
+    if(x.wag>0){ x.wag--;
+      if(x.wag<=0) noteer('Jou plek op die staatshospitaal se lys het oopgekom: ' +
+        tt.n.toLowerCase() + ' word nou behandel.','goed'); }
+    /* 'n Behandelde chroniese toestand maak jou nie elke jaar swakker
+       nie — dit hou jou net op 'n laer vlak, en dit is sy erns in
+       doodsKans() wat jou uiteindelik vat. Onbehandeld vreet dit elke
+       jaar verder. */
+    var krag = behandelKrag(x);
+    var skade = 0;
+    if(tt.soort==='akuut') skade = tussen(tt.gesond[0], tt.gesond[1]) * (1 - krag);
+    else if(krag<=0) skade = tussen(tt.gesond[0], tt.gesond[1]);
+    else if(kans(30)) skade = tussen(0, tt.gesond[1]) * (1 - krag);
+    skade = Math.round(skade);
+    s.gesondheid = klem(s.gesondheid - skade);
+    x.gekos = (x.gekos||0) + skade;
+    /* Onbehandeld kan 'n ernstige toestand enige jaar 'n krisis gee. */
+    if(krag<=0 && tt.erns>=1.4 && kans(9)){
+      s.gesondheid = klem(s.gesondheid - tussen(6, 10 + Math.round(tt.erns*4)));
+      noteer(tt.n + ' het jou vanjaar in die hospitaal laat beland.','sleg');
+    }
+    if(tt.soort==='chronies' && kans(22))
+      s.geluk = klem(s.geluk - tussen(1,5));
+    /* Akuut: dit kom en dit gaan — behandel vinniger as onbehandeld. */
+    if(tt.soort==='akuut'){
+      var duur = tussen(tt.jare[0], tt.jare[1]) + (x.behandel ? 0 : 1);
+      if(x.jare >= duur){
+        s.siektes = s.siektes.filter(function(y){ return y!==x; });
+        /* Jy kom wéér agter die wiel uit: die meeste van wat 'n akute
+           siekte jou gekos het, kry jy terug. 'n Griep moet nie vir die
+           res van jou lewe van jou gesondheid afkom nie. */
+        var terug = Math.round((x.gekos||0) * (x.behandel ? 0.88 : 0.72)) + tussen(0,2);
+        s.gesondheid = klem(s.gesondheid + terug);
+        noteer('Jy is oor ' + tt.n.toLowerCase() + '.','goed');
+      }
+      return;
+    }
+    /* Chronies en onbehandeld: dit word erger, en dit kan 'n tweede
+       toestand oopmaak (hoë bloeddruk wat 'n beroerte word). */
+    if(!x.behandel && kans(4 + tt.erns*2)){
+      var volg = tt.id==='bloeddruk' ? 'beroerte' : tt.id==='diabetes' ? 'hart' : null;
+      if(volg && !hetToestand(volg)) kryToestand(volg, 'omdat ' + tt.n.toLowerCase() +
+        ' onbehandeld gebly het');
+    }
+    /* Kanker kan ook verdwyn, as dit behandel word. */
+    if(tt.id==='kanker' && x.behandel && x.jare>=tussen(2,4) && kans(38 + krag*40)){
+      s.siektes = s.siektes.filter(function(y){ return y!==x; });
+      s.geluk = klem(s.geluk + tussen(14,26));
+      noteer('Die kanker is in remissie. Jy het dit gewen.','goed');
+    }
+  });
+  /* 2. iets nuuts */
+  if(kans(siekteKansJaar())){
+    var kan = TOESTANDE.filter(function(tt){ return toestandGewig(tt)>0; });
+    var nuut = kiesGeweeg(kan, toestandGewig);
+    if(nuut) kryToestand(nuut.id);
+  }
+}
+/* Sit 'n toestand in jou lewe en vra dadelik hoe jy dit gaan laat
+   behandel. */
+function kryToestand(id, rede){
+  var tt = toestandVan(id);
+  if(!tt || hetToestand(id)) return;
+  var x = {id:id, jare:0, behandel:0, pad:null, wag:0, voorFonds: s.mediesefonds?0:1};
+  s.siektes.push(x);
+  /* Die diagnose van 'n LEWENSLANGE toestand is die groot slag; daarna is
+     dit die behandeling wat bepaal hoe dit verder gaan. 'n Griep kry nie
+     so 'n slag nie — dié vat net sy jaar en gaan dan weer weg. */
+  if(tt.soort==='chronies')
+    s.gesondheid = klem(s.gesondheid - tussen(tt.gesond[0], tt.gesond[1]*2));
+  s.geluk = klem(s.geluk - Math.round(tt.erns*4 + 3));
+  noteer('Die dokter sê jy het ' + tt.n.toLowerCase() +
+    (rede ? ' ' + rede : '') + '.','sleg');
+  /* 'n Kind se ouers besluit vir hom, en hulle gaan staat toe as daar
+     nie 'n fonds is nie. */
+  if(s.ouderdom<18 && !s.mediesefonds){
+    x.behandel = 1; x.pad = 'staat';
+    noteer('Jou ouers het jou staatshospitaal toe gevat.','neutraal');
+    return;
+  }
+  vraBehandeling(x);
+}
+/* Die jaar se mediese rekeninge. Kan jy dit nie betaal nie, verval die
+   behandeling — en dit is die punt waar F1, F2 en die skuldstelsel van
+   Fase 2 bymekaarkom. */
+function siekteKosteJaar(){
+  var som = 0;
+  (s.siektes||[]).forEach(function(x){
+    if(x.betaalJaar===s.ouderdom) return;   /* al by die keuse betaal */
+    var koste = behandelKoste(x);
+    if(koste<=0) return;
+    var tt = toestandVan(x.id);
+    var ruimte = Math.max(0, s.geld) + (s.spaar||0) + skuldPerk();
+    if(koste > ruimte){
+      x.behandel = 0; x.pad = null;
+      s.geluk = klem(s.geluk - tussen(6,14));
+      noteer('Jy kon nie ' + tt.n.toLowerCase() + ' se ' + geld(koste) +
+        ' bekostig nie. Die behandeling het opgehou.','sleg');
+      /* Die staat is altyd daar, al is die waglys lank. */
+      if(kans(62)){ x.behandel = 1; x.pad = 'staat'; x.wag = kans(STAAT_WAG) ? 1 : 0;
+        noteer('Jy het by die staatshospitaal se kliniek aangesluit.','neutraal'); }
+      return;
+    }
+    som += betaalWatJyKan(koste, tt.n.toLowerCase() + ' se behandeling');
+  });
+  /* E4 — voorbehoeding kos ook elke jaar geld. */
+  var vb = voorbehoedingVan();
+  if(vb.koste>0 && s.ouderdom>=15 && maat()){
+    s.geld -= vb.koste; som += vb.koste;
+  }
+  return som;
+}
+
+/* ==========================================================================
+   F4 — DRANK, SIGARETTE EN DWELMS
+   Vlak 0 is niks, vlak 3 is verslaaf. Elke vlak kos meer geld, meer
+   gesondheid, en meer van jou werk en jou mense. Die spiraal is dat 'n
+   vlak nie bly staan nie: wie soms drink, drink mettertyd gereeld.
+   ========================================================================== */
+function gewoonteVan(id){
+  var r = null;
+  GEWOONTES.forEach(function(x){ if(x.id===id) r=x; });
+  return r;
+}
+function gewoonteVlak(id){ return (s.gewoontes && s.gewoontes[id]) || 0; }
+function verslaaf(){
+  return GEWOONTES.some(function(g){ return gewoonteVlak(g.id)>=3; });
+}
+function gewoonteJaar(){
+  if(!s.gewoontes) s.gewoontes = {drink:0, rook:0, dwelms:0};
+  GEWOONTES.forEach(function(g){
+    var v = gewoonteVlak(g.id);
+    /* Opgehou? Dan is daar nog die terugval. */
+    if(v===0){
+      if(s.opgehou[g.id] && kans(TERUGVAL_KANS - Math.min(18, s.opgehou[g.id]*3))){
+        s.gewoontes[g.id] = 1;
+        noteer('Jy het weer begin ' + (g.id==='drink' ? 'drink' :
+          g.id==='rook' ? 'rook' : 'gebruik') + '. Een keer was genoeg.','sleg');
+      } else if(s.opgehou[g.id]) s.opgehou[g.id]++;
+      return;
+    }
+    s.gewoonteJare[g.id] = (s.gewoonteJare[g.id]||0) + 1;
+    /* Soek jy dit nie meer op nie, sak 'n lae vlak weer terug. Van vlak
+       3 af help dit nie — dan moet jy regtig ophou (wysOphou). */
+    var stil = s.ouderdom - ((s.gewoonteLaas && s.gewoonteLaas[g.id]) || 0);
+    if(stil > GEWOONTE_STIL && kans(GEWOONTE_LOS[v])){
+      s.gewoontes[g.id] = v - 1;
+      if(v===1) noteer('Jy het sommer opgehou ' + (g.id==='drink' ? 'drink'
+        : g.id==='rook' ? 'rook' : 'gebruik') + ' — jy het dit net nie meer opgesoek nie.','goed');
+      else noteer('Jy gebruik minder ' + g.n.toLowerCase() + ' as voorheen.','goed');
+      return;
+    }
+    /* Die geld. 'n Kind se ouers betaal dit nie — hy steel of bedel dit. */
+    var koste = Math.round(g.koste[v] * dorpFaktor());
+    if(koste>0 && s.ouderdom>=15 && !s.tronk){
+      if(s.ouderdom>=18 || s.geld>=koste){ s.geld -= koste; }
+      else { s.geld -= Math.round(koste*0.4); }
+      noteer(g.n + ' het jou ' + geld(koste) + ' gekos vanjaar.','geld');
+    }
+    /* Die liggaam en die gemoed. */
+    if(g.gesond[v]) s.gesondheid = klem(s.gesondheid - tussen(0, g.gesond[v]*2));
+    if(g.geluk[v]) s.geluk = klem(s.geluk + (g.geluk[v]>0 ? tussen(0,g.geluk[v])
+      : -tussen(0, -g.geluk[v])));
+    /* Die werk. */
+    if(s.beroep && g.werk[v] && kans(g.werk[v]*2)){
+      s.beroep.prestasie = klem(s.beroep.prestasie - tussen(4, 8 + g.werk[v]));
+      noteer('Jou werk het gely onder ' + g.n.toLowerCase() + '.','werk');
+    }
+    /* Die mense. */
+    if(g.band[v] && kans(g.band[v]*3)){
+      var naby = s.verhoudings.filter(function(x){
+        return x.lewe && ['eggenoot','lief','ma','pa','seun','dogter'].indexOf(x.tipe)>=0; });
+      if(naby.length){
+        var w = kies(naby);
+        w.band = klem(w.band - tussen(5, 8 + g.band[v]));
+        noteer(w.naam + ' het met jou gepraat oor ' + g.n.toLowerCase() + '.','sleg');
+      }
+    }
+    /* Die spiraal. Op vlak 1 is dit nog jou keuse; van vlak 2 af vat dit
+       jou ook as jy dit nie opsoek nie. */
+    if(v===1 && stil > GEWOONTE_STIL) return;
+    if(g.spiraal[v] && kans(g.spiraal[v])){
+      s.gewoontes[g.id] = v + 1;
+      noteer('Jy is nou ' + g.vlakke[v+1] + '.', v+1>=3 ? 'sleg' : 'neutraal');
+      if(v+1>=3) s.geluk = klem(s.geluk - tussen(5,12));
+    }
+  });
+  /* 'n Verslaafde se jaar kan sommer in die tronk of op straat eindig. */
+  if(gewoonteVlak('dwelms')>=3 && s.beroep && kans(9)){
+    noteer('Jy is afgedank. Hulle het geweet hoekom.','sleg');
+    s.beroep = null; losWerkMense(); s.geluk = klem(s.geluk - tussen(8,16));
+  }
+}
+/* F4 — die drinkouderdom is 18. Is jy jonger en jy drink of rook, kan
+   jou ouers jou vang. */
+function teJonkGevang(g){
+  var ouers = lewendeOuers();
+  if(!ouers.length || !kans(ONDERDERTIEN_VANG)) return false;
+  var p = kies(ouers);
+  p.band = klem(p.band - tussen(8,22));
+  s.geluk = klem(s.geluk - tussen(5,12));
+  noteer(p.naam + ' het uitgevind van ' + g.n.toLowerCase() + '. Daar was groot moeilikheid.','sleg');
+  return true;
+}

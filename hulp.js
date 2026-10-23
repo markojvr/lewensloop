@@ -23,3 +23,15 @@ function kortGeld(n){
 /* 7.5 word "7,5" — Afrikaans skryf 'n desimale komma, nie 'n punt nie. */
 function persent(n){ return String(Math.round(n*10)/10).replace('.',','); }
 function el(id){ return document.getElementById(id); }
+/* Kies een item uit 'n lys waar elke item sy eie gewig het: 'n item met
+   gewig 20 kom tien keer so dikwels as een met gewig 2. Fase 5 gebruik
+   dit om 'n siekte te kies — 'n roker kry longsiekte, 'n nie-roker
+   byna nooit. */
+function kiesGeweeg(lys, gewigF){
+  var som=0, g=[];
+  lys.forEach(function(x){ var w = Math.max(0, gewigF(x)); g.push(w); som += w; });
+  if(som<=0) return null;
+  var r = Math.random()*som;
+  for(var i=0;i<lys.length;i++){ r -= g[i]; if(r<=0) return lys[i]; }
+  return lys[lys.length-1];
+}

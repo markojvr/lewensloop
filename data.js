@@ -491,3 +491,274 @@ var TROETELDIERE=[
 ];
 var TROETELNAME=['Bliksem','Skollie','Bokkie','Simba','Pluto','Boetie','Jakkals','Storm','Kaptein',
   'Brakkie','Mielie','Koekie','Rambo','Pixie','Sersant','Biltong','Rooies','Tier','Spikkels'];
+
+/* ==========================================================================
+   GESIN EN GESONDHEID (Fase 5 — E1, E4, E7, E12, F1, F2, F4, F9)
+   Vier gesinstelsels en vier gesondheidstelsels wat in mekaar inhaak:
+   grootouers wat jou kinderjare vul, 'n baba wat ook buite 'n huwelik kan
+   kom, kinders met 'n egte lewensloop, 'n eggenoot wat self verdien, en
+   dan die liggaam: siektes, 'n mediese fonds, drank/rook/dwelms, en 'n
+   dood wat uit al daardie dinge volg.
+   ========================================================================== */
+
+/* ---------- E1: grootouers ---------- */
+/* Hoeveel ouer as jou ouer sy eie ma of pa is. 'n Ouma van 'n 25-jarige
+   ma is self dikwels in haar laat veertigs; by 'n ouer ma is sy 70. */
+var OUMA_OUER=[20,38];
+/* Kans dat 'n grootouer al dood is wanneer jy gebore word. Elke
+   grootouer word apart gerol, dus het die meeste kinders twee of drie. */
+var GROOTOUER_DOOD=18;
+/* Die dinge wat grootouers met 'n kind doen. 'min'/'maks' is jou eie
+   ouderdom; 'band' is hoe sterk die band moet wees. */
+var GROOTOUER_DADE=[
+  {t:'het jou ’n note in die hand gestop toe niemand kyk nie', min:4, maks:17, band:40,
+   geld:[50,400], geluk:[2,6]},
+  {t:'het jou leer brood bak', min:5, maks:16, band:55, slim:[1,3], geluk:[3,7]},
+  {t:'het die hele middag stories van die ou dae vertel', min:4, maks:18, band:45,
+   slim:[1,4], geluk:[2,6]},
+  {t:'het jou die hele vakansie op die plaas laat bly', min:6, maks:17, band:60,
+   gesondheid:[2,5], geluk:[5,11]},
+  {t:'het jou kom haal ná skool, elke dag van die jaar', min:6, maks:13, band:50,
+   geluk:[3,8]},
+  {t:'het jou leer hoe om ’n hoek te gooi', min:7, maks:17, band:55, geluk:[3,8]},
+  {t:'het vir jou ’n trui gestrik wat twee nommers te groot is', min:1, maks:14, band:45,
+   geluk:[2,5]},
+  {t:'het jou kerk toe gesleep en daarna pannekoek gekoop', min:5, maks:16, band:40,
+   geluk:[1,5]},
+  {t:'het jou leer tjek skryf en jou eerste spaarboekie oopgemaak', min:10, maks:18, band:55,
+   slim:[2,5], geld:[200,1200], geluk:[2,5]}
+];
+/* Erflating van 'n grootouer: minder as 'n ouer, en net as daar was. */
+var GROOTOUER_ERF=[0,90000];
+
+/* ---------- E4: baba, swangerskap en voorbehoeding ---------- */
+/* Kans per poging om swanger te raak, volgens ouderdom. Dit is die
+   bestaande getalle, net op een plek. */
+var BABA_KANS=[[38,55],[44,30],[99,12]];
+/* En elke kind wat jy al het, maak die volgende minder waarskynlik. */
+var BABA_AFNAME=0.72;
+/* Voorbehoeding: 'f' is hoeveel van 'n onbeplande swangerskap dit keer
+   (0,97 = 97% effektief), 'koste' is wat dit jou per jaar kos. */
+var VOORBEHOEDING=[
+  {id:'geen',   n:'Niks',                 f:0,     koste:0,
+   sub:'Wat gebeur, gebeur'},
+  {id:'kondoom',n:'Kondome',              f:0.86,  koste:900,
+   sub:'By die kliniek gratis, by Clicks nie — en nie elke keer nie'},
+  {id:'pil',    n:'Die pil of ’n inspuiting', f:0.95, koste:2400,
+   sub:'Elke dag of elke drie maande, by die kliniek of die apteek'},
+  {id:'implant',n:'’n Implant of ’n lus',  f:0.99,  koste:1800,
+   sub:'Een keer ingesit, dan vir jare reg'},
+  {id:'steriel',n:'Gesteriliseer',         f:0.999, koste:0,
+   sub:'Permanent. Daar is nie ’n pad terug nie'}
+];
+var STERILISASIE_KOSTE=18000;
+/* Kans per jaar op 'n onbeplande swangerskap in 'n lief-verhouding, voor
+   voorbehoeding afgetrek word. 'n Tiener is minder gereeld saam, maar
+   gebruik ook minder gereeld iets. */
+var ONBEPLAN_TIENER=11;
+var ONBEPLAN_JONK=16;      /* 18 tot 29 */
+var ONBEPLAN_OUER=9;       /* 30 tot 42 */
+var KRAAM_KOSTE=[4500,38000];   /* staatshospitaal tot privaat kraamsaal */
+
+/* ---------- E7: 'n kind se eie lewe ---------- */
+/* Hoe 'n kind se matriekuitslag lyk: sy eie slimheid, plus wat jy as
+   ouer bygedra het (huiswerk help, 'n goeie skool, genoeg geld). */
+var KIND_APS_BASIS=14;
+var KIND_APS_SLIM=0.26;        /* elke punt slimheid bo 0 */
+var KIND_APS_OUER=0.11;        /* elke punt in die band met jou */
+var KIND_UNI_APS=26;           /* hieronder kom hy nie in 'n graad nie */
+var KIND_STUDIE_KOSTE=[38000,72000];  /* per jaar, as jy daarvoor betaal */
+/* Wat 'n kind ná skool word, as hy nie studeer nie. Gewone poste met
+   edu 0 of 1 — die lys word uit BEROEPE gevul, so dit bly in een plek. */
+var KIND_TROU_OUDERDOM=[23,36];
+var KIND_KIND_OUDERDOM=[24,39];
+var KIND_KINDERS_MAKS=3;
+var KIND_KIND_KANS=28;         /* kans per jaar op 'n kleinkind terwyl die venster oop is */
+
+/* ---------- E12: wat 'n eggenoot verdien ---------- */
+/* Jou maat se opleiding word by die troue gerol: hoe hoër jou eie
+   opleiding, hoe meer waarskynlik dat sy ook 'n graad het (mense trou
+   met mense soos hulself). Dan kry sy 'n pos uit BEROEPE wat daarby pas. */
+var MAAT_SALARIS_F=[72,118];   /* persent van die pos se basissalaris */
+var MAAT_GROEI=[2,6];          /* persent verhoging per jaar */
+var MAAT_WERKLOOS_KANS=3;      /* kans per jaar dat sy haar werk verloor */
+var MAAT_WERK_KANS=45;         /* kans per jaar dat sy weer een kry */
+var MAAT_AFTREE=62;
+var MAAT_HUISVROU=22;          /* kans dat sy by die kinders bly in plaas van werk */
+
+/* ---------- F1: siektes ---------- */
+/* 'soort' is 'akuut' (dit kom en gaan) of 'chronies' (dit bly by jou).
+   'gewig' is hoe algemeen die toestand is — hoë bloeddruk en diabetes
+   is in SA baie meer algemeen as lewersiekte, en 'n roker se weegskaal
+   word boonop deur ROOK_TOESTANDE geskuif.
+   'erns' is hoeveel dit jou kans op 'n dood vermeerder (1 = verdubbel).
+   'gesond' is wat dit elke jaar aan jou gesondheid doen, 'koste' wat die
+   behandeling 'n jaar kos, en 'behandelF' hoeveel van die skade die
+   behandeling wegneem. 'min' is die jongste ouderdom waarop dit kom. */
+var TOESTANDE=[
+  /* --- akuut --- */
+  {id:'griep', n:'Griep', e:'\u{1F912}', gewig:30, soort:'akuut', min:0, erns:0.10,
+   gesond:[3,8], koste:950, behandelF:0.7, jare:[1,1],
+   sub:'Drie weke hoes en ’n week in die bed'},
+  {id:'maag', n:'Maagvirus', e:'\u{1F922}', gewig:22, soort:'akuut', min:0, erns:0.08,
+   gesond:[2,6], koste:800, behandelF:0.7, jare:[1,1],
+   sub:'Niks bly binne nie. Jy het vyf kilogram verloor'},
+  {id:'been', n:'Gebreekte been', e:'\u{1FAFC}', gewig:9, soort:'akuut', min:3, erns:0.12,
+   gesond:[6,14], koste:14000, behandelF:0.8, jare:[1,2],
+   sub:'Ses weke in gips, en daarna fisioterapie'},
+  {id:'blinde', n:'Blindedermontsteking', e:'\u{1F52A}', gewig:3, soort:'akuut', min:5, erns:1.6,
+   gesond:[10,22], koste:46000, behandelF:0.92, jare:[1,1], dringend:true,
+   sub:'Dit moet vanaand nog uitkom, anders bars dit'},
+  {id:'longontsteking', n:'Longontsteking', e:'\u{1FAC1}', gewig:5, soort:'akuut', min:0, erns:1.1,
+   gesond:[8,18], koste:28000, behandelF:0.85, jare:[1,2], dringend:true,
+   sub:'Jou een long staan half vol water'},
+  {id:'tb', n:'Tuberkulose', e:'\u{1F9A0}', gewig:3, soort:'akuut', min:8, erns:1.4,
+   gesond:[10,20], koste:0, behandelF:0.88, jare:[1,2], staatGratis:true,
+   sub:'Ses maande se pille, elke dag, sonder om een oor te slaan'},
+  {id:'rug', n:'Rugbesering', e:'\u{1F6CF}', gewig:8, soort:'akuut', min:16, erns:0.10,
+   gesond:[4,10], koste:9500, behandelF:0.7, jare:[1,3],
+   sub:'Jy het verkeerd gelig en iets het geskeur'},
+  /* --- chronies --- */
+  {id:'asma', n:'Asma', e:'\u{1F32C}', gewig:6, soort:'chronies', min:2, erns:0.25,
+   gesond:[0,2], koste:5200, behandelF:0.8,
+   sub:'’n Pomp in elke sak, en ’n slegte winter elke jaar'},
+  {id:'bloeddruk', n:'Hoë bloeddruk', e:'\u{1FA78}', gewig:15, soort:'chronies', min:30, erns:0.55,
+   gesond:[0,2], koste:4800, behandelF:0.82,
+   sub:'Een pil per dag, vir die res van jou lewe'},
+  {id:'diabetes', n:'Diabetes tipe 2', e:'\u{1F36C}', gewig:12, soort:'chronies', min:28, erns:0.85,
+   gesond:[1,3], koste:16000, behandelF:0.78,
+   sub:'Jou bloedsuiker, jou voete en jou oë moet nou dopgehou word'},
+  {id:'artritis', n:'Artritis', e:'\u{1F9B4}', gewig:10, soort:'chronies', min:45, erns:0.20,
+   gesond:[0,2], koste:7800, behandelF:0.6,
+   sub:'Jou hande is soggens stywer as gister'},
+  {id:'hart', n:'Hartsiekte', e:'\u{1FAC0}', gewig:7, soort:'chronies', min:40, erns:1.5,
+   gesond:[1,4], koste:34000, behandelF:0.7,
+   sub:'Jou are is besig om toe te slaan'},
+  {id:'hiv', n:'HIV', e:'\u{1F397}', gewig:3, soort:'chronies', min:14, erns:2.2,
+   gesond:[1,4], koste:0, behandelF:0.9, staatGratis:true,
+   sub:'Met ARV’s elke dag leef jy ’n volle lewe; sonder hulle nie'},
+  {id:'kanker', n:'Kanker', e:'\u{1F380}', gewig:6, soort:'chronies', min:18, erns:4.5,
+   gesond:[4,10], koste:280000, behandelF:0.72, dringend:true,
+   sub:'Chemo, bestraling, en ’n jaar wat jou lewe in twee breek'},
+  {id:'lewer', n:'Lewersiekte', e:'\u{1F7E4}', gewig:3, soort:'chronies', min:30, erns:2.4,
+   gesond:[2,6], koste:62000, behandelF:0.55,
+   sub:'Die jare se drank het die rekening gebring'},
+  {id:'longe', n:'Chroniese longsiekte', e:'\u{1F6AD}', gewig:3, soort:'chronies', min:38, erns:2.0,
+   gesond:[2,5], koste:38000, behandelF:0.6,
+   sub:'Elke trap is nou ’n berg. Dit is die sigarette'},
+  {id:'beroerte', n:'Nagevolge van ’n beroerte', e:'\u{1F9E0}', gewig:4, soort:'chronies', min:45, erns:2.6,
+   gesond:[2,5], koste:52000, behandelF:0.62,
+   sub:'Jou een hand werk nie meer soos hy moet nie'}
+];
+/* Kans per jaar om énige nuwe toestand te kry: 'n basis plus 'n bietjie
+   vir elke jaar bo 30, en meer as jou gesondheid swak is. */
+var SIEK_BASIS=4.5;
+var SIEK_OUDERDOM=0.26;        /* per jaar bo 30 */
+var SIEK_SWAK=0.11;            /* per punt gesondheid onder 65 */
+var SIEK_ROOK=[0,6,13,20];     /* per rookvlak */
+var SIEK_DRINK=[0,3,9,17];
+var SIEK_DWELMS=[0,5,13,24];
+var SIEK_DAKLOOS=16;           /* op straat word jy baie makliker siek */
+var SIEK_TRONK=7;
+var SIEK_MAKS=42;              /* nooit meer as dit per jaar nie */
+/* Watter toestande watter gewoonte oopsluit. Sonder die gewoonte kan dit
+   steeds gebeur, net baie minder gereeld. */
+var ROOK_TOESTANDE=['longe','kanker','hart'];
+var DRINK_TOESTANDE=['lewer','hart'];
+var DWELM_TOESTANDE=['hiv','lewer','hart'];
+
+/* ---------- F2: mediese fonds, staat of privaat ---------- */
+/* 'premie' is per maand vir een grootmens; 'n maat kos 80% daarvan en
+   elke kind 40%. 'dek' is hoeveel van 'n rekening die fonds betaal. */
+var MEDIESE_FONDSE=[
+  {id:'hospitaal', n:'Hospitaalplan', premie:1450, dek:0.62, wag:0,
+   sub:'Net hospitaal. ’n Doktersbesoek betaal jy self'},
+  {id:'middel', n:'Middelopsie met spaarrekening', premie:3300, dek:0.82, wag:0,
+   sub:'Hospitaal plus ’n dagtoe-spaarrekening vir dokters en pille'},
+  {id:'omvattend', n:'Omvattende plan', premie:6800, dek:0.93, wag:0,
+   sub:'Alles gedek, by enige spesialis, met min uit jou eie sak'}
+];
+var FONDS_MAAT_F=0.80;
+var FONDS_KIND_F=0.40;
+var FONDS_WAGPERIODE=1;        /* jaar voor 'n bestaande toestand gedek word */
+var FONDS_SIEK_PREMIE=1.35;    /* het jy al 'n chroniese toestand, vra hulle meer */
+/* Die staatshospitaal: gratis, maar die waglys is lank en die uitkoms
+   slegter. 'wag' is die kans dat die behandeling eers volgende jaar kom. */
+var STAAT_WAG=46;
+var STAAT_UITKOMS=0.58;        /* die behandeling werk net so goed as dit */
+var STAAT_DRINGEND=0.78;       /* 'n noodgeval kry darem aandag */
+var PRIVAAT_F=1.0;             /* die volle rekening, uit jou eie sak */
+
+/* ---------- F4: drank, sigarette en dwelms ---------- */
+/* Vlak 0 = niks, 1 = soms, 2 = gereeld, 3 = verslaaf. 'spiraal' is die
+   kans per jaar om 'n vlak op te skuif as jy aanhou. */
+var GEWOONTES=[
+  {id:'drink', n:'Drank', e:'\u{1F37B}', min:18,
+   vlakke:['nie','soms ’n dop','gereeld','verslaaf aan drank'],
+   koste:[0,4800,19000,46000], gesond:[0,0,2,6], geluk:[0,2,0,-6],
+   spiraal:[0,11,7,0], werk:[0,0,4,14], band:[0,0,3,9],
+   sub:'Die wettige ouderdom in SA is 18'},
+  {id:'rook', n:'Sigarette', e:'\u{1F6AC}', min:14,
+   vlakke:['nie','soms','’n pakkie ’n dag','twee pakkies ’n dag'],
+   koste:[0,3600,19000,38000], gesond:[0,1,3,6], geluk:[0,1,0,-3],
+   spiraal:[0,24,9,0], werk:[0,0,1,3], band:[0,0,2,4],
+   sub:'’n Pakkie kos vandag ongeveer R52'},
+  {id:'dwelms', n:'Dwelms', e:'\u{1F48A}', min:15,
+   vlakke:['nie','het dit al probeer','gebruik gereeld','verslaaf'],
+   koste:[0,6000,48000,120000], gesond:[0,2,6,12], geluk:[0,3,-4,-16],
+   spiraal:[0,28,16,0], werk:[0,2,14,38], band:[0,2,10,22],
+   sub:'Dit begin by ’n partytjie en eindig nie daar nie'}
+];
+var ONTNUGTER_KOSTE=46000;     /* 'n private rehabilitasiesentrum */
+var ONTNUGTER_KANS=52;         /* kans dat rehab werk */
+var ONTNUGTER_SELF=19;         /* kans dat jy dit op jou eie regkry */
+var TERUGVAL_KANS=26;          /* kans per jaar om terug te val ná jy opgehou het */
+/* 'n Gewoonte wat jy nie meer opsoek nie, verdwyn weer — maar net op die
+   onderste vlakke. Van vlak 3 af laat dit jou nie los sonder dat jy
+   regtig ophou nie: dit is die "egte greep" van F4. */
+var GEWOONTE_LOS=[0, 45, 11, 0];   /* kans per jaar om 'n vlak terug te sak */
+var GEWOONTE_STIL=2;               /* ná so baie jare sonder om dit op te soek */
+var ONDERDERTIEN_VANG=55;      /* kans dat jou ouers jou vang as jy te jonk is */
+var DRONKBESTUUR_VANG=24;      /* kans om by 'n sperwyer gevang te word */
+var DRONKBESTUUR_ONGELUK=11;   /* kans op 'n ongeluk */
+var DRONKBESTUUR_BOETE=[6000,24000];
+var LISENSIE_TERUG=[1,3];      /* hoeveel jaar jou lisensie weg is */
+
+/* ---------- F9: hoe die dood werk ---------- */
+/* 'n Gompertz-kromme: die kans om in 'n jaar dood te gaan verdubbel
+   ongeveer elke agt jaar ná twintig. Daarbo kom 'n hele paar
+   vermenigvuldigers: jou gene, jou gesondheid, jou siektes, of jy
+   rook/drink/dwelms gebruik, en of jy mediese sorg kan bekostig. */
+var DOOD_BASIS=0.043;          /* persent per jaar op ouderdom 20 */
+var DOOD_KROM=0.0855;          /* hoe vinnig dit styg */
+var DOOD_KIND=[0.42,0.10];     /* kans in jaar 0, en van 1 tot 5 */
+var DOOD_GESOND_F=58;          /* elke punt gesondheid onder 70 maak dit erger */
+var DOOD_GESOND_MIN=0.40;      /* en perfekte gesondheid kan dit nie laer as dit druk nie */
+var DOOD_ONGELUK=0.10;         /* gewone ongelukke per jaar */
+var DOOD_JONKMAN=[18,34];      /* in SA is dit die gevaarlikste jare vir 'n jong man */
+var DOOD_JONKMAN_M=0.30;
+var DOOD_JONKMAN_V=0.11;
+var DOOD_TRONK=0.34;
+var DOOD_DAKLOOS=0.95;
+var DOOD_ROOK=[1,1.22,1.72,2.25];
+var DOOD_DRINK=[1,1.05,1.32,1.85];
+var DOOD_DWELMS=[1,1.12,1.70,2.60];
+var DOOD_ONBEHANDEL=1.0;       /* 'n onbehandelde toestand se volle erns tel */
+var DOOD_BEHANDEL=0.28;        /* 'n behandelde toestand net 28% daarvan */
+var DOOD_GEEN_SORG=1.22;       /* geen fonds en geen geld vir 'n dokter nie */
+var DOOD_GOEIE_SORG=0.88;      /* 'n goeie plan hou jou langer */
+/* F9 — jou familiegeskiedenis, by geboorte gerol. 'f' vermenigvuldig jou
+   hele lewe se doodskans: 0,62 is 'n familie waar almal 90 word. */
+var GENE=[
+  {n:'’n familie wat baie oud word', f:0.62, kans:14,
+   sub:'Jou ouma se ma het 97 geword'},
+  {n:'’n taai familie', f:0.80, kans:22, sub:'Niemand by julle is ooit siek nie'},
+  {n:'’n gewone familiegeskiedenis', f:1.0, kans:34, sub:''},
+  {n:'hartsiekte in die familie', f:1.30, kans:16,
+   sub:'Jou pa se pa is op 58 aan ’n hartaanval dood', neig:'hart'},
+  {n:'kanker in die familie', f:1.34, kans:9,
+   sub:'Dit het twee van jou ouma se susters gevat', neig:'kanker'},
+  {n:'diabetes in die familie', f:1.22, kans:5,
+   sub:'Byna almal aan jou ma se kant het dit gekry', neig:'diabetes'}
+];
+var GENE_NEIG=3.2;             /* 'n familietoestand kom so baie keer makliker */

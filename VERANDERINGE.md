@@ -13,11 +13,11 @@ met presies dieselfde gedrag — net makliker om in te werk:
 | `index.html` | Net die HTML-raam en die `<script>`-lyste. 35 reëls. |
 | `styl.css` | Al die uitleg en kleure. |
 | `hulp.js` | Klein hulpfunksies: `R()`, `kans()`, `geld()`, `klem()`. |
-| `data.js` | Al die lyste: name, skole, unies, beroepe, bates, misdade, flieks, diere. Onder "SKOOL EN STUDIE" staan die vakke, die APS-tabel en die slaagkanse; onder "EKONOMIE" staan al die geldgetalle bymekaar: dorpskoste, huurpryse, verbandkoerse, rente en pensioen. |
+| `data.js` | Al die lyste: name, skole, unies, beroepe, bates, misdade, flieks, diere. Onder "SKOOL EN STUDIE" staan die vakke, die APS-tabel en die slaagkanse; onder "EKONOMIE" staan al die geldgetalle bymekaar: dorpskoste, huurpryse, verbandkoerse, rente en pensioen; onder "GESIN EN GESONDHEID" staan die grootouer-dade, die voorbehoeding, die siektes (`TOESTANDE`), die mediese fondse, die gewoontes en die gene. |
 | `gebeure.js` | `GEBEURE` — die lukrake dinge wat met jou gebeur. |
 | `lewe.js` | Die status `s`, stoor/laai, en `wordOuer()` — die jaarmasjien. |
 | `aksies.js` | Alles wat die speler self kies: aktiwiteite, misdaad, werk, studie, bates, verhoudings, diere. |
-| `uitleg.js` | Bou die HTML vir elke tab. |
+| `uitleg.js` | Bou die HTML vir elke tab, insluitend die Gesond-blad (siektes, mediese fonds, leefstyl, voorbehoeding). |
 | `skerm.js` | Modale vensters, wenke, grafsteen, beginskerm. |
 | `begin.js` | Die inskryfpunt. Laai heel laaste. |
 
@@ -183,38 +183,57 @@ by die volgende jaar afgesny en die spel sê dit in die log.
 
 ## E. Gesin en verhoudings (P1)
 
-| # | Verandering |
-|---|---|
-| E1 | **Geen oupas en oumas.** Jy word gebore met net 'n ma, pa en broers/susters (`lewe.js:35`). Grootouers is 'n groot deel van 'n kinderlewe. |
-| E2 | **Geen uitgebreide familie:** geen ooms, tannies of niggies (net een "oom se testament"-gebeurtenis). |
-| E3 | **Jou ouers se lewe staan stil.** Hulle skei nooit, trou nooit weer, verloor nooit 'n werk nie, word nooit siek nie. Geen stiefouers, geen stiefbroers. |
-| E4 | **Geen baba sonder huwelik.** `raak(v,'baba')` is net vir `eggenoot` (`aksies.js:550`). Geen onverwagte swangerskap, geen tienerswangerskap, geen voorbehoeding as 'n keuse. Vir 'n lewe-simulasie is dit 'n groot gaping. |
-| E5 | **Swangerskap is oombliklik** — geen 9 maande, geen tweeling, geen miskraam, geen komplikasies, geen kraamkoste. |
-| E6 | **Geen aanneming, IVF of surrogaatskap.** Ook: geslag word heeltemal geïgnoreer, so twee mans kan 'n biologiese baba hê. |
-| E7 | **Kinders doen niks.** Hulle verouder, "verlaat die huis" op 18 en bly dan staties — geen skool, geen graad, geen werk, geen troue, geen kleinkinders (al verwys een gebeurtenis na kleinkinders). |
-| E8 | **Geen ouer-kind-interaksie as stelsel:** geen huiswerk help, geen dissipline, geen keuse oor jou kind se skool. |
-| E9 | **Ouderdomsgaping-probleem.** `soekLief()` laat 'n verskil van tot 12 jaar toe (`aksies.js:447`) en kollegas is 22–58 oud — so 'n 16-jarige met 'n werk kan 'n 28-jarige kollega uitvra. Dit moet hard geblokkeer word onder 18. |
-| E10 | **Geen ontrouheid, geen saamblyery, geen verlowing.** Troue is een knoppie teen band ≥ 70. |
-| E11 | **Geen huweliksgoederebedeling.** In SA maak "binne of buite gemeenskap van goed" (met of sonder accrual) die hele verskil by 'n egskeiding — en die spel verdeel net kontant (sien A10). |
-| E12 | **Jou eggenoot verdien niks.** Een huishouding = een inkomste, plus R26 000 ekstra koste. Nodig: 'n eggenoot met 'n beroep, inkomste en loopbaan. |
-| E13 | **Vriende is passief.** Hulle vra jou nooit iets nie, kom nooit in die moeilikheid nie, vra nooit geld nie, trou nie, sterf net. Al die inisiatief is joune. |
-| E14 | **Geen sosiale netwerk-effek:** geen groepe, geen "jou vriend stel jou aan iemand voor", geen vriende wat mekaar ken. |
+**Fase 5 (E1, E4, E7, E12) is ✅ KLAAR (23 Oktober 2026).** Die kolom **Gedoen** sê
+kortliks wat verander het. Die ander items in hierdie afdeling wag nog.
+
+Nuwe velde in `s`: `voorbehoeding`, `swangerskappe` en `kleinkinders`; nuwe velde op
+'n mens in `s.verhoudings`: `kant` (op 'n ouma/oupa), `kl` (op 'n kind of kleinkind —
+sy hele eie lewe) en `werk`/`afgetree`/`tuis` (op 'n eggenoot). Almal met
+verstekwaardes in `vulNuweVelde()`, sodat 'n ou lewe in localStorage steeds laai —
+`kindInhaal()` bou boonop 'n ou kind se lewe agteruit op uit sy ouderdom, sodat 'n
+seun van 34 nie skielik weer in Graad 1 begin nie.
+
+| # | Verandering | Gedoen |
+|---|---|---|
+| E1 | **Geen oupas en oumas.** Jy word gebore met net 'n ma, pa en broers/susters (`lewe.js:35`). Grootouers is 'n groot deel van 'n kinderlewe. | ✅ `maakGrootouers()` gee jou tot vier grootouers by geboorte, elk 20–38 jaar ouer as sy eie kind, met `kant` ('ma se kant' / 'pa se kant'). Sowat een uit vyf is al voor jou geboorte dood (hulle staan onder “In geheue”). `grootouerJaar()` laat hulle elke jaar iets doen uit `GROOTOUER_DADE` — geld in die hand stop, leer brood bak, jou plaas toe vat — en van 78 af kan húlle jóú hulp nodig kry. Sterf een, erf jy uit sy boedel. Hulle staan in 'n eie “Grootouers”-groep op die Mense-blad. |
+| E2 | **Geen uitgebreide familie:** geen ooms, tannies of niggies (net een "oom se testament"-gebeurtenis). | — |
+| E3 | **Jou ouers se lewe staan stil.** Hulle skei nooit, trou nooit weer, verloor nooit 'n werk nie, word nooit siek nie. Geen stiefouers, geen stiefbroers. | — |
+| E4 | **Geen baba sonder huwelik.** `raak(v,'baba')` is net vir `eggenoot` (`aksies.js:550`). Geen onverwagte swangerskap, geen tienerswangerskap, geen voorbehoeding as 'n keuse. Vir 'n lewe-simulasie is dit 'n groot gaping. | ✅ `raak(v,'baba')` werk nou ook vir 'n `lief`-verhouding, en `onbeplanJaar()` gee elke jaar in 'n verhouding 'n kans op 'n onbeplande swangerskap — hoër vir 'n tiener, laer vir 'n egpaar. `VOORBEHOEDING` is 'n werklike keuse op die Gesond-blad (niks / kondome / die pil / 'n implant / sterilisasie) met 'n prys per jaar en 'n effektiwiteit van 0% tot 99,9%. 'n Tienerswangerskap kos jou geluk, jou ouers se band, en dikwels 'n skooljaar (`skoolJaarVerloor`). Die kraamkoste hang aan F2: staatshospitaal R4 500, privaat R38 000, of net die gaping as jy 'n fonds het. |
+| E5 | **Swangerskap is oombliklik** — geen 9 maande, geen tweeling, geen miskraam, geen komplikasies, geen kraamkoste. | — |
+| E6 | **Geen aanneming, IVF of surrogaatskap.** Ook: geslag word heeltemal geïgnoreer, so twee mans kan 'n biologiese baba hê. | — |
+| E7 | **Kinders doen niks.** Hulle verouder, "verlaat die huis" op 18 en bly dan staties — geen skool, geen graad, geen werk, geen troue, geen kleinkinders (al verwys een gebeurtenis na kleinkinders). | ✅ Elke kind kry `v.kl` — sy eie slimheid, skool, matriek-APS, studie, beroep, salaris, maat, kinders, gewoontes, siektes en 'n eie lewensverhaal. `kindJaar()` speel dit jaar vir jaar: Graad 1 op 6, hoërskool op 13, matriek met 'n APS uit 42 op 18 (jou band met hom en “Help met die huiswerk” maak dit beter), dan 'n vraag aan jou of jy sy graad betaal, dan werk, 'n eie maat, en jou kleinkinders — wat self as mense in `s.verhoudings` staan en hul eie kinderjare deurloop. Op 62 tree hy af. Jy lees alles onder “Lees sy lewensverhaal”, en die grafsteen sê wat van elke kind geword het. Die struktuur is doelbewus ruim vir Fase 6 se generasiespel. |
+| E8 | **Geen ouer-kind-interaksie as stelsel:** geen huiswerk help, geen dissipline, geen keuse oor jou kind se skool. | — |
+| E9 | **Ouderdomsgaping-probleem.** `soekLief()` laat 'n verskil van tot 12 jaar toe (`aksies.js:447`) en kollegas is 22–58 oud — so 'n 16-jarige met 'n werk kan 'n 28-jarige kollega uitvra. Dit moet hard geblokkeer word onder 18. | — |
+| E10 | **Geen ontrouheid, geen saamblyery, geen verlowing.** Troue is een knoppie teen band ≥ 70. | — |
+| E11 | **Geen huweliksgoederebedeling.** In SA maak "binne of buite gemeenskap van goed" (met of sonder accrual) die hele verskil by 'n egskeiding — en die spel verdeel net kontant (sien A10). | — |
+| E12 | **Jou eggenoot verdien niks.** Een huishouding = een inkomste, plus R26 000 ekstra koste. Nodig: 'n eggenoot met 'n beroep, inkomste en loopbaan. | ✅ `maatBeroepKies()` gee jou eggenoot by die troue 'n pos uit `BEROEPE` wat by haar opleiding pas (wat weer aan joune hang — mense trou met mense soos hulself), met 72–118% van daardie pos se salaris. `maatWerkJaar()` gee verhogings tot by die pos se plafon, kan haar afdank, kan haar weer laat werk kry, en laat haar op 62 aftree. `inkomsteJaar()` belas haar salaris apart (soos SARS doen) en gooi dit by die huishouding se kontant; die nuwe `huishoudingBruto()` laat die bank, die krediteure en die huurmark na albei inkomste kyk. |
+| E13 | **Vriende is passief.** Hulle vra jou nooit iets nie, kom nooit in die moeilikheid nie, vra nooit geld nie, trou nie, sterf net. Al die inisiatief is joune. | — |
+| E14 | **Geen sosiale netwerk-effek:** geen groepe, geen "jou vriend stel jou aan iemand voor", geen vriende wat mekaar ken. | — |
 
 ---
 
 ## F. Gesondheid en liggaam (P1)
 
-| # | Verandering |
-|---|---|
-| F1 | **Geen siektes.** `gesondheid` is een getal wat net dryf. Geen griep vs kanker vs diabetes, geen chroniese toestand wat jaarliks geld kos, geen behandelingskeuse, geen herstel. |
-| F2 | **Geen mediese fonds of hospitaalkoste.** 'n Doktersbesoek kos R850 en 'n hartaanval kos niks. Nodig: mediese fonds-premie vs staatshospitaal vs privaat rekening. |
-| F3 | **Geen geestesgesondheid.** Geen depressie, geen angs, geen terapie — al kan `geluk` tot 0 val sonder enige gevolg behalwe die log. |
-| F4 | **Geen alkohol, sigarette of dwelms.** 'n Groot deel van 'n egte lewe-simulasie, en in SA met 'n drinkouderdom van 18, dronkbestuur, en verslawing as 'n langtermyn-spiraal. |
-| F5 | **Geen dieet, gewig of fiksheid** behalwe `gim` en `draf` wat elk een keer per jaar +gesondheid gee. |
-| F6 | **Geen besering of ongeskiktheid.** `ONGELUKKE` is net maniere om dood te gaan; jy kan nie 'n been breek of in 'n rolstoel beland nie. |
-| F7 | **Geen babasterftes of kindersiektes**, geen inentings. |
-| F8 | **Geen tandarts-gevolge.** Gaan nooit tandarts toe nie en niks gebeur. |
-| F9 | **Dood is te eenvoudig.** `doodKontrole()` gebruik 'n ouderdomskromme plus 0,09% kans op 'n ongeluk. Geen verband met leefstyl (rook, gewig, stres, dwelms), geen gesondheidsorg-kwaliteit, geen genetika/familiegeskiedenis. |
+**Fase 5 (F1, F2, F4, F9) is ✅ KLAAR (23 Oktober 2026).** Hierdie vier is doelbewus
+saam gedoen, want 'n siekte sonder koste en sonder 'n doodsverband beteken niks.
+
+Nuwe velde in `s`: `siektes`, `mediesefonds`, `fondsJare`, `siekJare`, `gewoontes`,
+`gewoonteJare`, `gewoonteLaas`, `opgehou`, `rehabs`, `lisensieWeg`, `dronkbestuur`,
+`fiks` en `gene` — almal met verstekwaardes in `vulNuweVelde()`. Die nuwe data staan
+in `data.js` onder "GESIN EN GESONDHEID (Fase 5)": `TOESTANDE`, `MEDIESE_FONDSE`,
+`GEWOONTES`, `GENE` en hul getalle.
+
+| # | Verandering | Gedoen |
+|---|---|---|
+| F1 | **Geen siektes.** `gesondheid` is een getal wat net dryf. Geen griep vs kanker vs diabetes, geen chroniese toestand wat jaarliks geld kos, geen behandelingskeuse, geen herstel. | ✅ `TOESTANDE` in `data.js` hou sewentien toestande: akuut (griep, maagvirus, 'n gebreekte been, blindedermontsteking, longontsteking, TB, 'n rugbesering) en chronies (asma, hoë bloeddruk, diabetes, artritis, hartsiekte, HIV, kanker, lewersiekte, chroniese longsiekte, nagevolge van 'n beroerte). `siekteJaar()` gee elke jaar 'n kans op iets nuuts — geweeg volgens jou ouderdom, jou gesondheid, jou gewoontes en die siekte wat in jou familie loop. 'n Akute toestand kom en gaan (en jy kry die meeste van jou gesondheid terug); 'n chroniese een bly, kos jaarliks geld, en kan 'n tweede toestand oopmaak as jy dit los. Alles staan op die nuwe **Gesond**-blad. |
+| F2 | **Geen mediese fonds of hospitaalkoste.** 'n Doktersbesoek kos R850 en 'n hartaanval kos niks. Nodig: mediese fonds-premie vs staatshospitaal vs privaat rekening. | ✅ Drie paaie by elke diagnose: jou **mediese fonds** (`MEDIESE_FONDSE` — hospitaalplan R1 450 p.m. tot 'n omvattende plan teen R6 800, plus 80% vir 'n maat en 40% per kind, en 35% meer as jy al 'n chroniese toestand het), die **staatshospitaal** (gratis, maar 46% kans op 'n waglys en 'n uitkoms wat net 58% so goed is), of **privaat uit jou eie sak** (die volle rekening — kanker is R280 000 per jaar). `fondsJaar()` trek die premie elke jaar; kan jy dit nie meer nie, verval die plan en elke behandeling wat daaraan hang word 'n privaat rekening. 'n Rekening wat jy nie kan betaal nie, loop deur `betaalWatJyKan()` — dus deur Fase 2 se skuld, die balju en uiteindelik die straat. |
+| F3 | **Geen geestesgesondheid.** Geen depressie, geen angs, geen terapie — al kan `geluk` tot 0 val sonder enige gevolg behalwe die log. | — |
+| F4 | **Geen alkohol, sigarette of dwelms.** 'n Groot deel van 'n egte lewe-simulasie, en in SA met 'n drinkouderdom van 18, dronkbestuur, en verslawing as 'n langtermyn-spiraal. | ✅ `GEWOONTES` gee drank, sigarette en dwelms elk vier vlakke (nie / soms / gereeld / verslaaf), elk met sy eie koste, gesondheidskoste, werkskade en skade aan jou mense. Die spiraal is eg: wie dit elke jaar opsoek, skuif op; wie dit twee jaar laat lê, sak op die laer vlakke weer terug — maar van vlak 3 af laat dit jou nie los sonder `wysOphou()` (self, die kliniek, of R46 000 se rehabilitasie, met 'n laer kans elke keer wat jy al daar was) nie. Die drinkouderdom is 18, en jonger beteken jou ouers kan jou vang. Drink jy en het jy 'n motor, vra die spel hoe jy huis toe kom: ry jy self, is daar 'n boete, 'n ongeluk, jou motor wat die versekering nie dek nie, 'n rekord, en 'n lisensie wat 1–4 jaar weg is (`magBestuur()` uit Fase 1 weier dit solank). |
+| F5 | **Geen dieet, gewig of fiksheid** behalwe `gim` en `draf` wat elk een keer per jaar +gesondheid gee. | — |
+| F6 | **Geen besering of ongeskiktheid.** `ONGELUKKE` is net maniere om dood te gaan; jy kan nie 'n been breek of in 'n rolstoel beland nie. | — |
+| F7 | **Geen babasterftes of kindersiektes**, geen inentings. | — |
+| F8 | **Geen tandarts-gevolge.** Gaan nooit tandarts toe nie en niks gebeur. | — |
+| F9 | **Dood is te eenvoudig.** `doodKontrole()` gebruik 'n ouderdomskromme plus 0,09% kans op 'n ongeluk. Geen verband met leefstyl (rook, gewig, stres, dwelms), geen gesondheidsorg-kwaliteit, geen genetika/familiegeskiedenis. | ✅ `doodKontrole()` gebruik nou 'n Gompertz-kromme (die kans verdubbel elke agt jaar ná twintig) maal ses dinge: jou **gene** (`GENE`, by geboorte gerol — van 'n familie wat 90 word tot hartsiekte of kanker in die familie), jou **gesondheid**, jou **siektes** (behandel tel net 28% van hul erns; die staat se uitkoms 1,6 keer soveel), **rook/drank/dwelms**, of jy **mediese sorg kan bekostig**, en waar jy is (tronk, straat). Ongelukke en geweld is 'n aparte kans wat veral 'n jong man tref. Twee ander dinge is reggemaak: `ouderdomDrywing()` se verval is sagter, en die nuwe `natuurlikeVlak()`/`herstelJaar()` gee die liggaam 'n vlak waarheen dit herstel in plaas daarvan dat gesondheid net een rigting ken — dít was die eintlike rede waarom elke speler kort ná 70 op nul uitgekom het. **Gemeet oor 300 lewens: nou 2 tot 89, mediaan 62; 'n speler wat gym toe gaan, 'n fonds het en sy siektes laat behandel haal mediaan 75 met 20% bo 85, en 'n roker-drinker haal mediaan 41.** |
 
 ---
 
@@ -287,9 +306,21 @@ by die volgende jaar afgesny en die spel sê dit in die log.
 
 ~~**Fase 3 — skool en werk reg kry (C1, C2, C4, C9, D3, D6).**~~ **✅ KLAAR (23 Oktober 2026).** Al ses items is gedoen — sien die **Gedoen**-kolomme in afdelings C en D. Skool beteken nou iets: in Graad 10 kies jy vakke, en sonder Wiskunde is Ingenieurswese, Geneeskunde, Rekeningkunde en Rekenaarwetenskap vir altyd toe; matriek gee ’n APS uit 42 in plaas van een persentasie; ’n graad is so lank as wat hy regtig is; jy kan ’n jaar druip en uitgeskop word; daar is deeltydse werk vir wie nog op skool is; en ’n salaris groei nie meer verby sy pos se plafon nie.
 
-**Fase 4 — gesin en gesondheid (E1, E4, E7, E12, F1, F2, F4).** Grootouers, kinders wat regtig lewe, siektes.
+~~**Fase 4 — gesin en gesondheid (E1, E4, E7, E12, F1, F2, F4, F9).**~~ **✅ KLAAR
+(23 Oktober 2026).** Al agt items is gedoen — sien die **Gedoen**-kolomme in afdelings
+E en F. ’n Mens word nou in ’n egte gesin gebore (grootouers wat jou kinderjare vul en
+mettertyd sterf), ’n baba kan ook buite ’n huwelik kom en voorbehoeding is ’n keuse met
+’n prys, jou kinders leef hul eie lewe tot by húlle kinders, en jou eggenoot verdien
+self. Die liggaam het regte siektes, ’n mediese fonds teenoor die staatshospitaal
+teenoor ’n privaat rekening wat jou kan ruïneer, en drank/sigarette/dwelms met ’n egte
+greep — en die dood volg nou uit al daardie dinge plus die familiegeskiedenis waarmee
+jy gebore is. *F9 was nie in die oorspronklike Fase 4-lysie nie, maar is bygevoeg: ’n
+siekte sonder ’n doodsverband beteken niks.*
 
-**Fase 5 — nuwe inhoud (H1, H13, H14, H3, H4).** Generasiespel, baie meer gebeure, vaardighede, eie besigheid.
+**Fase 6 — nuwe inhoud (H1, H13, H14, H3, H4).** Generasiespel, baie meer gebeure,
+vaardighede, eie besigheid. Die generasiespel (H1) hang direk aan E7 hierbo: ’n kind
+se `v.kl` is doelbewus gebou soos `s` self — eie slimheid, skool, beroep, maat, kinders,
+gewoontes, siektes en ’n eie lewensverhaal — sodat ’n mens as jou kind kan voortgaan.
 
 **Klaar tot dusver:**
 
@@ -305,8 +336,13 @@ by die volgende jaar afgesny en die spel sê dit in die log.
    regte graadlengtes, druip en akademiese uitsluiting, deeltydse werk, en ’n
    plafon per pos op salarisse.
 
-**Volgende aan die beurt: Fase 4** (E1, E4, E7, E12, F1, F2, F4 — grootouers,
-kinders wat regtig lewe, siektes).
+6. **Fase 4 (E1, E4, E7, E12, F1, F2, F4, F9)** — grootouers, ’n baba sonder ’n
+   huwelik, kinders met ’n egte lewensloop, ’n eggenoot wat verdien, siektes, die
+   mediese fonds teenoor die staatshospitaal, drank/rook/dwelms, en ’n dood wat
+   uit alles daarvan volg.
+
+**Volgende aan die beurt: Fase 6** (H1, H13, H14, H3, H4 — die generasiespel,
+baie meer gebeure, vaardighede, ’n eie besigheid).
 
 ⭐ **Twee dinge wat Fase 3 oopgelaat het en wat die moeite werd is om volgende te
 doen.** Eerstens **C3** (die drie NSC-slaagvlakke): die APS is nou daar, maar ’n
@@ -316,6 +352,14 @@ akkuraatheid. Tweedens **C5** (Medies en Regte is nog Amerikaans gemodelleer): d
 LLB en die MBChB staan nou as voorgraadse grade in `STUDIES`, maar die ou “Mediese
 Skool” en “Regskool” staan nog langs hulle in `NAGRAADS`. Dit werk, en niks breek
 nie, maar dit is twee paaie na dieselfde pos — C5 moet die ou een uithaal.
+
+⭐ **Wat Fase 4 oopgelaat het.** **E5** (nege maande, tweelinge, miskrame) en **E6**
+(aanneming, IVF, en dat geslag geïgnoreer word) staan nog: ’n baba is steeds oombliklik.
+Die onbeplande swangerskap (E4) kyk wel al na geslag — twee mans kry nie per ongeluk ’n
+baba nie — maar die “Probeer vir ’n baba”-knoppie nie, want dit is E6 se werk.
+**F3** (geestesgesondheid) en **F6** (ongeskiktheid) pas nou netjies in die nuwe
+`TOESTANDE`-lys in: depressie en angs is net nog twee chroniese toestande met ’n
+behandelingspad, en dit sou `geluk` eindelik gevolge gee.
 
 ⚠ **Een ding om in die oog te hou:** `slim` groei elke skooljaar (skoolbonus plus
 “Studeer harder” plus gebeure), so ’n speler wat net “Studeer harder” druk, sit op
