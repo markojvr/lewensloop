@@ -98,6 +98,9 @@ function rol(v){
     n += v.kant==='ma' ? ' (ma se kant)' : ' (pa se kant)';
   return n;
 }
+/* Afrikaans stem die besitlike vorm met die geslag saam: sy seun, haar
+   dogter. Sonder hierdie helper staan daar "Carike het sy graad gekry". */
+function besit(v){ return v && v.geslag==='v' ? 'haar' : 'sy'; }
 function emoVan(v){
   var m={ma:'\u{1F469}', pa:'\u{1F468}', broer:'\u{1F466}', suster:'\u{1F467}',
     lief:'\u{1F495}', eggenoot:'\u{1F48D}', seun:'\u{1F9D2}', dogter:'\u{1F9D2}',
@@ -2313,7 +2316,7 @@ function kindJaar(v){
   var k = kindLewe(v), o = v.ouderdom;
   /* --- die kinderjare --- */
   if(o<6){
-    if(kans(30)) kindNoteer(v, kies(['het sy eerste woorde gesê','het leer loop',
+    if(kans(30)) kindNoteer(v, kies(['het ' + besit(v) + ' eerste woorde gesê','het leer loop',
       'het leer fiets ry','het die hele huis omgekeer','het kleuterskool begin']));
     return;
   }
@@ -2348,15 +2351,15 @@ function kindJaar(v){
     if(k.skool.jareOor<=0){
       k.skool.grade.push(k.skool.studie);
       k.skool.vlak='klaar';
-      kindNoteer(v,'het sy graad in ' + k.skool.studie + ' gekry', true, 'skool');
+      kindNoteer(v,'het ' + besit(v) + ' graad in ' + k.skool.studie + ' gekry', true, 'skool');
       s.geluk = klem(s.geluk + tussen(8,16));
       kindWerkKies(v);
-    } else kindNoteer(v,'is in sy ' + (1 + (kindStudieJaar(k))) + 'e jaar van ' + k.skool.studie);
+    } else kindNoteer(v,'is in ' + besit(v) + ' ' + (1 + (kindStudieJaar(k))) + 'e jaar van ' + k.skool.studie);
     return;
   }
   /* --- aftrede. 'n Kind van 70 werk nie nog as kelner nie. --- */
   if(o>=MAAT_AFTREE && k.beroep){
-    kindNoteer(v,'het uit sy pos as ' + k.beroep.t.toLowerCase() + ' getree', true, 'werk');
+    kindNoteer(v,'het uit ' + besit(v) + ' pos as ' + k.beroep.t.toLowerCase() + ' getree', true, 'werk');
     k.beroep = null; k.salaris = 0; k.afgetree = 1;
   }
   /* --- werk --- */
@@ -2366,7 +2369,7 @@ function kindJaar(v){
     k.salaris = Math.round(k.salaris * 1.045);
     if(k.beroep.plafon && k.salaris > k.beroep.plafon) k.salaris = k.beroep.plafon;
     if(kans(4)){
-      kindNoteer(v,'het sy werk as ' + k.beroep.t.toLowerCase() + ' verloor', true, 'sleg');
+      kindNoteer(v,'het ' + besit(v) + ' werk as ' + k.beroep.t.toLowerCase() + ' verloor', true, 'sleg');
       k.beroep = null; k.salaris = 0;
     } else if(kans(7)){
       kindNoteer(v,'is bevorder by die werk');
