@@ -280,11 +280,14 @@ var TE_KOOP=[
   {id:'gesin',    n:'Gesinshuis in Stellenbosch',t:'huis', p:3400000,  e:'\u{1F3E1}'},
   {id:'plaas',    n:'Wynplaas in die Boland',    t:'huis', p:14000000, e:'\u{1F347}'},
   {id:'strand',   n:'Strandhuis in Camps Bay',   t:'huis', p:28000000, e:'\u{1F30A}'},
-  {id:'tazz',     n:'1998 Toyota Tazz',          t:'motor',p:38000,    e:'\u{1F697}'},
-  {id:'polo',     n:'VW Polo Vivo',              t:'motor',p:285000,   e:'\u{1F699}'},
-  {id:'ranger',   n:'Ford Ranger Wildtrak',      t:'motor',p:780000,   e:'\u{1F6FB}'},
-  {id:'bmw',      n:'BMW 330i',                  t:'motor',p:1050000,  e:'\u{1F3CE}'},
-  {id:'porsche',  n:'Porsche 911 Carrera',       t:'motor',p:2900000,  e:'\u{1F3CE}'},
+  /* Fase 8 — 'spoed' is die topspoed in km/h (dit is jou spoed in die
+     jaagtog), en 'ontsnap' is hoeveel persentasiepunte die motor as
+     ontsnapvoertuig van die gevangskans afhaal: vinniger en duurder is beter. */
+  {id:'tazz',     n:'1998 Toyota Tazz',          t:'motor',p:38000,    e:'\u{1F697}', spoed:155, ontsnap:8},
+  {id:'polo',     n:'VW Polo Vivo',              t:'motor',p:285000,   e:'\u{1F699}', spoed:175, ontsnap:12},
+  {id:'ranger',   n:'Ford Ranger Wildtrak',      t:'motor',p:780000,   e:'\u{1F6FB}', spoed:180, ontsnap:15},
+  {id:'bmw',      n:'BMW 330i',                  t:'motor',p:1050000,  e:'\u{1F3CE}', spoed:250, ontsnap:20},
+  {id:'porsche',  n:'Porsche 911 Carrera',       t:'motor',p:2900000,  e:'\u{1F3CE}', spoed:293, ontsnap:25},
   {id:'rolex',    n:'Rolex Submariner',          t:'luuks',p:420000,   e:'\u{231A}'},
   {id:'jag',      n:'Seiljag',                   t:'luuks',p:4800000,  e:'\u{26F5}'},
   {id:'vliegtuig',n:'Privaat Vliegtuig',         t:'luuks',p:85000000, e:'\u{2708}'}
@@ -429,44 +432,147 @@ var DAKLOOS_NAGTE=[
   'Die munisipaliteit het julle goed op ’n vragmotor gelaai en weggevat.'
 ];
 
+/* ==========================================================================
+   MISDAAD EN REG (Fase 8)
+   Die misdade self, die ontsnapvoertuie, en die getalle waarmee hitte,
+   die heler en die hof werk. Die kode wat dit gebruik, staan in
+   misdaad.js.
+
+   Elke misdaad: min = jongste ouderdom; erns 1-5 bepaal wat die hof
+   met jou doen (1 = 'n sak lekkers, 5 = 'n bankroof); hitte = hoeveel
+   die polisie se aandag styg as jy dit doen; perJaar = hoeveel keer per
+   jaar; spel = watter mini-spel daarby hoort. Elke teiken: buit = wat
+   jy kry (of, met goed:true, wat die goedere werd is — die heler betaal
+   jou net 30-60% daarvan); risiko = die gevangskans voor enige
+   aanpassing. 'n Teiken kan sy misdaad se erns oorskryf.
+
+   Niemand word in enige misdaad doodgemaak of beseer nie. 'n Wapen
+   (wapen:true) maak net die vonnis swaarder.
+   ========================================================================== */
+/* Die ontsnapvoertuie wat almal het. Jou eie motor kom by uit s.bates
+   (sien TE_KOOP se 'ontsnap' en 'spoed'): hy haal 8% (Tazz) tot 25%
+   (Porsche) van die risiko af, en hy is nie meer naspeurbaar nie — jy
+   ry hom net nie op die toneel nie. 'spoed' is jou spoed in die
+   jaagtog; sonder spoed is daar geen jaagtog nie. */
 var ONTSNAPVOERTUIE=[
-  {n:'Te voet', mod:14, sub:'Jy sal moet hardloop'},
-  {n:'Op ’n fiets', mod:9, sub:'Stil, maar stadig'},
-  {n:'Met ’n taxi', mod:3, sub:'Die drywer weet van niks'},
-  {n:'’n Gesteelde bakkie', mod:-13, sub:'Niemand kan dit aan jou koppel nie'},
-  {n:'Jou eie motor', mod:17, sub:'Hulle kan jou nommerplaat naspoor', vereisMotor:true}
+  {id:'voet',   n:'Te voet', mod:14, sub:'Jy sal moet hardloop'},
+  {id:'fiets',  n:'Op ’n fiets', mod:8, sub:'Stil, maar stadig'},
+  {id:'taxi',   n:'Met ’n taxi', mod:3, sub:'Die drywer weet van niks'},
+  {id:'bakkie', n:'’n Gesteelde bakkie', mod:-10, spoed:160, ekstra:1,
+   sub:'Vinnig weg, maar word jy gevang, is die bakkie nog ’n aanklag'}
 ];
 var MISDADE=[
-  {id:'winkel', n:'Winkeldiefstal', e:'\u{1F6D2}', maat:true, voertuig:false, jare:[1,2], teikens:[
+  /* --- Klein misdaad --- */
+  {id:'winkel', n:'Winkeldiefstal', e:'\u{1F6D2}', g:'Klein misdaad', min:12, erns:1, hitte:3,
+   maat:true, voertuig:false, jare:[1,2], teikens:[
     {n:'’n Sak lekkers', buit:[40,300], risiko:9},
     {n:'’n Selfoonlaaier', buit:[200,900], risiko:18},
     {n:'’n Duur hoodie', buit:[400,1800], risiko:27},
-    {n:'’n Selfoon uit die glaskas', buit:[3000,16000], risiko:44}
+    {n:'’n Selfoon uit die glaskas', buit:[3000,16000], risiko:44, goed:true, erns:2}
   ]},
-  {id:'sak', n:'Sakkerollery', e:'\u{1F91A}', maat:true, voertuig:false, jare:[1,3], teikens:[
+  {id:'sak', n:'Sakkerollery', e:'\u{1F91A}', g:'Klein misdaad', min:12, erns:1, hitte:4, spel:'sak',
+   maat:true, voertuig:false, jare:[1,3], teikens:[
     {n:'’n Toeris by die Waterfront', buit:[400,6000], risiko:23},
     {n:'’n Besigheidsman se beursie', buit:[800,12000], risiko:33},
     {n:'’n Ou tannie se handsak', buit:[200,3000], risiko:17, geluk:-12},
-    {n:'’n Polisieman se foon', buit:[1500,9000], risiko:62}
+    {n:'’n Polisieman se foon', buit:[1500,9000], risiko:62, goed:true, erns:2}
   ]},
-  {id:'inbreek', n:'Huisinbraak', e:'\u{1F3DA}', maat:true, voertuig:true, jare:[2,6], teikens:[
-    {n:'’n Woonstel in die dorp', buit:[3000,30000], risiko:28},
-    {n:'’n Huis in ’n gewone buurt', buit:[8000,90000], risiko:38},
-    {n:'’n Landgoed met sekuriteit', buit:[60000,420000], risiko:56},
-    {n:'’n Juwelierswinkel na-ure', buit:[150000,900000], risiko:64}
+  {id:'straat', n:'Straatskarrel', e:'\u{1F39F}', g:'Klein misdaad', min:14, erns:1, hitte:3,
+   maat:true, voertuig:false, jare:[1,3], teikens:[
+    {n:'Kaartjies vir ’n Bokke-toets teen woekerpryse', buit:[800,6000], risiko:12},
+    {n:'Namaak-sokkertruie en -handsakke smous', buit:[1500,9000], risiko:16},
+    {n:'Onwettige kragaansluitings vir die buurt', buit:[2000,15000], risiko:20, erns:2},
+    {n:'Koperkabels langs die spoorlyn afsny', buit:[4000,26000], risiko:30, goed:true, erns:3}
   ]},
-  {id:'motor', n:'Motordiefstal', e:'\u{1F697}', maat:true, voertuig:false, jare:[3,8], teikens:[
-    {n:'’n Ou Tazz by die stasie', buit:[12000,40000], risiko:26},
-    {n:'’n Polo by die winkelsentrum', buit:[80000,240000], risiko:44},
-    {n:'’n Bakkie by ’n bouperseel', buit:[150000,500000], risiko:52},
-    {n:'’n Porsche voor ’n restaurant', buit:[900000,2600000], risiko:70}
+  /* --- Groot misdaad --- */
+  {id:'inbreek', n:'Huisinbraak', e:'\u{1F3DA}', g:'Groot misdaad', min:14, erns:3, hitte:8, spel:'slot',
+   maat:true, voertuig:true, jare:[2,6], teikens:[
+    {n:'’n Woonstel in die dorp', buit:[3000,30000], risiko:28, goed:true},
+    {n:'’n Huis in ’n gewone buurt', buit:[8000,90000], risiko:38, goed:true},
+    {n:'’n Landgoed met sekuriteit', buit:[60000,420000], risiko:56, goed:true},
+    {n:'’n Juwelierswinkel na-ure', buit:[150000,900000], risiko:64, goed:true, erns:4}
   ]},
-  {id:'bank', n:'Bankroof', e:'\u{1F3E6}', maat:true, voertuig:true, jare:[8,20], teikens:[
+  /* Met motordiefstal is die gesteelde motor self jou ontsnapvoertuig:
+     sy spoed is jou spoed as die polisie agter jou aan kom. */
+  {id:'motor', n:'Motordiefstal', e:'\u{1F697}', g:'Groot misdaad', min:16, erns:3, hitte:10, spel:'aanskakel',
+   maat:true, voertuig:false, jare:[3,8], teikens:[
+    {n:'’n Ou Tazz by die stasie', buit:[12000,40000], risiko:26, goed:true, spoed:155},
+    {n:'’n Polo by die winkelsentrum', buit:[80000,240000], risiko:44, goed:true, spoed:175},
+    {n:'’n Bakkie by ’n bouperseel', buit:[150000,500000], risiko:52, goed:true, spoed:170},
+    {n:'’n Porsche voor ’n restaurant', buit:[900000,2600000], risiko:70, goed:true, spoed:293}
+  ]},
+  {id:'smokkel', n:'Smokkel', e:'\u{1F69A}', g:'Groot misdaad', min:16, erns:3, hitte:8,
+   maat:true, voertuig:true, jare:[2,8], teikens:[
+    {n:'Perlemoen uit die see by Hermanus', buit:[20000,120000], risiko:34, goed:true},
+    {n:'’n Bakkievrag onwettige sigarette', buit:[30000,180000], risiko:38, goed:true},
+    {n:'Gesmokkelde selfone deur die hawe', buit:[80000,400000], risiko:50, goed:true, erns:4}
+  ]},
+  {id:'roof', n:'Gewapende roof', e:'\u{1F52B}', g:'Groot misdaad', min:18, erns:5, hitte:18, wapen:true,
+   perJaar:1, maat:true, voertuig:true, jare:[10,15], teikens:[
+    {n:'’n Vulstasie se kasregister om twee-uur in die oggend', buit:[3000,20000], risiko:40},
+    {n:'’n Drankwinkel op ’n Vrydagaand', buit:[10000,60000], risiko:46},
+    {n:'’n Kontantafhaal by ’n winkelsentrum', buit:[100000,600000], risiko:60}
+  ]},
+  {id:'bank', n:'Bankroof', e:'\u{1F3E6}', g:'Groot misdaad', min:18, erns:5, hitte:25, wapen:true, spel:'kluis',
+   perJaar:1, maat:true, voertuig:true, jare:[12,20], teikens:[
     {n:'’n Klein tak op die platteland', buit:[120000,700000], risiko:54},
     {n:'’n Geldwa by ’n winkelsentrum', buit:[600000,2400000], risiko:68},
     {n:'Die hoofkantoor se kluis', buit:[2000000,9000000], risiko:80}
+  ]},
+  /* --- Witboordjie en kuber (G8) --- */
+  /* Witboordjie-misdaad vra 'n werk, en die buit hang van jou salaris
+     af (buitF = 'n breukdeel daarvan). Die gevangskans nou is klein,
+     maar die oudit kom later: 'oudit' is die kans (%) dat dit oor die
+     volgende OUDIT_JARE jaar uitkom. */
+  {id:'witboord', n:'Bedrog by die werk', e:'\u{1F4BC}', g:'Witboordjie en kuber', min:18, erns:3, hitte:2,
+   perJaar:1, vereis:'werk', maat:false, voertuig:false, jare:[3,10], teikens:[
+    {n:'Versteek inkomste van SARS', buitF:[0.08,0.2], risiko:4, oudit:40, erns:2},
+    {n:'Fiktiewe fakture aan jou werkgewer', buitF:[0.15,0.5], risiko:8, oudit:45},
+    {n:'Verduister geld uit die maatskappy', buitF:[0.4,1.2], risiko:10, oudit:60, erns:4},
+    {n:'Tenderbedrog met ’n vriend se maatskappy', buit:[250000,2500000], risiko:14, oudit:55, erns:4,
+     salaris:350000}
+  ]},
+  /* Kuberbedrog vra 'n kodeer-vlak (sien VAARDIGHEDE); elke vlak bo
+     die vereiste haal 2% van die risiko af. */
+  {id:'kuber', n:'Kuberbedrog', e:'\u{1F4BB}', g:'Witboordjie en kuber', min:14, erns:3, hitte:5,
+   vereis:'kodeer', maat:false, voertuig:false, jare:[3,10], teikens:[
+    {n:'Phishing-e-posse aan bankkliënte', buit:[5000,60000], risiko:14, kodeer:2},
+    {n:'Kaartbedrog met gesteelde kaartnommers', buit:[15000,150000], risiko:20, kodeer:3},
+    {n:'’n SIM-swop op ’n ryk man se foon', buit:[30000,300000], risiko:26, kodeer:4}
   ]}
 ];
+/* Hitte: elke misdaad tel m.hitte plus 'n vyfde van die teiken se
+   risiko by; gevang word gee HITTE_GEVANG ekstra. Elke jaar val dit
+   met HITTE_VERVAL (as breukdeel) en dan nog HITTE_VERVAL_VAS punte.
+   Elke HITTE_PER_RISIKO punte hitte is 1% ekstra gevangskans. */
+var HITTE_GEVANG = 12, HITTE_VERVAL = 0.4, HITTE_VERVAL_VAS = 3, HITTE_PER_RISIKO = 3.5;
+/* 'n Polisieman omkoop: die prys, en die kans dat hy eerlik is. */
+var OMKOOP_BASIS = 2000, OMKOOP_PER_HITTE = 1200, OMKOOP_EERLIK = 30;
+/* Die heler betaal 30-60% van wat die goedere werd is (minder as dit
+   warm is); onderhandel kan dit lig of laat sak. */
+var HELER = [30, 60];
+/* Die aanpassings saam mag die gevangskans hoogstens tot RISIKO_VLOER
+   van die teiken se basisrisiko druk; hitte en jou rekord kom daarna by. */
+var RISIKO_VLOER = 0.3;
+/* Word jy met 'n voertuig met spoed gevang, kom dit in JAAGTOG_KANS
+   van gevalle tot 'n jaagtog; anders spoor hulle jou later op. */
+var JAAGTOG_KANS = 60, POLISIE_SPOED = 200;
+/* Verloor jy 'n jaagtog in jou eie motor ná 'n ernstige misdaad (erns
+   4+), lê die staat in soveel % van gevalle beslag op die motor: dit was
+   die werktuig van die misdaad. */
+var MOTOR_BESLAG = 25;
+/* Witboordjie: hoeveel jare lank 'n oudit dit nog kan uitbring, en
+   hoeveel keer die bedrag jy moet terugbetaal as dit uitkom (bo-op die
+   hof se boete). */
+var OUDIT_JARE = 7, TERUGBETAAL = 1;
+/* Die hof. Die prokureurs: Regshulp is gratis, die ander kos per erns-punt. */
+var PROKUREURS = [
+  {id:'regshulp', n:'Regshulp Suid-Afrika', koste:0, bonus:0, sub:'Gratis, maar oorwerk'},
+  {id:'privaat',  n:'’n Privaat prokureur', koste:15000, bonus:1, sub:'’n Ordentlike verdediging'},
+  {id:'advokaat', n:'’n Senior advokaat', koste:70000, bonus:2, sub:'Die beste wat geld kan koop'}
+];
+var BORG_PER_ERNS = 2500;            /* borgtog = dit maal erns in die kwadraat */
+var PAROOL_KANS = 40;                /* per jaar ná die helfte van jou vonnis */
 var BOEKE=[
   {n:'Fiela se Kind', a:'Dalene Matthee', slim:5, geluk:4},
   {n:'Kringe in ’n Bos', a:'Dalene Matthee', slim:5, geluk:3},

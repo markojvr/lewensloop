@@ -16,10 +16,11 @@ met presies dieselfde gedrag — net makliker om in te werk:
 | `data.js` | Al die lyste: name, skole, unies, beroepe, bates, misdade, flieks, diere. Onder "SKOOL EN STUDIE" staan die vakke, die APS-tabel en die slaagkanse; onder "EKONOMIE" staan al die geldgetalle bymekaar: dorpskoste, huurpryse, verbandkoerse, rente en pensioen; onder "GESIN EN GESONDHEID" staan die grootouer-dade, die voorbehoeding, die siektes (`TOESTANDE`), die mediese fondse, die gewoontes en die gene. |
 | `gebeure.js` | `GEBEURE` — die lukrake dinge wat met jou gebeur. Ná Fase 6 is dit 197 gebeure, waarvan 53 ’n keuse het: die oorspronklike lys, dan blokke per lewensfase, dan blokke wat by die stelsels inhaak (siektes, gewoontes, die straat, jou besigheid, jou vaardighede, jou kinders), en heel onder die **vlagverhale** (H14) wat ’n vroeëre keuse later laat terugkom. |
 | `lewe.js` | Die status `s`, stoor/laai, en `wordOuer()` — die jaarmasjien. Fase 6 se drie nuwe blokke staan onderaan: die vlagstelsel (H14), vaardighede (H3), die besigheidsjaar (H4) en die generasie-oorgang (H1). |
-| `aksies.js` | Alles wat die speler self kies: aktiwiteite, misdaad, werk, studie, bates, verhoudings, diere. |
+| `aksies.js` | Alles wat die speler self kies: aktiwiteite, werk, studie, bates, verhoudings, diere. |
 | `uitleg.js` | Bou die HTML vir elke tab, insluitend die Gesond-blad (siektes, mediese fonds, leefstyl, voorbehoeding). |
 | `skerm.js` | Modale vensters, wenke, grafsteen, beginskerm. |
 | `minispel.js` | **Fase 7.** Die mini-spel-raamwerk (’n volskerm-paneel met “Speel self” en “Doen dit vinnig”) en die vier casino-spele: blackjack, roulette, slots en video poker. Laai ná `skerm.js`. |
+| `misdaad.js` | **Fase 8.** Die hele misdaadvloei (teiken, maat, ontsnapvoertuig, mini-spel, uitslag), hitte, die heler, die hof (jeugreg, prokureur, borgtog, pleit, vonnis), die witboordjie-oudit, en die vyf misdaad-mini-spele. Die getalle staan in `data.js` onder “MISDAAD EN REG”. Laai ná `minispel.js`. |
 | `begin.js` | Die inskryfpunt. Laai heel laaste. |
 
 Dit is gewone `<script src>`-lêers, nie ES modules nie, **sodat dubbelklik op
@@ -242,14 +243,14 @@ in `data.js` onder "GESIN EN GESONDHEID (Fase 5)": `TOESTANDE`, `MEDIESE_FONDSE`
 
 | # | Verandering |
 |---|---|
-| G1 | **Geen jeugreg.** 'n 12-jarige kry 'n volle grootmens-vonnis. In SA is 12 reg as minimum ouderdom van kriminele aanspreeklikheid, maar 'n kind gaan na 'n child and youth care centre en kry diversion, nie 8–20 jaar in "die tronk" nie. |
-| G2 | **Elke betrapping is tronk.** Geen waarskuwing, geen boete, geen gemeenskapsdiens, geen opgeskorte vonnis. 'n Kind wat 'n sak lekkers steel, kry 1–2 jaar. |
-| G3 | **Geen hofproses.** Geen arrestasie, geen borgtog, geen prokureur (wat jy kan bekostig of nie), geen pleitooreenkoms, geen onskuldig bevind word. |
-| G4 | **Geen parool, geen goeie gedrag, geen vroeë vrylating.** `tronkJaar()` tel net op. |
+| G1 | ✅ **KLAAR (24 Okt 2026, Fase 8.)** `jeugHof()` in `misdaad.js`: onder 14 altyd diversie; tot 17 diversie vir ’n eerste of ligte oortreding, anders ’n jeugsorgsentrum (1–4 jaar, nooit verby 21 nie) waar jy skool gaan. Diversie kom nie op jou rekord nie. **Geen jeugreg.** 'n 12-jarige kry 'n volle grootmens-vonnis. In SA is 12 reg as minimum ouderdom van kriminele aanspreeklikheid, maar 'n kind gaan na 'n child and youth care centre en kry diversion, nie 8–20 jaar in "die tronk" nie. |
+| G2 | ✅ **KLAAR (24 Okt 2026, Fase 8.)** `hofVonnis()`: die saak word teruggetrek, of ’n boete, gemeenskapsdiens, ’n opgeskorte vonnis of tronkstraf, na gelang van die misdaad se erns (1–5), jou rekord, ’n wapen, ’n jaagtog en jou pleit. ’n Ernstige misdaad het ’n vloer (’n bankroof is altyd tronk). **Elke betrapping is tronk.** Geen waarskuwing, geen boete, geen gemeenskapsdiens, geen opgeskorte vonnis. 'n Kind wat 'n sak lekkers steel, kry 1–2 jaar. |
+| G3 | ✅ **KLAAR (24 Okt 2026, Fase 8.)** Arrestasie → prokureur (Regshulp gratis, ’n privaat prokureur of ’n senior advokaat teen R15 000 of R70 000 per erns-punt) → borgtog (of maande in aanhouding, wat jou werk kan kos) → pleit skuldig (pleitooreenkoms, ligter) of onskuldig (3–45% kans om vrygespreek te word, anders swaarder). **Geen hofproses.** Geen arrestasie, geen borgtog, geen prokureur (wat jy kan bekostig of nie), geen pleitooreenkoms, geen onskuldig bevind word. |
+| G4 | ✅ **DEELS (24 Okt 2026, Fase 8.)** Parool: ná die helfte van ’n vonnis van 2+ jaar kom jy elke jaar met 40% kans vry, en die res word ’n paroolperiode wat soos ’n opgeskorte vonnis werk. ’n Vonnis wat met ’n ontsnappoging verleng is, kry nie parool nie. Goeie gedrag tel nog nie. **Geen parool, geen goeie gedrag, geen vroeë vrylating.** `tronkJaar()` tel net op. |
 | G5 | **Ontsnapping doen niks.** Slaag jy, is jy 'n "vlugteling" — en dan gebeur daar nooit weer iets nie. Geen jagtog, geen hervatting, geen lewe op die vlug. |
 | G6 | **Jy word nooit 'n slagoffer nie.** Jy kan 'n huis beroof maar nooit beroof word nie. Vir SA-realisme: huisinbraak, hijacking, selfoon gesteel, bedrog/phishing, smash-and-grab. |
 | G7 | **Geen verkeersoortredings.** Geen spoedboete, geen dronkbestuur, geen AARTO-demerits, geen motorongeluk waarvoor jy aanspreeklik is. |
-| G8 | **Geen white-collar misdaad.** Geen belastingontduiking as 'n keuse (net een SARS-gebeurtenis), geen bedrog, geen omkopery, geen cybercrime. |
+| G8 | ✅ **KLAAR (24 Okt 2026, Fase 8.)** “Bedrog by die werk” (vereis ’n werk: SARS, fakture, verduistering, tender) met ’n vertraagde oudit via die vlag `oudit`, “Kuberbedrog” (vereis kodeer 2–4: phishing, kaartbedrog, SIM-swop), en ’n polisieman omkoop. **Geen white-collar misdaad.** Geen belastingontduiking as 'n keuse (net een SARS-gebeurtenis), geen bedrog, geen omkopery, geen cybercrime. |
 | G9 | **Geen rekord-skoonmaak.** `skoon:true`-beroepe is vir ewig toe. In SA kan 'n rekord ná 10 jaar uitgewis word. |
 | G10 | **Geen burgerlike sake.** Geen dagvaarding, geen skadevergoeding, geen dispuut met 'n huurder of werkgewer. |
 
@@ -324,6 +325,53 @@ EKONOMIE (`JSE_JARE`, `PENSIOEN_GROEI`) en bo-aan elke spel in `minispel.js`.
 
 ---
 
+## L. Fase 8 — misdaad uitbrei — ✅ KLAAR (24 Oktober 2026)
+
+Nuwe velde in `s`: `hitte` (0–100), `opgeskort` (`{jare, tot, vir}` — ’n opgeskorte
+vonnis of parool wat nog loop, anders `null`) en `misdaad` = `{pogings, gevang, buit,
+koste}` (jou leeftyd se telling). `s.tronk` kry `vonnis` (die oorspronklike lengte, vir
+parool) en `jeug` (’n jeugsorgsentrum). Verstek in `nuweLewe()` en `vulNuweVelde()`
+(`0`, `null`, `{0,0,0,0}`, en `vonnis = jare` vir ’n ou tronkvonnis), sodat ou stoor-data
+laai; `gaanVoortAsKind()` begin dit weer by nul (die oudit-vlag verdwyn saam met
+`s.vlagge`). Die nuwe kode staan in **`misdaad.js`** (laai ná `minispel.js`), die
+getalle in `data.js` onder “MISDAAD EN REG”. Niemand word in enige misdaad
+doodgemaak of beseer nie; ’n wapen maak net die vonnis swaarder.
+
+| # | Wat | Gedoen |
+|---|---|---|
+| L1 | **Motors as ontsnapvoertuig.** Jou eie motor het die risiko met 17% *verhoog* (“hulle kan jou nommerplaat naspoor”). | ✅ Elke motor in `TE_KOOP` kry `spoed` (km/h) en `ontsnap`: **Tazz −8%, Polo −12%, Ranger −15%, BMW −20%, Porsche −25%**, en jy het een opsie per motor wat jy besit. Die ander voertuie is nou te voet +14%, fiets +8%, taxi +3% en ’n gesteelde bakkie −10% (maar word jy gevang, is die bakkie ’n ekstra erns-punt). Word jy gevang in ’n voertuig met spoed, kom dit in 60% van gevalle tot ’n **jaagtog**: “Trap die petrol” of “Gee jou oor” (die hof kyk gunstiger). Die kans om weg te kom is `10 + (spoed−150)/4` (Tazz 11%, Porsche 45%); verloor jy ná ’n ernstige misdaad (erns 4+), lê die staat in 25% van gevalle beslag op jou motor. Die vloer op die gevangskans (`RISIKO_VLOER`, 30% van die basis) keer dat aanpassings ’n misdaad gratis maak. **Gemeet** (2 000–4 000 pogings elk, 25 jaar, slim 60, geen rekord nie, vinnig gespeel, Regshulp en skuldig gepleit) — persentasie wat **hof toe gaan**: <br>• Huisinbraak, gewone huis (basis 38%): te voet **50%**, fiets 46%, taxi 38%, gesteelde bakkie 24%, Tazz **26%**, Polo 22%, Ranger 19%, BMW 14%, Porsche **9%**. <br>• Smokkel, sigarette (38%): te voet 50%, Tazz 26%, Porsche 9%. <br>• Bankroof, klein tak (54%): te voet 66%, taxi 56%, Tazz 43%, BMW 25%, Porsche **20%** — en hier is dit altyd tronk. |
+| L2 | **Hitte.** | ✅ Elke misdaad tel `m.hitte` (3 vir winkeldiefstal tot 25 vir ’n bankroof) plus ’n vyfde van die teiken se risiko by; gevang word gee nog 12. Elke 3,5 punte is 1% ekstra gevangskans (hitte 100 = +29%). Elke jaar val dit met 40% en dan nog 3 punte. Die Misdaad-blad wys ’n hitte-meter met twee knoppies: **“Lê laag”** (geen misdaad vanjaar, hitte halveer) en **“Koop ’n polisieman om”** (18+, hitte 10+, R2 000 + R1 200 per hittepunt; 70% kans dat hy dit vat en die hitte val na 35%, 30% kans dat hy eerlik is en jou vir omkopery arresteer). |
+| L3 | **Die heler.** | ✅ Goedere (selfone, juwele, motors, koper, perlemoen, sigarette — `goed:true`) is nie kontant nie: die heler (of die chop shop in Bellville) bied 30–60% van die waarde, minder as jou hitte hoog is. Jy kan een keer onderhandel: 50% kans hy skuif 4–12 punte op, 30% hy bly staan, 20% hy word kwaad en sak 8 punte. |
+| L4 | **Die hof (G1–G4).** | ✅ Sien G1–G4. Elke aanklag het ’n erns 1–5. Die punte vir die vonnis: erns×2, plus 1,5 per vorige veroordeling (tot 4), plus 2 vir ’n wapen, 2 as jou maat jou verklik het, 2 ná ’n jaagtog, 2 as ’n opgeskorte vonnis loop; min 1 as jy jou oorgegee het, min die prokureur se bonus (0/1/2), min 2 vir skuldig (plus 1 vir onskuldig en skuldig bevind), plus −1 tot +2 geluk. ≤2 (net sonder rekord): teruggetrek met ’n waarskuwing · ≤4 boete · ≤6 gemeenskapsdiens · ≤8 opgeskorte vonnis · daarbo tronk. Erns 3/4/5 het ’n vloer van boete/opgeskort/tronk. Wie skuldig bevind word terwyl ’n opgeskorte vonnis of parool loop, sit daardie jare uit. Alles gaan deur die bestaande `tronkToe()` en `s.rekord`; vrygespreek, teruggetrek en diversie kom nie op die rekord nie. **Gemeet** (eerste oortreding, Regshulp, skuldig): ’n klein misdaad eindig nooit in die tronk nie (boete of waarskuwing), ’n inbraak of motordiefstal byna nooit (opgeskort), en ’n gewapende roof of bankroof is altyd tronk (10–15 en 12–20 jaar). |
+| L5 | **Nuwe misdade.** Daar was vyf. | ✅ Nou tien, in drie groepe op die blad (elkeen met ’n minimum ouderdom): <br>• **Klein misdaad**: winkeldiefstal, sakkerollery, en nuut **straatskarrel** (kaartjies teen woekerpryse, namaak-goed smous, onwettige kragaansluitings, koperkabels). <br>• **Groot misdaad**: huisinbraak, motordiefstal (16+), nuut **smokkel** (16+: perlemoen, sigarette, selfone deur die hawe), nuut **gewapende roof** (18+, een keer per jaar, 10–15 jaar), bankroof (18+, een keer per jaar, 12–20 jaar). <br>• **Witboordjie en kuber** (G8): **bedrog by die werk** (vereis ’n werk; die buit is ’n deel van jou salaris; tenderbedrog vereis R350 000+) en **kuberbedrog** (vereis kodeer-vlak 2/3/4; elke vlak bo die vereiste is −2% risiko). Witboordjie het ’n klein gevangskans nou, maar elke slag gaan as ’n saak in die vlag `oudit`, en elke jaar vir 7 jaar kan ’n forensiese oudit dit uitbring (`ouditJaar()` in die jaarmasjien) — dan betaal jy alles terug, plus die hof se uitspraak, en vir erns 3+ word jy afgedank. **Gemeet** (rekenmeester, R462 000, 4 000 lopies, 9 jaar daarna): SARS-ontduiking kom in **42%** uit (EV +R34 000, jy hou jou werk), fiktiewe fakture **49%** (EV +R69 000, **46% verloor hul werk**), verduistering **64%** (EV +R127 000, 61% werk weg), tenderbedrog **61%** (EV +R529 000, 56% werk weg). Die EV tel nie die salaris wat jy verloor nie — wat dit duidelik ’n slegte ruil maak. |
+| L6 | **Misdaad-mini-spele** in die Fase 7-raamwerk, almal tik-groot op ’n 375-breë foon, met “Speel self” en “Doen dit vinnig”. | ✅ Elke spel gee ’n gehalte *q* (0–1). Die risiko skuif met `(0,6 − q) × 15`: “vinnig” trek *q* tussen 0,45 en 0,75 (gemiddeld 0,6 — die risiko bly gemiddeld dieselfde); ’n goeie speler haal 0,85–0,95 en kry 4–5% minder risiko, perfek is −6%, slordig speel kos tot +9%. <br>• **Slotoopsteek** (huisinbraak): vyf penne, druk as die merker in die groen sone is; die merker word vinniger en die sone smaller; vier foute en jy skop die deur oop. Gesimuleer met ’n mens se tydsfout van 60 ms: *q* = 0,86; 80 ms: 0,70. <br>• **Draai die drade** (motordiefstal): vier van vyf drade flits; tik hulle in dieselfde volgorde binne 9 sekondes. <br>• **Die kluis** (bankroof): ’n draaiskyf met ’n stetoskoop-meter (“Stil / Lou / Warm / KLIK”); drie getalle in 40 sekondes. Hoe vinniger, hoe meer buit (35–100% van die kluis). <br>• **Die greep** (sakkerollery): gryp as die slagoffer se aandag in die groen is; drie grepe, twee keer gevoel en hy hardloop. Ook hier hang die buit van *q* af. Gesimuleer met 250 ms reaksietyd: *q* = 0,78–0,88. <br>• **Jaagtog**: drie bane, 14 hindernisse, tik links/regs; jou motor se spoed is jou spoed (en die pad kom vinniger op jou af). Jou kans om weg te kom = basis × (0,5 + 0,75*q*): vinnig 0,95×, ’n goeie speler (gesimuleer *q* ≈ 0,85–0,9) ± 1,15×, perfek 1,25×. |
+
+**Is misdaad ’n geldmasjien? Nee.** Verwagte waarde per poging (dieselfde opstelling as
+L1, 2 000 pogings elk, sonder die salaris en jare wat jy verloor): klein misdaad bring
+**R150 tot R6 400** (’n polisieman se foon: −R1 800); ’n huisinbraak met ’n Porsche
+R6 600 (woonstel) tot R82 000 (landgoed); motordiefstal R8 000 (Tazz) tot R381 000
+(Porsche, maar 67% word gevang); kuberbedrog R29 000–R128 000. Die groot geld is
+gewapende roof en bankroof (’n Porsche-ontsnapping na die hoofkantoor: EV +R2,3 m), maar
+daar gaan **17–40%** van pogings vir 12–20 jaar tronk toe, en die hitte maak elke
+volgende een erger. **Oor ’n hele lewe** (300 lewens elk, vanaf 14 elke jaar een
+lukrake misdaad, Regshulp, skuldig, laag lê by hitte 40+): wie net klein misdaad doen,
+gaan in **51%** van lewens tronk toe, sit gemiddeld 3,2 jaar en buit R57 000 in sy hele
+lewe; wie enige misdaad doen, gaan in **93%** tronk toe, sit **22 jaar** (mediaan 23),
+en buit gemiddeld R696 000 (mediaan R294 000) — sowat **R31 000 per tronkjaar**. Met
+twee misdade per jaar en lukrake keuses in die hof (soms ’n duur advokaat) word dit 97%,
+33 jaar, en R830 000 buit teen R363 000 se regskoste. Kinders wat van 12 af elke jaar
+vyf klein misdade doen, kry gemiddeld 1,8 diversies, en 96% beland teen 18 in ’n
+jeugsorgsentrum — sonder dat hulle ’n skooljaar verloor. **0 foute** oor 300 passiewe
+lewens (gemiddelde ouderdom 59,7, soos voor Fase 8), 1 500 misdadiger-lewens en
+300 kinder-lewens.
+
+*Nie in Fase 8 nie:* tronk-ontsnapping en die lewe op die vlug (G5) is Fase 9 — die
+ou “Probeer ontsnap”-knoppie is onaangeraak (’n verlengde vonnis kry net nie parool
+nie). Slagoffer word (G6), verkeersoortredings (G7), rekord-skoonmaak (G9) en
+burgerlike sake (G10) staan nog oop.
+
+---
+
 ## J. Voorgestelde orde van werk
 
 ~~**Fase 1 — fixes (A1–A16).**~~ **✅ KLAAR (22 Oktober 2026).** Al 16 items is gedoen — sien die **Gedoen**-kolom in afdeling A. Die spel is nou eerliker: die fliek betaal reg, casino en Lotto verloor geld soos hulle moet, en die tronk breek nie meer jou skoolloopbaan nie.
@@ -360,6 +408,14 @@ die hoë-risiko-, hoë-opbrengs-belegging wat dit moet wees: oor 20 jaar klop di
 spaarrekening in 83% van gevalle, maar oor een tot drie jaar verloor dit een keer uit
 drie. Die spel is gereed vir GitHub Pages.
 
+~~**Fase 8 — misdaad uitbrei (L1–L6, G1–G3, G8, G4 deels).**~~ **✅ KLAAR (24 Oktober
+2026).** Sien afdeling L. Jou motor is nou jou beste ontsnapvoertuig (8–25% minder
+risiko, en ’n jaagtog as dit skeef loop), hitte maak ’n misdaadreeks al riskanter,
+goedere gaan teen 30–60% na die heler, en die hof is ’n proses: jeugreg vir kinders, en
+vir grootmense ’n prokureur, borgtog, ’n pleit, en ’n vonnis van ’n waarskuwing tot
+twintig jaar. Daar is tien misdade (met witboordjie- en kuberbedrog) en vyf
+misdaad-mini-spele. Misdaad betaal per poging, maar oor ’n lewe kos dit dekades.
+
 **Klaar tot dusver:**
 
 1. Die opdeel in aparte lêers (sien Lêerstruktuur bo), sodat die latere fases nie in
@@ -386,10 +442,15 @@ drie. Die spel is gereed vir GitHub Pages.
 8. **Fase 7 (K1–K4)** — die mini-spel-raamwerk, die casino as blackjack, roulette,
    slots en video poker, ’n JSE wat oor die lang termyn wen, en GitHub Pages.
 
-**Volgende aan die beurt:** Fase 8 en 9 — misdaad uitbrei (met motors) en
-tronk-ontsnapping. Albei kan die raamwerk in `minispel.js` gebruik: maak ’n object met
-`begin(opts)`, `stapWeg()` en `vinnig()`, en roep `minispelIngang()` met ’n eie
-`klaar(uitslag)`. Daarna: die drie wat die meeste sal
+9. **Fase 8 (L1–L6; G1–G3, G8, G4 deels)** — motors as ontsnapvoertuig, hitte, die
+   heler, die hof en jeugreg, tien misdade met ’n vertraagde oudit, en vyf
+   misdaad-mini-spele.
+
+**Volgende aan die beurt:** Fase 9 — tronk-ontsnapping as mini-game en die lewe op
+die vlug (G5). Gebruik `misdaad.js` se patroon: ’n spel gee ’n gehalte *q* terug, en
+`mdVinnig()` trek *q* rondom 0,6 sodat vinnig die kans gemiddeld nie skuif nie. ’n
+Vlugteling kan `s.hitte` gebruik (begin hoog, die polisie soek jou) en `hofSaak()` as
+hy gevang word. Dan Fase 10 (vaardigheid-mini-games). Daarna: die drie wat die meeste sal
 byvoeg, is waarskynlik **H2** (prestasies op die grafsteen — dit gee die
 generasiespel ’n telling om voor te speel), **H9** (die motor as ’n volle stelsel:
 lisensietoets, versekering, diens, ongeluk) en **H8** (eiendom om te verhuur, wat die

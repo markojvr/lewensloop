@@ -442,85 +442,9 @@ function vraGeldVloei(){
   kiesLys('Vra vir geld','Wie vra jy, en hoeveel?', opsies);
 }
 
-/* ---------- Misdaad ---------- */
-function doenMisdaad(id){
-  var m = null;
-  MISDADE.forEach(function(x){ if(x.id===id) m=x; });
-  if(!m || !s.lewe) return;
-  if(s.ouderdom<12){ wenk('Jy is te jonk vir die onderwereld.'); return; }
-  if((s.gedoen['md_'+id]||0) >= 2){ wenk('Moenie jou geluk vanjaar verder druk nie.'); return; }
-  kiesLys(m.n, 'Wat is die teiken?', m.teikens.map(function(teiken){
-    return {t:teiken.n, sub:'Buit ' + kortGeld(teiken.buit[0]) + ' tot ' + kortGeld(teiken.buit[1]) +
-      ' \u00b7 risiko ' + teiken.risiko + '%', doen:function(){ misdaadMaat(m, teiken); }};
-  }));
-}
-function misdaadMaat(m, teiken){
-  if(!m.maat){ misdaadVoertuig(m, teiken, null); return; }
-  var opsies = [{t:'Gaan alleen', sub:'Die hele buit is joune', doen:function(){ misdaadVoertuig(m, teiken, null); }}];
-  s.verhoudings.filter(function(v){ return v.lewe && v.ouderdom>=12 &&
-      ['vriend','broer','suster','klasmaat','kollega','lief','eggenoot'].indexOf(v.tipe)>=0; })
-    .sort(function(a,b){ return b.band - a.band; }).slice(0,8)
-    .forEach(function(v){
-      opsies.push({t:'Vra ' + v.naam, sub: rol(v) + ' \u00b7 band ' + v.band + '% \u00b7 julle deel die buit',
-        doen:function(){
-          if(v.band < 32 && kans(70)){
-            v.band = klem(v.band - 8);
-            noteer(v.naam + ' het geweier om saam te gaan en jou skeef aangekyk.','misdaad');
-            wenk(v.naam + ' het geweier.');
-            sluitModaal(); stoor(); renderAlles(); return;
-          }
-          misdaadVoertuig(m, teiken, v);
-        }});
-    });
-  kiesLys('Wie gaan saam?','Twee is veiliger as een \u2014 maar julle deel die buit.', opsies);
-}
-function misdaadVoertuig(m, teiken, maatP){
-  if(!m.voertuig){ misdaadUitslag(m, teiken, maatP, null); return; }
-  var hetMotor = magBestuur() && s.bates.some(function(b){ return b.t==='motor'; });
-  var lys = ONTSNAPVOERTUIE.filter(function(v){ return !v.vereisMotor || hetMotor; });
-  kiesLys('Ontsnapvoertuig','Hoe kom julle daar weg?', lys.map(function(v){
-    return {t:v.n, sub: v.sub + ' \u00b7 risiko ' + (v.mod>0?'+':'') + v.mod + '%',
-      doen:function(){ misdaadUitslag(m, teiken, maatP, v); }};
-  }));
-}
-function misdaadUitslag(m, teiken, maatP, voertuig){
-  s.gedoen['md_'+m.id] = (s.gedoen['md_'+m.id]||0) + 1;
-  var risiko = teiken.risiko + (voertuig ? voertuig.mod : 0) + (maatP ? -8 : 0)
-    + s.rekord.length*3 - Math.round((s.slim-50)/6);
-  risiko = Math.max(3, Math.min(95, risiko));
-  var hoe = (maatP ? ' saam met ' + maatP.naam : '') + (voertuig ? ', ' + voertuig.n.toLowerCase() : '');
-  if(kans(risiko)){
-    noteer('Jy is gevang tydens ' + m.n.toLowerCase() + ' (' + teiken.n + ')' + hoe + '.','misdaad');
-    s.geluk = klem(s.geluk-14);
-    var jare = tussen(m.jare[0], m.jare[1]);
-    if(maatP){
-      var w = R(100);
-      if(w < 28){
-        maatP.band = klem(maatP.band - 5);
-        noteer(maatP.naam + ' het die hele skuld op hom geneem. Jy stap vry.','misdaad');
-        wenk(maatP.naam + ' het die skuld gevat!');
-        sluitModaal(); stoor(); renderAlles(); return;
-      }
-      if(w < 52){
-        jare += tussen(2,5); maatP.band = klem(maatP.band - 45);
-        noteer(maatP.naam + ' het alles vir die polisie vertel. Jou vonnis is langer.','sleg');
-      } else {
-        noteer(maatP.naam + ' is saam met jou gevonnis.','misdaad');
-      }
-    }
-    tronkToe(jare, m.n.toLowerCase());
-    wenk('Gevang! ' + jare + ' jaar tronkstraf.');
-  } else {
-    var buit = tussen(teiken.buit[0], teiken.buit[1]);
-    var myne = buit;
-    if(maatP){ myne = Math.round(buit/2); maatP.band = klem(maatP.band + 12); }
-    s.geld += myne; s.geluk = klem(s.geluk + 4);
-    if(teiken.geluk) s.geluk = klem(s.geluk + teiken.geluk);
-    noteer(m.n + ' (' + teiken.n + ')' + hoe + ' het ' + geld(myne) + ' opgelewer.','misdaad');
-    wenk('Jy het ' + geld(myne) + ' gebuit.');
-  }
-  sluitModaal(); stoor(); renderAlles();
-}
+/* ---------- Misdaad ----------
+   Fase 8 — die hele misdaadvloei (teiken, maat, voertuig, mini-spel,
+   die heler, hitte en die hof) staan nou in misdaad.js. */
 
 /* ---------- Tronk-aksies ---------- */
 function tronkAksie(wat){

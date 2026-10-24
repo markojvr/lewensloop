@@ -212,3 +212,57 @@ body{background:#05080c;color:var(--teks);
 .vp-plek .ms-kaart{width:58px;height:82px;font-size:20px}
 .vp-plek .ms-kaart.hou{transform:translateY(-6px);box-shadow:0 0 0 3px var(--geel),0 6px 12px rgba(0,0,0,.5)}
 .vp-plek small{height:16px;margin-top:4px;font-size:11px;font-weight:800;color:var(--geel);letter-spacing:1px}
+
+/* ---------- Misdaad (Fase 8) ---------- */
+.md-groep{margin:12px 3px 6px;font-weight:700;letter-spacing:.6px}
+.kaart.af{opacity:.5}
+.balk{height:7px;border-radius:4px;background:#0f151e;margin-top:6px;overflow:hidden}
+.balk div{height:100%;border-radius:4px;transition:width .3s}
+.ms-ry .knop small,.knop small{display:block;font-size:10.5px;font-weight:500;opacity:.75;margin-top:2px}
+/* Die misdaad-mini-spele speel in die nag, nie by die casino se groen tafel nie. */
+.md-agter{position:absolute;inset:0;display:flex;flex-direction:column;
+  background:radial-gradient(ellipse at 50% 25%,#1d2638,#0d121c 70%,#080b12)}
+.md-groot{padding:15px;font-size:16px}
+.md-tydbalk{width:100%;max-width:320px;height:8px;border-radius:4px;background:#0f151e;margin-top:14px;overflow:hidden}
+.md-tydbalk div{height:100%;width:100%;background:var(--oranje)}
+.md-gehoor{margin-top:6px;font-size:13px;font-weight:700;color:#bcd;letter-spacing:.5px;text-align:center}
+/* Slotoopsteek */
+.md-penne{display:flex;gap:10px;margin:18px 0 22px}
+.md-penne span{width:16px;height:46px;border-radius:5px;background:#2a3346;border:1px solid #3d4a63}
+.md-penne span.aan{background:var(--groen);height:30px;margin-top:16px}
+.md-baan{position:relative;width:100%;max-width:320px;height:46px;border-radius:12px;background:#0f151e;
+  border:1px solid var(--lyn);overflow:hidden}
+.md-sone{position:absolute;top:0;bottom:0;background:rgba(70,194,95,.45);border-left:2px solid var(--groen);
+  border-right:2px solid var(--groen)}
+.md-merk{position:absolute;top:4px;bottom:4px;width:4px;margin-left:-2px;border-radius:2px;background:var(--geel);
+  box-shadow:0 0 8px var(--geel)}
+/* Drade */
+.md-drade{display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;margin-top:10px}
+.md-draad{display:flex;align-items:center;gap:12px;background:#121a28;border:1px solid var(--lyn);border-radius:12px;
+  padding:12px 14px;color:var(--teks);font:inherit;font-size:14px;font-weight:700;text-transform:capitalize;cursor:pointer}
+.md-draad span{flex:none;width:60px;height:9px;border-radius:5px;background:var(--k)}
+.md-draad.flits{background:var(--k);color:#111}
+.md-draad.flits span{background:#111}
+.md-draad.reg{box-shadow:0 0 0 2px var(--groen)}
+/* Kluis */
+.md-skyf{position:relative;width:170px;height:170px;border-radius:50%;margin-top:14px;flex:none;
+  background:radial-gradient(circle,#5b6372,#2b313c 70%);border:6px solid #8c96a8;box-shadow:0 8px 20px rgba(0,0,0,.6)}
+.md-wys{position:absolute;left:50%;top:6px;bottom:50%;width:4px;margin-left:-2px;background:var(--geel);
+  transform-origin:50% 100%;border-radius:2px;transition:transform .12s}
+.md-getal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800}
+.md-steto{width:100%;max-width:320px;height:12px;border-radius:6px;background:#0f151e;margin-top:16px;overflow:hidden}
+.md-steto div{height:100%;background:linear-gradient(90deg,#4f9bf5,#46c25f);transition:width .12s}
+/* Sakkerollery */
+.md-slagoffer{font-size:72px;margin:16px 0 8px}
+.md-aandag{position:relative;width:100%;max-width:320px;height:34px;border-radius:10px;
+  background:linear-gradient(90deg,#1c3a24,#3a2d14 50%,#4a1c1c);border:1px solid var(--lyn);overflow:hidden}
+.md-groen{position:absolute;left:0;top:0;bottom:0;background:rgba(70,194,95,.4);border-right:2px solid var(--groen)}
+/* Jaagtog */
+.md-pad{position:relative;width:100%;max-width:300px;height:330px;border-radius:12px;overflow:hidden;
+  background:#2b2f36;border-left:4px solid #e8e8e8;border-right:4px solid #e8e8e8;cursor:pointer;flex:none}
+.md-lyn{position:absolute;top:0;bottom:0;width:0;border-left:3px dashed rgba(255,255,255,.35)}
+.md-ek,.md-ding,.md-polisie{position:absolute;font-size:34px;transform:translateX(-50%);line-height:1}
+.md-ek{top:78%;transition:left .1s;transform:translateX(-50%) rotate(-90deg)}
+.md-polisie{left:50%;top:90%;font-size:26px;animation:md-sirene .5s infinite alternate}
+.md-ding.raak{opacity:.3}
+@keyframes md-sirene{from{filter:drop-shadow(0 0 6px #f0564a)}to{filter:drop-shadow(0 0 6px #4f9bf5)}}

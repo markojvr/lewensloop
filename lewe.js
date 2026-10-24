@@ -59,7 +59,10 @@ function nuweLewe(naam, van, geslag){
     /* H1 — die hoeveelste lewe in hierdie familie, en wie voor jou was */
     generasie:1, familielyn:[],
     /* Fase 7 — wat jy oor jou hele lewe by die casino ingesit en uitgehaal het */
-    casino:{sessies:0, ingekoop:0, uitbetaal:0}
+    casino:{sessies:0, ingekoop:0, uitbetaal:0},
+    /* Fase 8 — hoe naby die polisie jou dophou (0-100), 'n opgeskorte
+       vonnis of parool wat nog loop, en jou leeftyd se misdaadtelling */
+    hitte:0, opgeskort:null, misdaad:{pogings:0, gevang:0, buit:0, koste:0}
   };
   /* F9 — die gene word heel eerste gerol, want elke ander stelsel kan
      daarna daarna kyk (watter siekte in die familie is, hoe lank jy leef). */
@@ -241,6 +244,12 @@ function vulNuweVelde(){
   if(!s.vlagge) s.vlagge = {};                          /* H14 */
   /* Fase 7 — die casino se leeftydtelling. */
   if(!s.casino) s.casino = {sessies:0, ingekoop:0, uitbetaal:0};
+  /* Fase 8 — hitte, die opgeskorte vonnis en die misdaadtelling. 'n Ou
+     tronkvonnis weet nie wat sy oorspronklike lengte was nie. */
+  if(!s.hitte) s.hitte = 0;
+  if(s.opgeskort===undefined) s.opgeskort = null;
+  if(!s.misdaad) s.misdaad = {pogings:0, gevang:0, buit:0, koste:0};
+  if(s.tronk && s.tronk.vonnis===undefined) s.tronk.vonnis = s.tronk.jare;
   /* E7 — 'n ou kind het nog nie 'n eie lewe nie. kindLewe() bou dit
      agteruit uit sy ouderdom, sodat 'n 30-jarige seun nie skielik weer
      in Graad 1 begin nie. E12 doen dieselfde vir 'n eggenoot. */
@@ -288,6 +297,7 @@ function wordOuer(){
   ouderdomDrywing();
   lisensieJaar();
   tronkJaar();
+  misdaadJaar();                   /* Fase 8 — hitte, opgeskorte vonnisse, oudits */
   dakloosJaar();
   skoolJaar();
   beroepJaar();
@@ -668,7 +678,7 @@ function uitgesluit(){
 
 function skoolJaar(){
   var o = s.ouderdom, sk = s.skool;
-  if(s.tronk){ skoolJaarVerloor('in die tronk'); return; }
+  if(s.tronk && !s.tronk.jeug){ skoolJaarVerloor('in die tronk'); return; }
   /* B18 — op straat is skool en studie toe, net soos in die tronk. */
   if(s.dakloos){ skoolJaarVerloor('op straat'); return; }
 
@@ -1865,19 +1875,38 @@ function tronkJaar(){
   if(!s.tronk) return;
   s.tronk.gedien++;
   s.tronkJare = (s.tronkJare||0) + 1;   /* elke jaar tel, ook die jaar waarin jy vrykom */
+  /* G4 — parool: wie die helfte van sy vonnis uitgesit het (en dit nie
+     met 'n ontsnappoging verleng het nie), kan elke jaar vrykom. Die res
+     word 'n paroolperiode: word jy daarin skuldig bevind, sit jy dit uit. */
+  var t = s.tronk, oor = t.jare - t.gedien;
+  if(oor > 0 && !t.jeug && t.jare >= 2 && t.jare === (t.vonnis||t.jare) &&
+     t.gedien >= Math.ceil(t.jare/2) && kans(PAROOL_KANS)){
+    s.tronk = null; s.geluk = klem(s.geluk+14);
+    s.opgeskort = {jare:oor, tot:s.ouderdom + oor, vir:'parool'};
+    noteer('Jy is ná ' + t.gedien + ' van ' + t.jare + ' jaar op parool vrygelaat. Hou jou neus skoon vir die volgende ' +
+      oor + ' jaar.','goed');
+    return;
+  }
   if(s.tronk.gedien >= s.tronk.jare){
+    var jeug = s.tronk.jeug;
     s.tronk = null; s.geluk = klem(s.geluk+16);
-    noteer('Jy is uit die tronk vrygelaat. ’n Nuwe begin.','goed');
+    noteer(jeug ? 'Jy is uit die jeugsorgsentrum ontslaan. ’n Nuwe begin.' : 'Jy is uit die tronk vrygelaat. ’n Nuwe begin.','goed');
     if(s.skool.agter && !s.skool.uit && s.skool.vlak!=='klaar')
       noteer('Jy is ' + s.skool.agter + ' jaar agter met skool. Jy begin weer waar jy opgehou het.','skool');
   } else {
-    noteer('Jy sit tronk: jaar ' + s.tronk.gedien + ' van ' + s.tronk.jare + '.','misdaad');
+    noteer((s.tronk.jeug ? 'Jy is in die jeugsorgsentrum: jaar ' : 'Jy sit tronk: jaar ') +
+      s.tronk.gedien + ' van ' + s.tronk.jare + '.','misdaad');
   }
 }
-function tronkToe(jare, waarvoor){
-  s.tronk = {jare:jare, gedien:0};
+/* Fase 8 — 'vonnis' onthou die oorspronklike vonnis (vir parool), en
+   'jeug' is 'n jeugsorgsentrum in plaas van die tronk (G1): daar gaan
+   jy steeds skool. */
+function tronkToe(jare, waarvoor, opts){
+  var jeug = !!(opts && opts.jeug);
+  s.tronk = {jare:jare, gedien:0, vonnis:jare, jeug:jeug};
   s.rekord.push(waarvoor);
-  noteer('Jy is gevonnis tot ' + jare + ' jaar in die tronk vir ' + waarvoor + '.','misdaad');
+  noteer(jeug ? 'Jy is vir ' + jare + ' jaar na ’n jeugsorgsentrum gestuur vir ' + waarvoor.replace(/ \(jeug\)$/,'') + '.'
+    : 'Jy is gevonnis tot ' + jare + ' jaar in die tronk vir ' + waarvoor + '.','misdaad');
   if(s.beroep){
     noteer('Jy het jou werk as ' + beroepTitel() + ' verloor.','werk');
     s.beroep = null; losWerkMense();
@@ -3426,6 +3455,9 @@ function gaanVoortAsKind(id){
   }
   /* Fase 7 — die casino-telling was die ouer s'n. */
   s.casino = {sessies:0, ingekoop:0, uitbetaal:0};
+  /* Fase 8 — die ouer se rekord, hitte en oudits was syne; nuweLewe()
+     het dit al skoon gemaak, en s.vlagge (met die oudit) ook. */
+  s.hitte = 0; s.opgeskort = null; s.misdaad = {pogings:0, gevang:0, buit:0, koste:0};
   /* --- sy lewensverhaal --- */
   s.log = [];
   noteer('Jy is ' + v.naam + ' ' + v.van + ', kind van ' + oud.naam + ' ' + oud.van +

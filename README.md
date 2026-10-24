@@ -32,6 +32,7 @@ blaaier).
 | `uitleg.js` | Bou die HTML vir elke tab. |
 | `skerm.js` | Modale vensters, wenke, grafsteen, beginskerm. |
 | `minispel.js` | Die mini-spele: blackjack, roulette, slots en video poker. |
+| `misdaad.js` | Misdaad en die hof: hitte, die heler, jeugreg, vonnisse en die misdaad-mini-spele. |
 | `begin.js` | Die inskryfpunt — laai laaste. |
 
 Dit is gewone `<script src>`-lêers en nie ES modules nie, sodat

@@ -22,7 +22,7 @@ function bar(naam, waarde, kleur){
 }
 function statusLyn(){
   if(!s.lewe) return 'Oorlede';
-  if(s.tronk) return 'In die tronk (' + (s.tronk.jare - s.tronk.gedien) + ' jaar oor)';
+  if(s.tronk) return (s.tronk.jeug ? 'Jeugsorgsentrum (' : 'In die tronk (') + (s.tronk.jare - s.tronk.gedien) + ' jaar oor)';
   if(s.dakloos) return 'Dakloos' + (s.dakloos.jare ? ' (jaar ' + s.dakloos.jare + ')' : '');
   if(s.beroep) return beroepTitel();
   /* H4 — wie sy eie ding loop, is nie werkloos nie. */
@@ -93,17 +93,39 @@ function renderDakloos(){
   return h;
 }
 /* Die misdaadlys. Dit staan apart sodat die gewone blad en die
-   dakloos-paneel albei dit kan wys. */
+   dakloos-paneel albei dit kan wys. Fase 8: bo-aan staan jou hitte (en
+   hoe om dit te laat sak), dan die misdade in drie groepe. */
 function renderMisdaad(){
   var h = '<div class="titel">Misdaad</div>';
   if(s.ouderdom<12) return h + '<div class="kaart klein">Jy is nog te jonk vir die onderwereld.</div>';
-  MISDADE.forEach(function(m){
-    var gedaan = (s.gedoen['md_'+m.id]||0)>=2;
-    h += '<div class="kaart klik" onclick="doenMisdaad(\'' + m.id + '\')"><div class="ry">'+
-      '<div class="emo">' + m.e + '</div><div class="groei"><div class="hoof">' + m.n + '</div>'+
-      '<div class="klein">' + m.teikens.length + ' teikens' + (m.voertuig?' \u00b7 jy kies die ontsnapvoertuig':'') +
-      (m.maat?' \u00b7 jy kan iemand saamvat':'') + '</div></div>'+
-      '<div class="regs">' + (gedaan?'<span class="merkie">GENOEG</span>':'\u276F') + '</div></div></div>';
+  var hi = s.hitte||0;
+  h += '<div class="kaart"><div class="ry"><div class="emo">\u{1F525}</div><div class="groei">'+
+    '<div class="hoof">Hitte: ' + hi + ' / 100</div>'+
+    '<div class="balk"><div style="width:' + hi + '%;background:' + (hi>=50?'var(--rooi)':hi>=20?'var(--geel)':'var(--groen)') +
+    '"></div></div>'+
+    '<div class="klein">' + (hi ? 'Die polisie hou jou dop: +' + hitteRisiko() + '% op elke misdaad se risiko. Dit sak elke jaar.' :
+      'Die polisie weet nie van jou nie.') + '</div></div></div>'+
+    (s.opgeskort ? '<div class="slot">' + (s.opgeskort.vir==='parool' ? 'Op parool' : 'Opgeskorte vonnis van ' +
+      s.opgeskort.jare + ' jaar') + ' tot jy ' + s.opgeskort.tot + ' is</div>' : '') +
+    (hi>=5 ? '<div class="ms-ry"><button class="knop grys" onclick="laagLe()">Lê laag' +
+      '<small>Geen misdaad vanjaar \u00b7 hitte halveer</small></button>' +
+      (s.ouderdom>=18 && hi>=10 ? '<button class="knop grys" onclick="omkoop()">Koop ’n polisieman om' +
+        '<small>' + geld(omkoopPrys()) + ' \u00b7 hy kan eerlik wees</small></button>' : '') + '</div>' : '') +
+    '</div>';
+  var groepe = [];
+  MISDADE.forEach(function(m){ if(groepe.indexOf(m.g)<0) groepe.push(m.g); });
+  groepe.forEach(function(g){
+    h += '<div class="klein md-groep">' + g + '</div>';
+    MISDADE.filter(function(m){ return m.g===g; }).forEach(function(m){
+      var gedaan = (s.gedoen['md_'+m.id]||0) >= (m.perJaar||2);
+      var slot = misdaadSlot(m);
+      h += '<div class="kaart klik' + (slot?' af':'') + '" onclick="doenMisdaad(\'' + m.id + '\')"><div class="ry">'+
+        '<div class="emo">' + m.e + '</div><div class="groei"><div class="hoof">' + m.n + '</div>'+
+        '<div class="klein">' + (slot ? 'Toe: ' + slot : m.teikens.length + ' teikens' +
+          (m.voertuig?' \u00b7 jy kies die ontsnapvoertuig':'') + (m.maat?' \u00b7 jy kan iemand saamvat':'') +
+          (m.spel?' \u00b7 mini-spel':'') + (m.wapen?' \u00b7 met ’n wapen':'')) + '</div></div>'+
+        '<div class="regs">' + (gedaan||s.gedoen.laag?'<span class="merkie">GENOEG</span>':'\u276F') + '</div></div></div>';
+    });
   });
   return h;
 }
@@ -111,9 +133,12 @@ function renderAkt(){
   var h = '';
   if(s.dakloos && !s.tronk) return renderDakloos() + renderMisdaad();
   if(s.tronk){
-    h += '<div class="titel">Tronklewe</div>';
+    var jeug = s.tronk.jeug;
+    h += '<div class="titel">' + (jeug ? 'Jeugsorgsentrum' : 'Tronklewe') + '</div>';
     h += '<div class="kaart"><div class="hoof">Jaar ' + s.tronk.gedien + ' van ' + s.tronk.jare + '</div>'+
-      '<div class="klein">Jy kan nie werk of studeer terwyl jy hier is nie.</div>'+
+      '<div class="klein">' + (jeug ? 'Jy gaan hier skool, maar jy kom nie huis toe nie.' :
+        'Jy kan nie werk of studeer terwyl jy hier is nie.' + (s.tronk.jare>=2 ?
+        ' Parool is moontlik ná ' + Math.ceil(s.tronk.jare/2) + ' jaar.' : '')) + '</div>'+
       '<button class="knop grys" onclick="tronkAksie(\'oefen\')">Oefen in die gym</button>'+
       '<button class="knop grys" onclick="tronkAksie(\'lees\')">Lees in die biblioteek</button>'+
       '<button class="knop grys" onclick="tronkAksie(\'vriende\')">Maak vriende in jou blok</button>'+
