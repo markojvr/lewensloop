@@ -282,12 +282,14 @@ var TE_KOOP=[
   {id:'strand',   n:'Strandhuis in Camps Bay',   t:'huis', p:28000000, e:'\u{1F30A}'},
   /* Fase 8 — 'spoed' is die topspoed in km/h (dit is jou spoed in die
      jaagtog), en 'ontsnap' is hoeveel persentasiepunte die motor as
-     ontsnapvoertuig van die gevangskans afhaal: vinniger en duurder is beter. */
-  {id:'tazz',     n:'1998 Toyota Tazz',          t:'motor',p:38000,    e:'\u{1F697}', spoed:155, ontsnap:8},
-  {id:'polo',     n:'VW Polo Vivo',              t:'motor',p:285000,   e:'\u{1F699}', spoed:175, ontsnap:12},
-  {id:'ranger',   n:'Ford Ranger Wildtrak',      t:'motor',p:780000,   e:'\u{1F6FB}', spoed:180, ontsnap:15},
-  {id:'bmw',      n:'BMW 330i',                  t:'motor',p:1050000,  e:'\u{1F3CE}', spoed:250, ontsnap:20},
-  {id:'porsche',  n:'Porsche 911 Carrera',       t:'motor',p:2900000,  e:'\u{1F3CE}', spoed:293, ontsnap:25},
+     ontsnapvoertuig van die gevangskans afhaal: vinniger en duurder is beter.
+     'kanse' is hoeveel keer jy in die jaagtog iets mag raakry voordat die
+     polisie jou vaskeer (die laaste fout is die een wat jou vang). */
+  {id:'tazz',     n:'1998 Toyota Tazz',          t:'motor',p:38000,    e:'\u{1F697}', spoed:155, ontsnap:8, kanse:2},
+  {id:'polo',     n:'VW Polo Vivo',              t:'motor',p:285000,   e:'\u{1F699}', spoed:175, ontsnap:12, kanse:3},
+  {id:'ranger',   n:'Ford Ranger Wildtrak',      t:'motor',p:780000,   e:'\u{1F6FB}', spoed:180, ontsnap:15, kanse:3},
+  {id:'bmw',      n:'BMW 330i',                  t:'motor',p:1050000,  e:'\u{1F3CE}', spoed:250, ontsnap:20, kanse:4},
+  {id:'porsche',  n:'Porsche 911 Carrera',       t:'motor',p:2900000,  e:'\u{1F3CE}', spoed:293, ontsnap:25, kanse:5},
   {id:'rolex',    n:'Rolex Submariner',          t:'luuks',p:420000,   e:'\u{231A}'},
   {id:'jag',      n:'Seiljag',                   t:'luuks',p:4800000,  e:'\u{26F5}'},
   {id:'vliegtuig',n:'Privaat Vliegtuig',         t:'luuks',p:85000000, e:'\u{2708}'}
@@ -444,7 +446,8 @@ var DAKLOOS_NAGTE=[
    jaar; spel = watter mini-spel daarby hoort. Elke teiken: buit = wat
    jy kry (of, met goed:true, wat die goedere werd is — die heler betaal
    jou net 30-60% daarvan); risiko = die gevangskans voor enige
-   aanpassing. 'n Teiken kan sy misdaad se erns oorskryf.
+   aanpassing. 'n Teiken kan sy misdaad se erns oorskryf, en 'rep' vra 'n
+   minimum straatrep (Fase 8b: niemand vertrou 'n niemand met 'n geldwa nie).
 
    Niemand word in enige misdaad doodgemaak of beseer nie. 'n Wapen
    (wapen:true) maak net die vonnis swaarder.
@@ -511,13 +514,13 @@ var MISDADE=[
    perJaar:1, maat:true, voertuig:true, jare:[10,15], teikens:[
     {n:'’n Vulstasie se kasregister om twee-uur in die oggend', buit:[3000,20000], risiko:40},
     {n:'’n Drankwinkel op ’n Vrydagaand', buit:[10000,60000], risiko:46},
-    {n:'’n Kontantafhaal by ’n winkelsentrum', buit:[100000,600000], risiko:60}
+    {n:'’n Kontantafhaal by ’n winkelsentrum', buit:[100000,600000], risiko:60, rep:15}
   ]},
   {id:'bank', n:'Bankroof', e:'\u{1F3E6}', g:'Groot misdaad', min:18, erns:5, hitte:25, wapen:true, spel:'kluis',
    perJaar:1, maat:true, voertuig:true, jare:[12,20], teikens:[
     {n:'’n Klein tak op die platteland', buit:[120000,700000], risiko:54},
-    {n:'’n Geldwa by ’n winkelsentrum', buit:[600000,2400000], risiko:68},
-    {n:'Die hoofkantoor se kluis', buit:[2000000,9000000], risiko:80}
+    {n:'’n Geldwa by ’n winkelsentrum', buit:[500000,1800000], risiko:68, rep:20},
+    {n:'Die hoofkantoor se kluis', buit:[1500000,6000000], risiko:80, rep:45}
   ]},
   /* --- Witboordjie en kuber (G8) --- */
   /* Witboordjie-misdaad vra 'n werk, en die buit hang van jou salaris
@@ -554,9 +557,16 @@ var HELER = [30, 60];
 /* Die aanpassings saam mag die gevangskans hoogstens tot RISIKO_VLOER
    van die teiken se basisrisiko druk; hitte en jou rekord kom daarna by. */
 var RISIKO_VLOER = 0.3;
-/* Word jy met 'n voertuig met spoed gevang, kom dit in JAAGTOG_KANS
-   van gevalle tot 'n jaagtog; anders spoor hulle jou later op. */
-var JAAGTOG_KANS = 60, POLISIE_SPOED = 200;
+/* Die jaagtog (Fase 8b). Word jy gevang met 'n motor as ontsnapvoertuig
+   (jou eie, die gesteelde bakkie, of die motor wat jy steel), kies jy
+   altyd self: jaag of gee jou oor. Die jaagtog is JAAG_RYE rye
+   hindernisse plus JAAG_PER_ERNS per erns-punt en JAAG_PER_HITTE per 10
+   hitte; hitte en erns maak dit ook vinniger en digter. Kom jy deur met
+   minstens een kans oor, is jy weg — foutloos is altyd 100%.
+   "Doen dit vinnig" ry elke ry raak met JAAG_VINNIG_FOUT, plus hitte /
+   JAAG_VINNIG_HITTE, plus 3% vir 'n padblokkade oor twee bane. */
+var JAAG_RYE = 26, JAAG_PER_ERNS = 6, JAAG_PER_HITTE = 3, JAAG_VINNIG_FOUT = 0.06, JAAG_VINNIG_HITTE = 1200;
+var POLISIE_SPOED = 200;
 /* Verloor jy 'n jaagtog in jou eie motor ná 'n ernstige misdaad (erns
    4+), lê die staat in soveel % van gevalle beslag op die motor: dit was
    die werktuig van die misdaad. */
@@ -573,6 +583,83 @@ var PROKUREURS = [
 ];
 var BORG_PER_ERNS = 2500;            /* borgtog = dit maal erns in die kwadraat */
 var PAROOL_KANS = 40;                /* per jaar ná die helfte van jou vonnis */
+
+/* ==========================================================================
+   DIE ONDERWÊRELD (Fase 8b)
+   s.straatRep (0-100) is jou naam as krimineel. Dit groei uit elke misdaad
+   wat slaag (meer vir ernstiger misdaad), uit 'n jaagtog wat jy wen en uit
+   tronkjare; dit sak as jy iemand verklik en as jy twee jaar of langer
+   stil is. Met genoeg rep sluit jy by 'n organisasie aan; bo EIE_ORG_REP
+   begin jy jou eie.
+
+   Geen job in enige organisasie maak iemand dood of seer nie:
+   intimidasie en wapens kom voor, geweld nie.
+   ========================================================================== */
+var REP_PER_ERNS = [0, 1, 1, 2, 3, 5];   /* rep vir 'n geslaagde misdaad, per erns */
+var REP_JAAG = 3, REP_TRONKJAAR = 1, REP_VERKLIK = 25;
+/* 'n Ontsnapping in 'n jaagtog: soveel hitte ekstra, en elke stamp kos
+   soveel van die buit (’n sak wat by die venster uitwaai). */
+var JAAG_HITTE = 15, JAAG_BUIT_VERLIES = 0.10;
+var REP_STIL_JARE = 2, REP_STIL_VERVAL = 0.08;
+var REP_NAME = [[0,'’n Niemand'],[10,'’n Bekende gesig'],[25,'Gehard'],[45,'Gevrees'],
+  [70,'’n Naam in die onderwêreld'],[90,'’n Legende']];
+/* Die jare wat 'n job van elke erns in die hof kan kos. */
+var ERNS_JARE = [null, [1,2], [1,4], [2,6], [3,10], [8,18]];
+/* Range binne 'n organisasie: die punte wat jy nodig het. 'n Job wat
+   slaag gee ORG_PUNTE_SLAAG plus die job se rang; een wat misluk kos 1. */
+var ORG_RANG_PUNTE = [0, 4, 10, 20], ORG_PUNTE_SLAAG = 2, ORG_JOBS_PER_JAAR = 2;
+var ORGANISASIES = [
+  {id:'bende', n:'Die Vlakte-bende', e:'\u{1F9E2}', rep:0, min:14, deel:20000,
+   sub:'’n Straatbende op die Kaapse Vlakte', range:['Loopjong','Soldaat','Vertroude','Luitenant'], jobs:[
+    {n:'Hou die hoek dop vir die polisie', rang:0, betaal:[1500,6000], risiko:10, erns:1, rep:1},
+    {n:'Smous namaak-goed by die taxistaanplek', rang:0, betaal:[3000,12000], risiko:16, erns:1, rep:1},
+    {n:'Vat ’n pakkie na die ander kant van die dorp', rang:1, betaal:[8000,25000], risiko:24, erns:2, rep:2, voertuig:true},
+    {n:'Breek in by ’n pakhuis', rang:2, betaal:[25000,90000], risiko:34, erns:3, rep:3, spel:'slot', voertuig:true},
+    {n:'Samel beskermingsgeld in by die winkels', rang:3, betaal:[40000,120000], risiko:30, erns:3, rep:4}
+  ]},
+  {id:'chop', n:'Die Chop-shop-netwerk', e:'\u{1F527}', rep:20, min:16, deel:60000,
+   sub:'Gesteelde motors kry hier nuwe nommerplate', range:['Spotter','Dief','Bestuurder','Voorman'], jobs:[
+    {n:'Spot duur motors in die parkeerterreine', rang:0, betaal:[5000,15000], risiko:12, erns:1, rep:1},
+    {n:'Steel ’n Polo op bestelling', rang:0, betaal:[25000,60000], risiko:32, erns:3, rep:2, spel:'aanskakel', spoed:175},
+    {n:'Ry ’n gesteelde bakkie oor die grens', rang:1, betaal:[50000,140000], risiko:36, erns:3, rep:3, spoed:170},
+    {n:'Steel ’n BMW uit ’n beveiligde garage', rang:2, betaal:[120000,300000], risiko:44, erns:3, rep:4, spel:'aanskakel', spoed:250},
+    {n:'Bestuur die werkswinkel vir die netwerk', rang:3, betaal:[150000,400000], risiko:22, erns:3, rep:4}
+  ]},
+  {id:'hawe', n:'Die Hawe-sindikaat', e:'\u{2693}', rep:40, min:18, deel:150000,
+   sub:'Perlemoen, sigarette en wat ook al deur die hawe kom', range:['Draer','Skipper','Koerier','Kaptein'], jobs:[
+    {n:'Laai perlemoen af by Gansbaai', rang:0, betaal:[20000,60000], risiko:28, erns:3, rep:2, voertuig:true},
+    {n:'Ry ’n vrag sigarette na Gauteng', rang:0, betaal:[40000,120000], risiko:34, erns:3, rep:3, voertuig:true},
+    {n:'Koop ’n doeanebeampte om', rang:1, betaal:[80000,250000], risiko:30, erns:4, rep:4},
+    {n:'Smokkel ’n houer deur die hawe', rang:2, betaal:[250000,900000], risiko:46, erns:4, rep:6, voertuig:true},
+    {n:'Bestuur die roete na die Ooste', rang:3, betaal:[500000,1500000], risiko:40, erns:4, rep:7}
+  ]},
+  {id:'sindikaat', n:'Die Sindikaat', e:'\u{1F3A9}', rep:65, min:21, deel:400000,
+   sub:'Die groot geld: kontant-in-transito en bankkluise', range:['Kontak','Spesialis','Beplanner','Regterhand'], jobs:[
+    {n:'Verken ’n geldwa se roete', rang:0, betaal:[30000,90000], risiko:18, erns:2, rep:2},
+    {n:'Kraak ’n kluis vir die span', rang:0, betaal:[150000,500000], risiko:44, erns:5, rep:6, spel:'kluis', wapen:true},
+    {n:'Bestuur die ontsnapmotor by ’n kontantroof', rang:1, betaal:[200000,700000], risiko:50, erns:5, rep:7, voertuig:true, wapen:true},
+    {n:'Beplan ’n bankkluis-heist', rang:2, betaal:[800000,3000000], risiko:56, erns:5, rep:9, spel:'kluis', voertuig:true, wapen:true},
+    {n:'Was die sindikaat se geld deur ’n maatskappy', rang:3, betaal:[400000,1200000], risiko:20, erns:4, rep:6}
+  ]}
+];
+/* Jou eie organisasie. Mense werf is die moeilike deel: die kans hang
+   af van die organisasie se rep, en dié is 'n deel van jou eie rep plus
+   werkRep — wat jou mense se jobs opbou (en wat mislukkings afbreek). */
+var EIE_ORG_REP = 75, EIE_ORG_OUDERDOM = 21, EIE_ORG_KOSTE = 100000;
+var EIE_ORG_UIT_JOU_REP = 0.3, EIE_WERKREP_VERVAL = 0.15;
+var EIE_WERF_PER_JAAR = 2, EIE_LEDE_BASIS = 3, EIE_LOON = 15000;   /* loon per lid per vlak per jaar */
+var EIE_WERF_BASIS = 12, EIE_WERF_PER_REP = 0.8;   /* werfkans = basis + org-rep × dit */
+var EIE_GEVANG = 50;         /* % van mislukte jobs waar jou mens gevang word */
+var EIE_DEEL = 0.5;          /* jou mense hou die helfte van die buit */
+var EIE_JOBS = [
+  {n:'Smous op straat', moeilik:1, orgRep:0, buit:[8000,30000], rep:1, erns:1},
+  {n:'Steel motors vir ’n chop shop', moeilik:2, orgRep:10, buit:[30000,120000], rep:2, erns:3},
+  {n:'Samel beskermingsgeld in', moeilik:2, orgRep:15, buit:[25000,90000], rep:2, erns:3},
+  {n:'Smokkel perlemoen', moeilik:3, orgRep:25, buit:[60000,250000], rep:3, erns:3},
+  {n:'Steel ’n vragmotor vol elektronika uit ’n depot', moeilik:4, orgRep:40,
+   buit:[200000,700000], rep:5, erns:4},
+  {n:'’n Kontant-in-transito-roof', moeilik:5, orgRep:60, buit:[600000,2400000], rep:7, erns:5}
+];
 var BOEKE=[
   {n:'Fiela se Kind', a:'Dalene Matthee', slim:5, geluk:4},
   {n:'Kringe in ’n Bos', a:'Dalene Matthee', slim:5, geluk:3},

@@ -127,7 +127,7 @@ function renderMisdaad(){
         '<div class="regs">' + (gedaan||s.gedoen.laag?'<span class="merkie">GENOEG</span>':'\u276F') + '</div></div></div>';
     });
   });
-  return h;
+  return h + renderOnderwereld();
 }
 function renderAkt(){
   var h = '';

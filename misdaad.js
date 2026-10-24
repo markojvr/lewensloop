@@ -56,6 +56,7 @@ function misdaadSlot(m){
 function teikenOop(m, t){
   if(t.kodeer && vaardigVlak('kodeer') < t.kodeer) return false;
   if(t.salaris && (!s.beroep || s.beroep.salaris < t.salaris)) return false;
+  if(t.rep && (s.straatRep||0) < t.rep) return false;
   return true;
 }
 function buitTeks(m, t){
@@ -76,7 +77,9 @@ function doenMisdaad(id){
   if(s.gedoen.laag){ wenk('Jy lê vanjaar laag.'); return; }
   if((s.gedoen['md_'+id]||0) >= (m.perJaar||2)){ wenk('Moenie jou geluk vanjaar verder druk nie.'); return; }
   var lys = m.teikens.filter(function(t){ return teikenOop(m, t); });
-  kiesLys(m.n, 'Wat is die teiken?' + (s.hitte>=10 ? ' Die polisie hou jou dop: +' + hitteRisiko() +
+  var toe = m.teikens.length - lys.length;
+  kiesLys(m.n, 'Wat is die teiken?' + (toe ? ' (' + toe + (toe===1 ? ' teiken vra' : ' teikens vra') +
+    ' meer rep of ’n beter werk/vaardigheid.)' : '') + (s.hitte>=10 ? ' Die polisie hou jou dop: +' + hitteRisiko() +
     '% op elke risiko.' : ''), lys.map(function(t){
     return {t:t.n, sub:buitTeks(m, t) + ' · risiko ' + t.risiko + '%', doen:function(){
       misdaadMaat({m:m, t:t}); }};
@@ -142,6 +145,7 @@ function misdaadBuit(c){
   /* Die kluis en die sakkerollery: hoe goed jy gespeel het, bepaal ook hoeveel jy kry. */
   if(c.q!==undefined && c.q!==null && (c.m.spel==='kluis' || c.m.spel==='sak'))
     b = Math.round(b*(0.35 + 0.65*c.q));
+  if(c.buitVerlies) b = Math.round(b*(1 - c.buitVerlies));
   return b;
 }
 function hoeTeks(c){
@@ -154,6 +158,7 @@ function misdaadUitslag(c){
   var m = c.m, t = c.t;
   s.gedoen['md_'+m.id] = (s.gedoen['md_'+m.id]||0) + 1;
   misdaadTel().pogings++;
+  s.misdaad.laas = s.ouderdom;          /* Fase 8b — vir die rep se stil jare */
   var risiko = misdaadRisiko(c);
   s.hitte = klem((s.hitte||0) + m.hitte + Math.round(t.risiko/5));
   if(kans(risiko)) misdaadGevang(c);
@@ -174,10 +179,13 @@ function misdaadBetaal(c, bedrag, ekstra){
   if(t.geluk) s.geluk = klem(s.geluk + t.geluk);
   /* G8 — witboordjie-misdaad: niemand sien dit nou nie, maar die oudit kom. */
   if(t.oudit) ouditBy(m, t, bedrag);
+  /* Fase 8b — 'n misdaad wat slaag, bou jou naam; 'n job ook jou rang. */
+  repBy(REP_PER_ERNS[misdaadErns(m, t)]);
   var teks = m.n + ' (' + t.n + ')' + hoeTeks(c) + ' het ' + geld(myne) + ' opgelewer' +
     (c.maat ? ' (julle het ' + geld(bedrag) + ' gedeel)' : '') + '.' + (ekstra||'');
   if(m.wapen) teks += ' Niemand is beseer nie.';
   noteer(teks,'misdaad');
+  if(c.job) orgJobSlaag(c);      /* ná die buit, sodat 'n bevordering daarna in die log staan */
   wenk('Jy het ' + geld(myne) + ' gebuit.');
   sluitModaal(); stoor(); renderAlles();
 }
@@ -213,6 +221,7 @@ function misdaadGevang(c){
   misdaadTel().gevang++;
   s.hitte = klem(s.hitte + HITTE_GEVANG);
   s.geluk = klem(s.geluk - 10);
+  if(c.job) orgJobMisluk(c);
   noteer('Die polisie het jou betrap tydens ' + m.n.toLowerCase() + ' (' + t.n + ')' + hoeTeks(c) + '.','misdaad');
   if(c.maat){
     var w = R(100);
@@ -228,14 +237,18 @@ function misdaadGevang(c){
       noteer(c.maat.naam + ' het alles vir die polisie vertel.','sleg');
     }
   }
-  var spoed = c.voertuig ? (c.voertuig.spoed||0) : (m.id==='motor' ? (t.spoed||0) : 0);
-  if(spoed && kans(JAAGTOG_KANS)){
+  /* Fase 8b — met 'n motor (jou eie, die gesteelde bakkie, of die motor
+     wat jy pas gesteel het) kies jy altyd self: jaag of gee jou oor. */
+  var spoed = c.voertuig ? (c.voertuig.spoed||0) : (t.spoed||0);
+  if(spoed){
+    var kanse = jaagKanse(c, spoed), op = jaagOpstel(spoed, kanse, misdaadErns(m, t));
     var met = c.voertuig ? (c.voertuig.bate ? 'jou ' + c.voertuig.bate.n : c.voertuig.n.toLowerCase()) : 'die gesteelde motor';
     wysModaal('\u{1F6A8} Die polisie is agter jou!', 'Blou ligte in die truspieël. Jy sit in ' + met +
-      ' (' + spoed + ' km/h). Jou kans om weg te kom is sowat ' + jaagBasis(spoed) + '% — en vang hulle jou ' +
-      'ná ’n jaagtog, is die vonnis swaarder.', [
-      {t:'Trap die petrol', klas:'rooi', sub:'’n Jaagtog: jou motor se spoed is jou spoed', doen:function(){
-        sluitModaal(); jaagIngang(c, spoed); }},
+      ' (' + spoed + ' km/h): ' + kanse + (kanse===1 ? ' kans' : ' kanse') + ' voor hulle jou vaskeer, en ' +
+      op.lengte + ' hindernisse tot by die afrit. Kom jy deur, is jy weg; vang hulle jou ná ’n jaagtog, ' +
+      'is die vonnis swaarder.', [
+      {t:'Trap die petrol', klas:'rooi', sub:'’n Jaagtog: hoe vinniger die motor, hoe meer kanse', doen:function(){
+        sluitModaal(); jaagIngang(c, op); }},
       {t:'Trek af en gee jou oor', sub:'Die hof kyk gunstiger na wie saamwerk', doen:function(){
         c.oorgegee = true; misdaadHof(c); }}
     ]);
@@ -243,27 +256,53 @@ function misdaadGevang(c){
   }
   misdaadHof(c);
 }
-function jaagBasis(spoed){ return klem(10 + (spoed-150)*0.25, 8, 45); }
-function jaagIngang(c, spoed){
-  JAAGTOG.spoed = spoed;
+/* Hoeveel kanse jy kry: TE_KOOP se 'kanse' vir jou eie motor, anders uit die spoed. */
+function jaagKanse(c, spoed){
+  var mt = c.voertuig && c.voertuig.bate ? motorVan(c.voertuig.bate) : null;
+  if(mt && mt.kanse) return mt.kanse;
+  return spoed >= 280 ? 6 : spoed >= 240 ? 5 : spoed >= 170 ? 3 : 2;
+}
+/* Die jaagtog se pad: hoeveel rye, hoe dig en hoe vinnig. Dieselfde
+   opstelling speel jy self of "vinnig". */
+function jaagOpstel(spoed, kanse, erns){
+  var h = s.hitte||0, moeilik = erns + h/15;
+  var lengte = JAAG_RYE + JAAG_PER_ERNS*erns + JAAG_PER_HITTE*Math.floor(h/10), rye = [];
+  for(var i=0;i<lengte;i++){
+    var dubbel = kans(20 + moeilik*6), oop = R(3);
+    rye.push({bane: dubbel ? [0,1,2].filter(function(b){ return b!==oop; }) : [R(3)],
+      gaping: Math.round(28 - (14 + moeilik*0.6)*i/lengte)});
+  }
+  return {spoed:spoed, kanse:kanse, erns:erns, moeilik:moeilik, lengte:lengte, rye:rye,
+    v:(1.3 + spoed/400)*(1 + moeilik*0.03)};
+}
+/* "Doen dit vinnig": elke ry het 'n vaste kans om jou 'n kans te kos. */
+function jaagVinnig(op){
+  var raak = 0, p = JAAG_VINNIG_FOUT + (s.hitte||0)/JAAG_VINNIG_HITTE;
+  op.rye.forEach(function(r){ if(Math.random() < p + (r.bane.length>1 ? 0.03 : 0)) raak++; });
+  return raak;
+}
+function jaagIngang(c, op){
+  JAAGTOG.op = op;
   minispelIngang(JAAGTOG, {
-    teks: JAAGTOG.uitleg + '\n\nJou spoed: ' + spoed + ' km/h, die polisie s’n ' + POLISIE_SPOED +
-      ' km/h. Sonder ’n fout is jou kans sowat ' + Math.round(jaagBasis(spoed)*1.25) + '%.',
-    klaar:function(u){ jaagKlaar(c, spoed, u.q); },
+    teks: JAAGTOG.uitleg + '\n\nJou spoed: ' + op.spoed + ' km/h, die polisie s’n ' + POLISIE_SPOED + ' km/h. ' +
+      op.lengte + ' hindernisse, ' + op.kanse + ' kanse. Foutloos is jy altyd weg.',
+    klaar:function(u){ jaagKlaar(c, op, u); },
     los:function(){ c.oorgegee = true; misdaadHof(c); }});
 }
-function jaagKlaar(c, spoed, q){
-  var p = jaagBasis(spoed)*(0.5 + 0.75*q);
-  if(kans(p)){
-    s.hitte = klem(s.hitte + 5);
-    noteer('Jy het die polisie in ’n jaagtog afgeskud.','misdaad');
+function jaagKlaar(c, op, u){
+  if(u.ontsnap){
+    s.hitte = klem(s.hitte + JAAG_HITTE);
+    repBy(REP_JAAG);
+    c.buitVerlies = Math.min(0.8, (u.raak||0)*JAAG_BUIT_VERLIES);
+    noteer('Jy het die polisie in ’n jaagtog afgeskud' + (u.raak ? ' (' + u.raak + ' keer raakgery, en ' +
+      Math.round(c.buitVerlies*100) + '% van die buit het by die venster uitgewaai)' : ', sonder ’n skrapie') + '.','misdaad');
     misdaadSlaag(c);
     return;
   }
   c.jaag = true;
-  if(q < 0.25){
+  if(u.q < 0.25){
     s.gesondheid = Math.max(10, s.gesondheid - tussen(8,20));
-    noteer('Jy het in die jaagtog teen ’n paal vasgery. Jy is seer, maar niemand anders is beseer nie.','sleg');
+    noteer('Jy het in die jaagtog teen ’n padblokkade vasgery. Jy is seer, maar niemand anders is beseer nie.','sleg');
   } else noteer('Die polisie het jou ná ’n jaagtog vasgekeer.','misdaad');
   if(c.voertuig && c.voertuig.bate && misdaadErns(c.m, c.t)>=4 && kans(MOTOR_BESLAG)){
     var b = c.voertuig.bate;
@@ -291,7 +330,12 @@ var HOF_MIN = [0, 0, 0, 3, 7, 9];   /* die ligste uitkoms wat elke erns kan kry 
 
 function hofSaak(a){
   if(s.ouderdom < 18){ jeugHof(a); return; }
-  var opsies = PROKUREURS.filter(function(p){ return !p.koste || p.koste*a.erns <= s.geld; }).map(function(p){
+  /* Fase 8b — 'n organisasie betaal vir sy mense (vanaf die tweede rang) se privaat prokureur. */
+  var betaal = s.bende && s.bende.rang >= 1 ? myOrg() : null;
+  var opsies = PROKUREURS.map(function(p){
+    if(betaal && p.id==='privaat') return {id:p.id, n:p.n, koste:0, bonus:p.bonus, sub:betaal.n + ' betaal'};
+    return p;
+  }).filter(function(p){ return !p.koste || p.koste*a.erns <= s.geld; }).map(function(p){
     return {t:p.n, sub:p.sub + (p.koste ? ' · ' + geld(p.koste*a.erns) : ''), doen:function(){
       hofBorg(a, p); }};
   });
@@ -310,12 +354,19 @@ function hofBorg(a, p){
 }
 function hofPleit(a, p, borg){
   var k = onskuldigKans(a, p.bonus);
-  wysModaal('⚖ Hoe pleit jy?', 'Jou prokureur: ' + p.n + '. Die aanklaer bied ’n pleitooreenkoms aan.', [
+  var opsies = [];
+  /* Fase 8b — jy kan iemand anders verklik vir 'n ligter vonnis, maar
+     die onderwêreld vergeet dit nooit. */
+  var wie = a.maat && a.maat.lewe ? a.maat.naam : s.bende ? myOrg().n : s.eieOrg && s.eieOrg.lede.length ? 'jou eie mense' : null;
+  if(wie) opsies.push({t:'Verklik ' + wie, klas:'rooi', sub:'’n Baie ligter vonnis \u00b7 rep \u2212' + REP_VERKLIK +
+    (s.bende ? ' \u00b7 hulle skop jou uit' : ''), doen:function(){
+      hofKlaar(a, {prokureur:p, borg:borg, pleit:'verklik', wie:wie}); }});
+  wysModaal('\u2696 Hoe pleit jy?', 'Jou prokureur: ' + p.n + '. Die aanklaer bied ’n pleitooreenkoms aan.', opsies.concat([
     {t:'Pleit skuldig', sub:'’n Ligter vonnis, maar geen kans om vry te kom nie', doen:function(){
       hofKlaar(a, {prokureur:p, borg:borg, pleit:'skuldig'}); }},
     {t:'Pleit onskuldig', sub:'Sowat ' + k + '% kans dat jy vrygespreek word; anders swaarder', doen:function(){
       hofKlaar(a, {prokureur:p, borg:borg, pleit:'onskuldig'}); }}
-  ]);
+  ]));
 }
 function hofKlaar(a, keuses){
   var teks = hofBeslis(a, keuses);
@@ -330,7 +381,7 @@ function hofVonnis(a, bonus, pleit){
   if(pleit==='onskuldig' && kans(onskuldigKans(a, bonus))) return {soort:'onskuldig'};
   var tel = s.rekord.length;
   var punte = a.erns*2 + Math.min(tel,4)*1.5 + (a.wapen?2:0) + (a.verklik?2:0) + (a.jaag?2:0)
-    - (a.oorgegee?1:0) - bonus + (pleit==='skuldig' ? -2 : 1) + tussen(-1,2) + (s.opgeskort?2:0);
+    - (a.oorgegee?1:0) - bonus + (pleit==='skuldig' ? -2 : pleit==='verklik' ? -5 : 1) + tussen(-1,2) + (s.opgeskort?2:0);
   punte = Math.max(punte, HOF_MIN[a.erns]);
   if(punte <= 2 && !tel) return {soort:'teruggetrek'};
   if(punte <= 4){
@@ -360,6 +411,7 @@ function hofBeslis(a, k){
     }
   }
   var v = hofVonnis(a, p.bonus, k.pleit);
+  if(k.pleit==='verklik') teks.push(hofVerklik(a, k.wie));
   var skuldig = v.soort!=='onskuldig' && v.soort!=='teruggetrek';
   /* Wie skuldig bevind word terwyl 'n opgeskorte vonnis (of parool) loop,
      gaan sit daardie jare uit. */
@@ -404,6 +456,26 @@ function hofBeslis(a, k){
   var t = teks.join(' ');
   noteer(t, skuldig ? 'misdaad' : 'goed');
   wenk(v.soort==='tronk' || jare ? 'Tronk: ' + jare + ' jaar.' : skuldig ? 'Skuldig bevind.' : 'Jy stap vry!');
+  return t;
+}
+
+/* Fase 8b — wat dit kos om iemand te verklik. Niemand sterf nie, maar
+   hulle kom wel vir jou. */
+function hofVerklik(a, wie){
+  repBy(-REP_VERKLIK);
+  if(a.maat && a.maat.lewe && wie===a.maat.naam) a.maat.band = klem(a.maat.band - 60);
+  var t = 'Jy het ' + wie + ' verklik.';
+  if(s.bende){
+    var o = myOrg(); s.bende = null;
+    s.gesondheid = Math.max(10, s.gesondheid - tussen(5,15)); s.geluk = klem(s.geluk - 12);
+    t += ' ' + o.n + ' het jou uitgeskop, en ’n paar van hulle het jou ’n week later agter die winkels ingewag. ' +
+      'Jy het dit oorleef, maar jy sal dit nie vergeet nie.';
+  } else if(s.eieOrg && wie==='jou eie mense'){
+    noteer(s.eieOrg.naam + ' het uitmekaar geval ná jou getuienis.','sleg');
+    s.eieOrg = null;
+    t += ' Jou organisasie het uitmekaar geval.';
+  }
+  noteer(t,'sleg');
   return t;
 }
 
@@ -480,6 +552,7 @@ function ouditJaar(){
 /* ---------- Die jaar: hitte, opgeskorte vonnisse, oudits ---------- */
 function misdaadJaar(){
   if(s.hitte) s.hitte = Math.max(0, Math.round(s.hitte*(1-HITTE_VERVAL)) - HITTE_VERVAL_VAS);
+  onderwereldJaar();                    /* Fase 8b — rep, die organisasie se deel, jou eie mense */
   if(s.opgeskort && s.ouderdom >= s.opgeskort.tot && !s.tronk){
     noteer(s.opgeskort.vir==='parool' ? 'Jou parool is verby. Jy is heeltemal vry.' :
       'Jou opgeskorte vonnis het verval. Die skoon blad is joune.','goed');
@@ -543,10 +616,12 @@ function mdRaam(spel, tafel, etiket){
 }
 var md = null;   /* die mini-spel wat nou loop */
 function mdStop(){ if(md && md.tik){ clearInterval(md.tik); md.tik = null; } }
-function mdKlaar(q){
+function mdKlaar(q, ekstra){
   if(!md) return;
   mdStop(); var k = md.klaar; md = null;
-  k({q:Math.max(0, Math.min(1, q))});
+  var u = {q:Math.max(0, Math.min(1, q))};
+  if(ekstra) for(var x in ekstra) u[x] = ekstra[x];
+  k(u);
 }
 
 /* ---------- Slotoopsteek (huisinbraak) ---------- */
@@ -763,33 +838,43 @@ function sakGryp(){
 }
 
 /* ---------- Die jaagtog ---------- */
-/* Drie bane; hindernisse kom van voor af. Tik links of regs om uit te
-   swaai. 'n Vinniger motor het 'n beter kans, maar die pad kom ook
-   vinniger op jou af. q is hoeveel van die hindernisse jy ontwyk het. */
-var JAAG_HINDERNIS = 14;
-var JAAG_DINGE = ['\u{1F6A7}','\u{1F697}','\u{1F69A}','\u{1F404}','\u{1F6A7}'];
+/* Drie bane; rye hindernisse kom van voor af — soms 'n padblokkade oor
+   twee bane. Tik links of regs om uit te swaai. Elke keer dat jy iets
+   raakry, kos dit 'n kans (jou motor bepaal hoeveel jy het); die laaste
+   een is die polisie wat jou vaskeer. Kom jy by die afrit uit met 'n
+   kans oor, is jy weg. Die pad word al vinniger en digter. */
+var JAAG_DINGE = ['\u{1F6A7}','\u{1F697}','\u{1F69A}','\u{1F404}','\u{1F6A7}','\u{1F699}'];
 var JAAGTOG = {
-  id:'jaag', n:'Jaagtog', e:'\u{1F6A8}', spoed:160,
-  uitleg:'Swaai uit vir die hindernisse: tik links of regs. Hoe minder jy raakry, hoe beter jou kans om die polisie af te skud.',
-  selfSub:'Jy bestuur self · sonder ’n fout is jou kans ’n kwart beter',
-  vinnigSub:'Jy trap net die petrol · jou kans hang net van die motor af',
+  id:'jaag', n:'Jaagtog', e:'\u{1F6A8}', op:null,
+  uitleg:'Swaai uit vir die hindernisse: tik links of regs. Elke keer dat jy iets raakry, kos dit ’n kans. Kom jy by die afrit uit met ’n kans oor, is jy weg.',
+  selfSub:'Jy bestuur self · foutloos is jy altyd weg',
+  vinnigSub:'Jy trap net die petrol en hoop · jou motor se kanse maak die verskil',
   begin:function(o){
-    md = {klaar:o.klaar, baan:1, dinge:[], gestuur:0, raak:0, verby:0, tel:0,
-      v:1.1 + JAAGTOG.spoed/260};
+    var op = JAAGTOG.op;
+    md = {klaar:o.klaar, op:op, baan:1, dinge:[], i:0, wag:20, raak:0, verby:0, kanse:op.kanse};
     o.paneel.innerHTML = mdRaam(JAAGTOG, '<div class="md-pad" id="md-pad" onclick="jaagTikPad(event)">'+
       '<div class="md-lyn" style="left:33.3%"></div><div class="md-lyn" style="left:66.6%"></div>'+
-      '<div class="md-ek" id="md-ek">\u{1F697}</div><div class="md-polisie">\u{1F693}</div></div>', 'Ontwyk');
+      '<div class="md-ek" id="md-ek">\u{1F697}</div><div class="md-polisie">\u{1F693}</div></div>'+
+      '<div class="md-tydbalk"><div id="md-tyd" style="width:0%;background:var(--groen)"></div></div>'+
+      '<div class="md-gehoor">Afstand na die afrit</div>', 'Kanse');
     el('ms-beheer').innerHTML = '<div class="ms-ry"><button class="knop grys md-groot" onclick="jaagSwaai(-1)">◀ Links</button>'+
       '<button class="knop grys md-groot" onclick="jaagSwaai(1)">Regs ▶</button></div>';
-    jaagTeken(); msBoods(JAAGTOG.spoed + ' km/h — swaai uit!');
+    jaagTeken(); msBoods(op.spoed + ' km/h — swaai uit!');
     md.tik = setInterval(jaagTik, 30);
   },
-  stapWeg:function(){ if(md) mdKlaar(md.verby/JAAG_HINDERNIS*0.5); },
-  vinnig:function(){ return mdVinnig('Jy het jou voet plat op die petrol gehou.'); }
+  stapWeg:function(){ if(md) jaagEinde(false); },
+  vinnig:function(){
+    var op = JAAGTOG.op, raak = jaagVinnig(op), weg = raak < op.kanse;
+    return {q: weg ? 1 - raak/op.lengte : Math.min(0.9, (op.kanse/Math.max(1,raak))*0.5), ontsnap:weg,
+      raak: weg ? raak : op.kanse,
+      teks: weg ? 'Jy het die petrol plat gehou en ' + raak + ' keer iets geskraap.' : 'Hulle het jou vasgekeer.'};
+  }
 };
 function jaagTeken(){
-  el('ms-chips').textContent = md.verby + '/' + JAAG_HINDERNIS;
+  var h = ''; for(var i=0;i<md.kanse;i++) h += '❤';
+  el('ms-chips').textContent = h || '—';
   el('md-ek').style.left = (md.baan*33.33 + 16.66) + '%';
+  el('md-tyd').style.width = (md.verby/md.op.lengte*100) + '%';
 }
 function jaagSwaai(r){ if(!md || !md.tik) return; md.baan = Math.max(0, Math.min(2, md.baan + r)); jaagTeken(); }
 function jaagTikPad(e){
@@ -797,32 +882,42 @@ function jaagTikPad(e){
   var b = pad.getBoundingClientRect();
   jaagSwaai(e.clientX - b.left < b.width/2 ? -1 : 1);
 }
+/* Die pad word vinniger hoe nader jy aan die afrit kom (tot 60% vinniger). */
+function jaagSpoed(){ return Math.min(3.2, md.op.v*(1 + 0.6*md.i/md.op.lengte)); }
 function jaagTik(){
-  md.tel++;
-  /* Elke ~0,8 sekonde 'n nuwe hindernis, in 'n baan wat nie altyd joune is nie. */
-  if(md.gestuur < JAAG_HINDERNIS && md.tel % 26 === 0){
-    var d = document.createElement('div');
-    d.className = 'md-ding'; d.textContent = kies(JAAG_DINGE);
-    var baan = R(3);
-    d.style.left = (baan*33.33 + 16.66) + '%';
-    el('md-pad').appendChild(d);
-    md.dinge.push({baan:baan, y:-8, el:d, klaar:false});
-    md.gestuur++;
+  var op = md.op;
+  if(md.i < op.lengte && --md.wag <= 0){
+    var ry = op.rye[md.i], els = ry.bane.map(function(b){
+      var d = document.createElement('div');
+      d.className = 'md-ding'; d.textContent = ry.bane.length>1 ? '\u{1F6A7}' : kies(JAAG_DINGE);
+      d.style.left = (b*33.33 + 16.66) + '%';
+      el('md-pad').appendChild(d); return d;
+    });
+    md.dinge.push({bane:ry.bane, y:-8, els:els, klaar:false});
+    md.wag = ry.gaping; md.i++;
   }
+  var v = jaagSpoed();
   md.dinge.forEach(function(x){
     if(x.klaar) return;
-    x.y += md.v; x.el.style.top = x.y + '%';
-    if(x.y >= 74 && x.y <= 86 && x.baan===md.baan){
-      x.klaar = true; md.raak++; x.el.classList.add('raak');
-      setTimeout(function(){ x.el.remove(); }, 400);
-      msBoods('Bam! Jy verloor spoed.','sleg');
-    } else if(x.y > 86){ x.klaar = true; md.verby++; x.el.remove(); jaagTeken(); }
+    x.y += v; x.els.forEach(function(d){ d.style.top = x.y + '%'; });
+    if(x.y >= 74 && x.y <= 86 && x.bane.indexOf(md.baan)>=0){
+      x.klaar = true; md.raak++; md.kanse--;
+      x.els.forEach(function(d){ d.classList.add('raak'); setTimeout(function(){ d.remove(); }, 400); });
+      jaagTeken();
+      if(md.kanse <= 0){ msBoods('Hulle het jou vasgekeer!','sleg'); jaagEinde(false); return; }
+      msBoods('Bam! Nog ' + md.kanse + (md.kanse===1 ? ' kans.' : ' kanse.'),'sleg');
+    } else if(x.y > 86){ x.klaar = true; md.verby++; x.els.forEach(function(d){ d.remove(); }); jaagTeken(); }
   });
-  if(md.gestuur >= JAAG_HINDERNIS && md.dinge.every(function(x){ return x.klaar; })){
-    var q = md.verby/JAAG_HINDERNIS;
-    msBoods(q >= 0.85 ? 'Skoon gery! Die afrit is voor jou…' : 'Die afrit is voor jou…', q>=0.85?'goed':'');
-    mdStop(); setTimeout(function(){ mdKlaar(q); }, 700);
+  if(md && md.tik && md.i >= op.lengte && md.dinge.every(function(x){ return x.klaar; })){
+    msBoods(md.raak ? 'Die afrit! Jy is weg.' : 'Foutloos! Jy is weg.','goed');
+    jaagEinde(true);
   }
+}
+function jaagEinde(weg){
+  if(!md || md.einde) return;
+  md.einde = true;
+  var q = md.verby/md.op.lengte, raak = md.raak;
+  mdStop(); setTimeout(function(){ mdKlaar(q, {ontsnap:weg, raak:raak}); }, 800);
 }
 
 var MD_SPELE = {slot:SLOTOOP, aanskakel:AANSKAKEL, kluis:KLUIS, sak:SAKKE};

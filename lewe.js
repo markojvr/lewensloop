@@ -62,7 +62,10 @@ function nuweLewe(naam, van, geslag){
     casino:{sessies:0, ingekoop:0, uitbetaal:0},
     /* Fase 8 — hoe naby die polisie jou dophou (0-100), 'n opgeskorte
        vonnis of parool wat nog loop, en jou leeftyd se misdaadtelling */
-    hitte:0, opgeskort:null, misdaad:{pogings:0, gevang:0, buit:0, koste:0}
+    hitte:0, opgeskort:null, misdaad:{pogings:0, gevang:0, buit:0, koste:0},
+    /* Fase 8b — jou naam in die onderwêreld, die organisasie waarby jy
+       is, en jou eie organisasie */
+    straatRep:0, bende:null, eieOrg:null
   };
   /* F9 — die gene word heel eerste gerol, want elke ander stelsel kan
      daarna daarna kyk (watter siekte in die familie is, hoe lank jy leef). */
@@ -250,6 +253,10 @@ function vulNuweVelde(){
   if(s.opgeskort===undefined) s.opgeskort = null;
   if(!s.misdaad) s.misdaad = {pogings:0, gevang:0, buit:0, koste:0};
   if(s.tronk && s.tronk.vonnis===undefined) s.tronk.vonnis = s.tronk.jare;
+  /* Fase 8b — rep en organisasies. */
+  if(!s.straatRep) s.straatRep = 0;
+  if(s.bende===undefined) s.bende = null;
+  if(s.eieOrg===undefined) s.eieOrg = null;
   /* E7 — 'n ou kind het nog nie 'n eie lewe nie. kindLewe() bou dit
      agteruit uit sy ouderdom, sodat 'n 30-jarige seun nie skielik weer
      in Graad 1 begin nie. E12 doen dieselfde vir 'n eggenoot. */
@@ -3458,6 +3465,8 @@ function gaanVoortAsKind(id){
   /* Fase 8 — die ouer se rekord, hitte en oudits was syne; nuweLewe()
      het dit al skoon gemaak, en s.vlagge (met die oudit) ook. */
   s.hitte = 0; s.opgeskort = null; s.misdaad = {pogings:0, gevang:0, buit:0, koste:0};
+  /* Die ouer se naam in die onderwêreld en sy organisasie gaan saam met hom. */
+  s.straatRep = 0; s.bende = null; s.eieOrg = null;
   /* --- sy lewensverhaal --- */
   s.log = [];
   noteer('Jy is ' + v.naam + ' ' + v.van + ', kind van ' + oud.naam + ' ' + oud.van +
