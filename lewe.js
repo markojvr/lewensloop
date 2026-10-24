@@ -57,7 +57,9 @@ function nuweLewe(naam, van, geslag){
     /* H4 — jou eie besigheid, en wat jy al gehad het */
     besigheid:null, besighedeGehad:[],
     /* H1 — die hoeveelste lewe in hierdie familie, en wie voor jou was */
-    generasie:1, familielyn:[]
+    generasie:1, familielyn:[],
+    /* Fase 7 — wat jy oor jou hele lewe by die casino ingesit en uitgehaal het */
+    casino:{sessies:0, ingekoop:0, uitbetaal:0}
   };
   /* F9 — die gene word heel eerste gerol, want elke ander stelsel kan
      daarna daarna kyk (watter siekte in die familie is, hoe lank jy leef). */
@@ -237,6 +239,8 @@ function vulNuweVelde(){
   if(!s.generasie) s.generasie = 1;                     /* H1 */
   if(!s.familielyn) s.familielyn = [];
   if(!s.vlagge) s.vlagge = {};                          /* H14 */
+  /* Fase 7 — die casino se leeftydtelling. */
+  if(!s.casino) s.casino = {sessies:0, ingekoop:0, uitbetaal:0};
   /* E7 — 'n ou kind het nog nie 'n eie lewe nie. kindLewe() bou dit
      agteruit uit sy ouderdom, sodat 'n 30-jarige seun nie skielik weer
      in Graad 1 begin nie. E12 doen dieselfde vir 'n eggenoot. */
@@ -1387,7 +1391,7 @@ function pensioenBydraeJaar(){
 }
 function pensioenFondsJaar(){
   if(!(s.pensioenFonds>0)) return;
-  var r = tussen(PENSIOEN_GROEI[0], PENSIOEN_GROEI[1])/100;
+  var r = trekOpbrengs(PENSIOEN_GROEI)/100;
   var groei = Math.round(s.pensioenFonds * r);
   s.pensioenFonds += groei;
   if(s.afgetree){
@@ -1404,11 +1408,17 @@ function pensioenFondsJaar(){
 }
 
 /* ---------- Beleggings en bates ---------- */
+/* Fase 7 — trek 'n jaar se opbrengs (persent) uit 'n tabel van emmers
+   soos JSE_JARE: eers die emmer volgens sy kans, dan 'n getal daarin. */
+function trekOpbrengs(tabel){
+  var e = kiesGeweeg(tabel, function(x){ return x.kans; });
+  return tussen(e.r[0], e.r[1]);
+}
 function beleggingJaar(){
   if(!(s.belegging>0)) return;
   /* H3 — wie jaarverslae lees en 'n besigheid kan waardeer, kry 'n paar
      persent meer uit dieselfde mark. */
-  var r = (tussen(-24,34) + vaardigBeleggingBonus())/100;
+  var r = (trekOpbrengs(JSE_JARE) + vaardigBeleggingBonus())/100;
   var w = Math.round(s.belegging * r);
   s.belegging = Math.max(0, s.belegging + w);
   noteer('Jou beleggings het ' + (w>=0?'gegroei met ':'gedaal met ') + geld(Math.abs(w)) +
@@ -3414,6 +3424,8 @@ function gaanVoortAsKind(id){
   if(geleer){
     s.vaardighede[geleer.id] = {vlak:1, punte:VAARDIG_PUNTE[1], jare:1, laas:s.ouderdom};
   }
+  /* Fase 7 — die casino-telling was die ouer s'n. */
+  s.casino = {sessies:0, ingekoop:0, uitbetaal:0};
   /* --- sy lewensverhaal --- */
   s.log = [];
   noteer('Jy is ' + v.naam + ' ' + v.van + ', kind van ' + oud.naam + ' ' + oud.van +

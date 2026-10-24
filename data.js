@@ -340,6 +340,18 @@ var VEILING_F=0.80;           /* 'n huis op 'n bankveiling kry net 80% van sy wa
 
 /* B5 — 'n spaarrekening groei; die tjekrekening doen niks. */
 var SPAAR_KOERS=[5,7];        /* persent per jaar */
+
+/* Fase 7 — die JSE-indeksfonds. Hoë risiko, hoër opbrengs: die jaar se
+   opbrengs kom uit een van drie emmers. Meeste jare is goed, 'n kwart is
+   plat, en sowat een uit tien is 'n swak jaar of 'n crash (nooit erger as
+   -25%). Gemeet oor 20 000 lopies: gemiddeld ± 9,6% per jaar, en die JSE
+   klop die spaarrekening oor 20 jaar in ± 84% van gevalle — maar oor een
+   tot drie jaar verloor dit ± een keer uit drie. */
+var JSE_JARE=[
+  {kans:9,  r:[-25,-10], n:'crash'},
+  {kans:26, r:[-6,6],    n:'plat'},
+  {kans:65, r:[8,26],    n:'goed'}
+];
 var RENTE_VRY=23800;          /* SARS se rentevrystelling per jaar */
 
 /* B6 — skuld. Jou oortrokke rekening en kredietkaart loop teen 19%, en
@@ -364,7 +376,13 @@ var LEEFSTYL_F=0.18;          /* ... laat jou 18c meer spandeer */
    groei, en by aftrede koop dit 'n inkomste. */
 var PENSIOEN_KEUSES=[0, 0.05, 0.075, 0.15];
 var PENSIOEN_WERKGEWER=0.075; /* jou werkgewer pas jou bydrae tot hier */
-var PENSIOEN_GROEI=[0,12];    /* 'n gebalanseerde fonds se opbrengs per jaar */
+/* Fase 7 — 'n gebalanseerde fonds se opbrengs per jaar. Meestal 4–12%,
+   maar een jaar uit tien verloor dit ook (2–12%), sodat dit nie 'n
+   risikolose beter JSE is nie. Dieselfde vorm as JSE_JARE hieronder. */
+var PENSIOEN_GROEI=[
+  {kans:10, r:[-12,-2]},
+  {kans:90, r:[4,12]}
+];
 var ANNUITEIT_TREK=0.055;     /* hoeveel 'n lewende annuiteit per jaar uitbetaal */
 var AFTREE_OUDERDOM=60;
 var VROEG_AFTREE=55;

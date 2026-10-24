@@ -86,7 +86,7 @@ var AKTIWITEITE=[
    as:function(){ return !s.tronk; }, vloei:vaardigheidVloei},
 
   /* --- Geld --- */
-  /* Lotto en casino is doelbewus sleg beleggings: oor baie kere verloor jy
+  /* Lotto is doelbewus 'n slegte belegging: oor baie kere verloor jy
      geld. Die prysstruktuur hier gee jou ongeveer R18 terug vir elke R30
      wat jy inbetaal \u2014 net soos die regte ding. */
   {id:'lotto', g:'Geld', n:'Koop \u2019n Lotto-kaartjie', e:'\u{1F39F}', koste:30, min:18, maks:5,
@@ -101,14 +101,11 @@ var AKTIWITEITE=[
      if(kans(1.5)){ var k=tussen(50,150); s.geld+=k;
        return ['Drie nommers reg: ' + geld(k) + '. Net genoeg vir \u2019n koffie.','geld']; }
      return ['Geen nommers reg nie. Volgende keer weer.','neutraal']; }},
-  {id:'casino', g:'Geld', n:'Dobbel R5 000 by die casino', e:'\u{1F3B2}', koste:5000, min:18, maks:3,
-   kosteTeks:'R5 000 \u00b7 38% kans om te wen \u00b7 die huis wen op die lang duur',
-   doen:function(){
-     if(kans(2)){ var j=tussen(30000,90000); s.geld+=j; s.geluk=klem(s.geluk+16);
-       return ['Die masjien het losgebars! Jy het ' + geld(j) + ' gewen!','geld']; }
-     if(kans(36)){ var w=tussen(6000,12000); s.geld+=w; s.geluk=klem(s.geluk+6);
-       return ['Jy het ' + geld(w) + ' by die casino gewen!','geld']; }
-     s.geluk=klem(s.geluk-6); return ['Jy het jou R5 000 by die casino verloor.','sleg']; }}
+  /* Fase 7 — die casino is nou vier mini-spele (minispel.js). Jy koop
+     chips, speel self of laat dit vinnig gebeur, en stap weg wanneer jy wil. */
+  {id:'casino', g:'Geld', n:'Gaan casino toe', e:'\u{1F3B2}', min:18, maks:3,
+   kosteTeks:function(){ return casinoTeks(); },
+   as:function(){ return !s.tronk; }, vloei:function(){ casinoVloei(); }}
 ];
 
 function doenAkt(id){

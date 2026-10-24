@@ -19,6 +19,7 @@ met presies dieselfde gedrag — net makliker om in te werk:
 | `aksies.js` | Alles wat die speler self kies: aktiwiteite, misdaad, werk, studie, bates, verhoudings, diere. |
 | `uitleg.js` | Bou die HTML vir elke tab, insluitend die Gesond-blad (siektes, mediese fonds, leefstyl, voorbehoeding). |
 | `skerm.js` | Modale vensters, wenke, grafsteen, beginskerm. |
+| `minispel.js` | **Fase 7.** Die mini-spel-raamwerk (’n volskerm-paneel met “Speel self” en “Doen dit vinnig”) en die vier casino-spele: blackjack, roulette, slots en video poker. Laai ná `skerm.js`. |
 | `begin.js` | Die inskryfpunt. Laai heel laaste. |
 
 Dit is gewone `<script src>`-lêers, nie ES modules nie, **sodat dubbelklik op
@@ -306,6 +307,23 @@ VAARDIGHEDE", "H4 — JOU EIE BESIGHEID" en "H1 — DIE BOEDEL".
 
 ---
 
+## K. Fase 7 — mini-spele, beleggings en hosting — ✅ KLAAR (24 Oktober 2026)
+
+Nuwe veld in `s`: `casino` = `{sessies, ingekoop, uitbetaal}` — wat jy oor jou hele
+lewe by die casino ingesit en uitgehaal het. Verstek in `nuweLewe()` en in
+`vulNuweVelde()` (`{sessies:0, ingekoop:0, uitbetaal:0}`), sodat ou stoor-data laai;
+`gaanVoortAsKind()` begin dit weer by nul. Die nuwe getalle staan in `data.js` onder
+EKONOMIE (`JSE_JARE`, `PENSIOEN_GROEI`) en bo-aan elke spel in `minispel.js`.
+
+| # | Wat | Gedoen |
+|---|---|---|
+| K1 | **’n Mini-spel-raamwerk.** Tot nou was alles ’n knoppie met ’n lukrake uitslag. | ✅ `minispel.js` (gewone `<script src>`, ná `skerm.js`). ’n Mini-spel is ’n object met `begin(opts)`, `stapWeg()` en `vinnig(chips)`; `opts.klaar(uitslag)` gee die uitslag terug aan wie die spel oopgemaak het. `minispelIngang(spel, opts)` wys altyd twee knoppies: **“Speel self”** maak ’n volskerm-paneel (`#minispel`) bo-oor die toestel oop, en **“Doen dit vinnig”** simuleer ’n hele sessie (25 rondtes teen ’n tiende van jou chips) in een slag. Die vinnige weergawe speel altyd by ’n *effens swakker tafel* — so self speel betaal effens beter, maar die huis wen steeds. Die spelreëls (“enjins”) is los van die skerm: die vinnige sessie en die Monte Carlo-toets gebruik presies dieselfde funksies as wat jy op die skerm speel. Alles is tik-groot en pas op ’n 375×667-foon; die style staan onder “Mini-spele” in `styl.css`. |
+| K2 | **Beleggingskoerse.** Die spaarrekening (5–7%) het die JSE (plat −24% tot +34%) in ± 80% van 40-jaar-lopies geklop — die omgekeerde van die werklikheid. | ✅ Die spaarrekening bly 5–7%. Die JSE trek nou elke jaar uit drie emmers (`JSE_JARE`): **65%** van jare is goed (+8% tot +26%), **26%** is plat (−6% tot +6%), en **9%** is ’n swak jaar of crash (−10% tot −25%, nooit erger nie). `vaardigBeleggingBonus()` tel steeds bo-op. Die pensioenfonds (`PENSIOEN_GROEI`) verloor nou ook een jaar uit tien (−2% tot −12%) en groei andersins 4–12%. Albei loop deur die nuwe `trekOpbrengs(tabel)`. Die JSE-kaart op die Bates-blad sê nou wat die risiko is. **Gemeet** (20 000 lopies elk, deur die spel se eie `beleggingJaar()` teen `SPAAR_KOERS`): die JSE klop die spaarrekening oor **1 jaar in 66%, 3 jaar 67%, 5 jaar 70%, 10 jaar 76%, 20 jaar 83%, 30 jaar 88% en 40 jaar 91%** van gevalle (was 46% / 42% / … / 27% / … / 19%). Gemiddeld +9,5% per jaar (meetkundig +8,7%); 21% van jare is negatief, 8,5% erger as −10% (was 41% en 24%). Die pensioenfonds klop die spaarrekening in 60–67%, en die JSE oortref dit oor ’n lang termyn. |
+| K3 | **Die casino as mini-spele** (vervang die ou “Dobbel R5 000”-knoppie; Lotto bly). | ✅ Aktiwiteite → Geld → **“Gaan casino toe”** (18+, nie in die tronk nie, drie keer per jaar). Kies ’n tafel, koop chips (tot vier bedrae van R500 tot R250 000, na gelang van jou kontant), en speel self of vinnig. Jy stap weg wanneer jy wil (behalwe middel-in ’n hand of terwyl die wiel draai); die chips gaan na jou kontant, die sessie word gelog (“By die casino (blackjack) het jy R10 000 se chips gekoop, 14 rondtes gespeel en met R11 500 weggestap (+R1 500).”), jou geluk skuif saam, en die kaart wys jou leeftydtotaal. Die vier spele, met hul Monte Carlo-terugbetaling (RTP) oor **1 miljoen rondtes elk**: <br>• **Blackjack** — 6 pakke, die dealer staan op sagte 17 en loer vir blackjack, blackjack betaal 3:2, trek/staan/verdubbel/verdeel (een keer; verdeelde ase kry een kaart). Daar is ’n “Wat sê basiese strategie?”-knoppie. Self: **99,40% (huisvoordeel 0,60%)**; vinnig (blackjack betaal 6:5): **98,13% (1,87%)**. <br>• **Roulette** — die Europese wiel met een nul en ’n wiel-animasie; rooi/swart, ewe/onewe, die drie dosyne en enkelgetalle op ’n 9×4-bord. Self: **97,59%** (teorie 97,30%); vinnig (dubbelnul, op rooi/swart): **94,68%** (teorie 94,74%). <br>• **Slots** — drie rolle met gewigte, een lyn, ’n betaaltabel op die masjien. Presies uitgetel oor al 512 uitkomste: self **92,69%**, vinnig **87,82%** (Monte Carlo 92,46% en 87,21%). <br>• **Video poker** (Jacks or Better) — vyf kaarte, tik om te hou, trek een keer, met ’n “Wat sou ’n kenner hou?”-knoppie. Self is die 9/6-tabel (perfekte spel 99,54%), vinnig die 8/5-tabel (97,30%). Met die spel se eie eenvoudige strategie: self **99,51%** en vinnig **97,01%** oor 8 miljoen hande elk (± 0,16%). <br>Elke tafel verloor dus oor die lang termyn, en self speel is elke keer effens beter as vinnig. |
+| K4 | **Hosting op GitHub Pages.** | ✅ ’n `README.md` (hoe om te speel, wat in watter lêer is, hoe om Pages aan te skakel) en ’n leë `.nojekyll`. Alle paaie in `index.html` en die kode is relatief, so dieselfde lêers werk met ’n dubbelklik op `index.html` én op Pages. Die repo het nog geen remote nie: om dit publiek te maak, is die gebruiker se besluit. |
+
+---
+
 ## J. Voorgestelde orde van werk
 
 ~~**Fase 1 — fixes (A1–A16).**~~ **✅ KLAAR (22 Oktober 2026).** Al 16 items is gedoen — sien die **Gedoen**-kolom in afdeling A. Die spel is nou eerliker: die fliek betaal reg, casino en Lotto verloor geld soos hulle moet, en die tronk breek nie meer jou skoolloopbaan nie.
@@ -334,6 +352,14 @@ kom uit jou sak), en veertien vaardighede bou oor jare op en maak geld, werk, ge
 en ’n besigheid oop. Daar is 197 gebeure in plaas van 46, en ’n keuse wat jy op tien
 maak, kan jou op dertig weer in die gesig kyk.
 
+~~**Fase 7 — mini-spele, beleggings en hosting (K1–K4).**~~ **✅ KLAAR (24 Oktober
+2026).** Sien afdeling K. Daar is nou ’n raamwerk vir mini-spele waarin jy self speel
+of dit vinnig laat gebeur, en die casino is vier egte spele (blackjack, roulette,
+slots, video poker) waarvan elkeen oor die lang termyn geld verloor. Die JSE is nou
+die hoë-risiko-, hoë-opbrengs-belegging wat dit moet wees: oor 20 jaar klop dit die
+spaarrekening in 83% van gevalle, maar oor een tot drie jaar verloor dit een keer uit
+drie. Die spel is gereed vir GitHub Pages.
+
 **Klaar tot dusver:**
 
 1. Die opdeel in aparte lêers (sien Lêerstruktuur bo), sodat die latere fases nie in
@@ -357,7 +383,13 @@ maak, kan jou op dertig weer in die gesig kyk.
    stokperdjies, ’n eie besigheid, 197 gebeure, en vlae wat onthou. I13 (die oom se
    testament wat oor en oor kon vuur) is in dieselfde slag reggemaak.
 
-**Volgende aan die beurt:** niks is vasgestel nie. Die drie wat die meeste sal
+8. **Fase 7 (K1–K4)** — die mini-spel-raamwerk, die casino as blackjack, roulette,
+   slots en video poker, ’n JSE wat oor die lang termyn wen, en GitHub Pages.
+
+**Volgende aan die beurt:** Fase 8 en 9 — misdaad uitbrei (met motors) en
+tronk-ontsnapping. Albei kan die raamwerk in `minispel.js` gebruik: maak ’n object met
+`begin(opts)`, `stapWeg()` en `vinnig()`, en roep `minispelIngang()` met ’n eie
+`klaar(uitslag)`. Daarna: die drie wat die meeste sal
 byvoeg, is waarskynlik **H2** (prestasies op die grafsteen — dit gee die
 generasiespel ’n telling om voor te speel), **H9** (die motor as ’n volle stelsel:
 lisensietoets, versekering, diens, ongeluk) en **H8** (eiendom om te verhuur, wat die

@@ -122,3 +122,93 @@ body{background:#05080c;color:var(--teks);
 .knop small{display:block;font-size:11px;font-weight:500;opacity:.72;margin-top:3px;line-height:1.35}
 .dier-ry{display:flex;gap:7px;align-items:center}
 ::-webkit-scrollbar{width:0}
+
+/* ---------- Mini-spele (Fase 7) ---------- */
+/* 'n Volskerm-paneel bo-oor die toestel. Alles is tik-groot sodat dit
+   op 'n foon speel sonder 'n sleutelbord. */
+#minispel{position:absolute;inset:0;z-index:25;display:none;flex-direction:column;
+  background:radial-gradient(ellipse at 50% 30%,#14402c,#0a2117 70%,#07170f)}
+#minispel.wys{display:flex}
+.ms-kop{flex:none;display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:rgba(0,0,0,.35);border-bottom:1px solid rgba(255,255,255,.08)}
+.ms-naam{font-weight:700;font-size:15px}
+.ms-chips{margin-left:auto;text-align:right;font-weight:700;color:var(--geel)}
+.ms-chips small{display:block;font-size:9px;color:var(--dof);letter-spacing:.8px;text-transform:uppercase}
+.ms-weg{background:var(--kaart2);color:var(--teks);border:1px solid var(--lyn);border-radius:10px;
+  padding:8px 11px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.ms-tafel{flex:1;overflow-y:auto;padding:12px 12px 6px;display:flex;flex-direction:column;align-items:center}
+.ms-boods{min-height:22px;margin:10px 0 2px;font-size:13.5px;font-weight:600;text-align:center;color:#d8e6dc}
+.ms-boods.goed{color:var(--groen)}
+.ms-boods.sleg{color:#ff8a80}
+.ms-beheer{flex:none;padding:6px 12px 14px;background:rgba(0,0,0,.3);border-top:1px solid rgba(255,255,255,.06)}
+.ms-ry{display:flex;gap:7px;align-items:center}
+.ms-ry .knop{margin-top:8px}
+.ms-insette{display:flex;gap:6px;margin-top:8px}
+.ms-inset{flex:1;background:#0f151e;border:1px solid var(--lyn);color:var(--dof);border-radius:10px;
+  padding:9px 4px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.ms-inset.aan{background:var(--geel);border-color:var(--geel);color:#1b1404}
+.ms-inset.af{opacity:.35}
+.ms-wenk{display:block;width:100%;margin-top:8px;background:none;border:1px dashed rgba(255,255,255,.2);
+  color:var(--dof);border-radius:10px;padding:8px;font:inherit;font-size:12.5px;cursor:pointer}
+.ms-etiket{align-self:flex-start;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#9fc3ad;
+  font-weight:700;margin:6px 2px 6px}
+.ms-etiket b{color:#fff;margin-left:6px}
+.ms-hand{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;min-height:76px;
+  padding:4px 6px;border-radius:12px;margin-bottom:6px}
+.ms-hand.aktief{background:rgba(255,255,255,.07);box-shadow:0 0 0 1px rgba(232,185,63,.5)}
+.ms-tot{margin-left:6px;font-weight:800;font-size:18px;text-align:center}
+.ms-tot small{display:block;font-size:10.5px;color:var(--geel);font-weight:600}
+.ms-kaart{width:48px;height:68px;border-radius:7px;background:#f6f3ec;color:#141414;font-weight:800;
+  font-size:17px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;
+  box-shadow:0 3px 8px rgba(0,0,0,.45)}
+.ms-kaart.nuut{animation:ms-in .25s ease}
+.ms-kaart span{font-size:20px}
+.ms-kaart.rooi{color:#c62828}
+.ms-kaart.toe{background:repeating-linear-gradient(45deg,#2f5fa8 0 6px,#244a85 6px 12px);border:2px solid #f6f3ec}
+@keyframes ms-in{from{transform:translateY(-10px) scale(.9);opacity:0}to{transform:none;opacity:1}}
+
+/* Roulette */
+.rl-bo{position:relative;width:184px;height:184px;flex:none}
+.rl-wiel{position:absolute;inset:0;border-radius:50%;border:5px solid #6b4a22;
+  box-shadow:0 6px 18px rgba(0,0,0,.6),inset 0 0 0 2px rgba(255,255,255,.15);
+  transition:transform 3.2s cubic-bezier(.15,.7,.2,1)}
+.rl-wiel span{position:absolute;left:50%;top:50%;width:16px;margin-left:-8px;margin-top:-6px;
+  font-size:8.5px;font-weight:700;color:#fff;text-align:center;line-height:12px}
+.rl-naaf{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px;border-radius:50%;
+  background:#3b2a14;border:3px solid #c8a35a;display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:800;color:#fff}
+.rl-naaf.rooi{background:#c0392b}.rl-naaf.swart{background:#161b22}.rl-naaf.groen{background:#1f8a46}
+.rl-wys{position:absolute;left:50%;top:-8px;margin-left:-8px;width:0;height:0;z-index:2;
+  border-left:8px solid transparent;border-right:8px solid transparent;border-top:14px solid var(--geel)}
+.rl-laaste{display:flex;gap:4px;margin-top:10px;min-height:20px}
+.rl-laaste span{font-size:11px;font-weight:700;padding:2px 6px;border-radius:6px;color:#fff}
+.rl-laaste .rooi{background:#c0392b}.rl-laaste .swart{background:#161b22}.rl-laaste .groen{background:#1f8a46}
+.rl-bord{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;margin-top:4px}
+.rl-bord .nul{grid-column:span 9}
+.rl-buite{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:3px}
+.rl-vak{position:relative;border:0;border-radius:6px;padding:6px 0;font:inherit;font-size:12.5px;font-weight:700;
+  color:#fff;background:#25543c;cursor:pointer}
+.rl-vak.rooi{background:#b03428}.rl-vak.swart{background:#161b22;box-shadow:inset 0 0 0 1px #3a4557}.rl-vak.groen{background:#1f8a46}
+.rl-vak i{position:absolute;right:-3px;top:-6px;background:var(--geel);color:#1b1404;font-style:normal;
+  font-size:9px;font-weight:800;border-radius:8px;padding:1px 4px;pointer-events:none}
+
+/* Slots */
+.sl-masjien{display:flex;gap:8px;padding:14px;margin-top:10px;border-radius:18px;
+  background:linear-gradient(180deg,#7a1f1f,#4b0f0f);box-shadow:0 8px 24px rgba(0,0,0,.55),inset 0 0 0 3px #c8a35a}
+.sl-rol{width:78px;height:96px;border-radius:10px;background:#f6f3ec;display:flex;align-items:center;
+  justify-content:center;font-size:46px;box-shadow:inset 0 8px 14px rgba(0,0,0,.25),inset 0 -8px 14px rgba(0,0,0,.25)}
+.sl-rol.draai{filter:blur(1.2px);transform:translateY(2px)}
+.sl-tabel{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px 10px;margin-top:14px;font-size:13px;
+  background:rgba(0,0,0,.25);border-radius:12px;padding:10px 12px}
+.sl-tabel b{color:var(--geel)}
+
+/* Video poker */
+.vp-tabel{width:100%;background:#0b1d47;border:2px solid #c8a35a;border-radius:10px;padding:6px 10px;
+  font-size:12px;font-weight:600;color:#ffe9a8}
+.vp-tabel div{display:flex;justify-content:space-between;padding:1px 0}
+.vp-tabel div.aan{background:#c8a35a;color:#0b1d47;border-radius:4px;padding:1px 4px;margin:0 -4px}
+.vp-hand{display:flex;gap:5px;margin-top:16px;min-height:96px}
+.vp-plek{display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.vp-plek .ms-kaart{width:58px;height:82px;font-size:20px}
+.vp-plek .ms-kaart.hou{transform:translateY(-6px);box-shadow:0 0 0 3px var(--geel),0 6px 12px rgba(0,0,0,.5)}
+.vp-plek small{height:16px;margin-top:4px;font-size:11px;font-weight:800;color:var(--geel);letter-spacing:1px}

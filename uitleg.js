@@ -131,7 +131,8 @@ function renderAkt(){
       var jonk  = s.ouderdom < a.min;
       var kind  = s.ouderdom < 18 && lewendeOuers().length > 0;
       var arm   = !a.vloei && a.koste && s.geld < a.koste && !kind;
-      var onder = a.kosteTeks || (a.koste ? geld(a.koste) : 'Gratis');
+      var onder = (typeof a.kosteTeks==='function' ? a.kosteTeks() : a.kosteTeks) ||
+        (a.koste ? geld(a.koste) : 'Gratis');
       if(a.koste && kind && !a.kosteTeks) onder += ' \u00b7 jy kan jou ouers vra';
       if(jonk) onder += ' \u00b7 ouderdom ' + a.min + '+';
       h += '<div class="kaart klik" onclick="doenAkt(\'' + a.id + '\')"><div class="ry">'+
@@ -635,7 +636,9 @@ function renderBates(){
     '<button class="knop klein2 rooi" onclick="uitSpaar(\'alles\')">Trek alles uit</button></div>';
   h += renderBond();
   h += '<div class="kaart"><div class="hoof">JSE-indeksfonds</div>'+
-    '<div class="klein">Waarde: ' + geld(s.belegging) + ' · historiese opbrengs -24% tot +34% per jaar</div>'+
+    '<div class="klein">Waarde: ' + geld(s.belegging) + ' · hoë risiko: meeste jare ' +
+      JSE_JARE[2].r[0] + '\u2013' + JSE_JARE[2].r[1] + '%, sowat een uit tien \u2019n crash tot ' +
+      JSE_JARE[0].r[0] + '%. Oor 20 jaar klop dit meestal die spaarrekening.</div>'+
     '<div class="knoppe"><button class="knop klein2" onclick="bele(10000)">Bele R10k</button>'+
     '<button class="knop klein2" onclick="bele(100000)">Bele R100k</button>'+
     '<button class="knop klein2 grys" onclick="bele(\'alles\')">Alles</button></div>'+
