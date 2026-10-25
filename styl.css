@@ -266,3 +266,20 @@ body{background:#05080c;color:var(--teks);
 .md-polisie{left:50%;top:90%;font-size:26px;animation:md-sirene .5s infinite alternate}
 .md-ding.raak{opacity:.3}
 @keyframes md-sirene{from{filter:drop-shadow(0 0 6px #f0564a)}to{filter:drop-shadow(0 0 6px #4f9bf5)}}
+
+/* ---------- Die ontsnapping (Fase 9) ---------- */
+/* 'n Rooster van 9 x 11 van bo af; elke sel is 'n tikteiken. */
+.os-rooster{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;width:100%;max-width:330px;
+  padding:3px;border-radius:10px;background:#0b0f15}
+.os-sel{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  font-size:19px;line-height:1;border-radius:4px;background:#2a3140;cursor:pointer;user-select:none}
+.os-sel.muur{background:#11161f}
+.os-sel.krat{background:#3a3226}
+.os-sel.heining{background:repeating-linear-gradient(45deg,#44505f 0 3px,#1b222d 3px 7px)}
+.os-sel.uit{box-shadow:inset 0 0 0 2px var(--groen)}
+.os-sel.hek{background:#21402b}
+.os-sel.pad{background-image:radial-gradient(circle,rgba(255,255,255,.28) 2px,transparent 2.5px)}
+.os-sel.spook{background-color:#4f3b22;box-shadow:inset 0 0 0 1px var(--oranje)}
+.os-sel.kegel{background-color:#6b2a27}
+.os-sel.ek{box-shadow:inset 0 0 0 2px var(--geel)}
+.os-sel i{position:absolute;right:1px;bottom:0;font-size:10px;font-style:normal;color:#ffd0c8}

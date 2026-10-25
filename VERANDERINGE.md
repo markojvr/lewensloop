@@ -22,6 +22,7 @@ met presies dieselfde gedrag — net makliker om in te werk:
 | `minispel.js` | **Fase 7.** Die mini-spel-raamwerk (’n volskerm-paneel met “Speel self” en “Doen dit vinnig”) en die vier casino-spele: blackjack, roulette, slots en video poker. Laai ná `skerm.js`. |
 | `misdaad.js` | **Fase 8.** Die hele misdaadvloei (teiken, maat, ontsnapvoertuig, mini-spel, uitslag), hitte, die heler, die hof (jeugreg, prokureur, borgtog, pleit, vonnis), die witboordjie-oudit, en die vyf misdaad-mini-spele. Die getalle staan in `data.js` onder “MISDAAD EN REG”. Laai ná `minispel.js`. |
 | `onderwereld.js` | **Fase 8b.** Jou rep as krimineel, die vier organisasies (aansluit, jobs, range) en jou eie organisasie (werf, jobs vir jou mense, lone). Laai ná `misdaad.js`. |
+| `ontsnap.js` | **Fase 9.** Tronk-ontsnapping: die voorbereidings oor jare, die stealth-mini-spel (rooster, patrollies, kykkeëls, ’n foutlose-pad-oplosser en twee bots), en die lewe op die vlug (soektog, vals ID, trek, oorgee). Die getalle staan in `data.js` onder “ONTSNAPPING EN DIE LEWE OP DIE VLUG”. Laai ná `onderwereld.js`. |
 | `begin.js` | Die inskryfpunt. Laai heel laaste. |
 
 Dit is gewone `<script src>`-lêers, nie ES modules nie, **sodat dubbelklik op
@@ -247,8 +248,8 @@ in `data.js` onder "GESIN EN GESONDHEID (Fase 5)": `TOESTANDE`, `MEDIESE_FONDSE`
 | G1 | ✅ **KLAAR (24 Okt 2026, Fase 8.)** `jeugHof()` in `misdaad.js`: onder 14 altyd diversie; tot 17 diversie vir ’n eerste of ligte oortreding, anders ’n jeugsorgsentrum (1–4 jaar, nooit verby 21 nie) waar jy skool gaan. Diversie kom nie op jou rekord nie. **Geen jeugreg.** 'n 12-jarige kry 'n volle grootmens-vonnis. In SA is 12 reg as minimum ouderdom van kriminele aanspreeklikheid, maar 'n kind gaan na 'n child and youth care centre en kry diversion, nie 8–20 jaar in "die tronk" nie. |
 | G2 | ✅ **KLAAR (24 Okt 2026, Fase 8.)** `hofVonnis()`: die saak word teruggetrek, of ’n boete, gemeenskapsdiens, ’n opgeskorte vonnis of tronkstraf, na gelang van die misdaad se erns (1–5), jou rekord, ’n wapen, ’n jaagtog en jou pleit. ’n Ernstige misdaad het ’n vloer (’n bankroof is altyd tronk). **Elke betrapping is tronk.** Geen waarskuwing, geen boete, geen gemeenskapsdiens, geen opgeskorte vonnis. 'n Kind wat 'n sak lekkers steel, kry 1–2 jaar. |
 | G3 | ✅ **KLAAR (24 Okt 2026, Fase 8.)** Arrestasie → prokureur (Regshulp gratis, ’n privaat prokureur of ’n senior advokaat teen R15 000 of R70 000 per erns-punt) → borgtog (of maande in aanhouding, wat jou werk kan kos) → pleit skuldig (pleitooreenkoms, ligter) of onskuldig (3–45% kans om vrygespreek te word, anders swaarder). **Geen hofproses.** Geen arrestasie, geen borgtog, geen prokureur (wat jy kan bekostig of nie), geen pleitooreenkoms, geen onskuldig bevind word. |
-| G4 | ✅ **DEELS (24 Okt 2026, Fase 8.)** Parool: ná die helfte van ’n vonnis van 2+ jaar kom jy elke jaar met 40% kans vry, en die res word ’n paroolperiode wat soos ’n opgeskorte vonnis werk. ’n Vonnis wat met ’n ontsnappoging verleng is, kry nie parool nie. Goeie gedrag tel nog nie. **Geen parool, geen goeie gedrag, geen vroeë vrylating.** `tronkJaar()` tel net op. |
-| G5 | **Ontsnapping doen niks.** Slaag jy, is jy 'n "vlugteling" — en dan gebeur daar nooit weer iets nie. Geen jagtog, geen hervatting, geen lewe op die vlug. |
+| G4 | ✅ **DEELS (24 Okt 2026, Fase 8.)** Parool: ná die helfte van ’n vonnis van 2+ jaar kom jy elke jaar met 40% kans vry, en die res word ’n paroolperiode wat soos ’n opgeskorte vonnis werk. ’n Vonnis wat met ’n ontsnappoging of ’n deursoeking verleng is, of wat ’n gevange vlugteling uitsit, kry nie parool nie (Fase 9). Goeie gedrag tel nog nie. **Geen parool, geen goeie gedrag, geen vroeë vrylating.** `tronkJaar()` tel net op. |
+| G5 | ✅ **KLAAR (25 Okt 2026, Fase 9.)** Sien afdeling M: ’n ontsnapping wat jy oor jare beplan, ’n stealth-mini-spel, en ’n lewe op die vlug met ’n jaarlikse soektog, ’n vals ID, trek, oorgee en ’n pad uit. **Ontsnapping doen niks.** Slaag jy, is jy 'n "vlugteling" — en dan gebeur daar nooit weer iets nie. Geen jagtog, geen hervatting, geen lewe op die vlug. |
 | G6 | **Jy word nooit 'n slagoffer nie.** Jy kan 'n huis beroof maar nooit beroof word nie. Vir SA-realisme: huisinbraak, hijacking, selfoon gesteel, bedrog/phishing, smash-and-grab. |
 | G7 | **Geen verkeersoortredings.** Geen spoedboete, geen dronkbestuur, geen AARTO-demerits, geen motorongeluk waarvoor jy aanspreeklik is. |
 | G8 | ✅ **KLAAR (24 Okt 2026, Fase 8.)** “Bedrog by die werk” (vereis ’n werk: SARS, fakture, verduistering, tender) met ’n vertraagde oudit via die vlag `oudit`, “Kuberbedrog” (vereis kodeer 2–4: phishing, kaartbedrog, SIM-swop), en ’n polisieman omkoop. **Geen white-collar misdaad.** Geen belastingontduiking as 'n keuse (net een SARS-gebeurtenis), geen bedrog, geen omkopery, geen cybercrime. |
@@ -381,6 +382,47 @@ burgerlike sake (G10) staan nog oop.
 
 ---
 
+## M. Fase 9 — tronk-ontsnapping en die lewe op die vlug — ✅ KLAAR (25 Oktober 2026)
+
+Nuwe velde in `s`: `vlug` (`{oor, ekstra, sedert, jare, vals, laag, getrek}` — hoeveel
+jaar van die vonnis oop is, wat die ontsnapping self sal kos as hulle jou vang, en wat jy
+gedoen het om weg te bly; anders `null`) en `vlugJare` (jou leeftyd se jare op die vlug,
+op die grafsteen). `s.tronk` kry `plan` (`{tonnel 0–3, laken, uniform, roete, helper,
+bewaarder, kar}`) en `geenParool`. Verstek in `nuweLewe()`, `vulNuweVelde()` (ook ’n
+leë plan vir ’n ou tronkvonnis) en `tronkToe()`; `gaanVoortAsKind()` begin `vlug` en
+`vlugJare` skoon. Die nuwe kode staan in **`ontsnap.js`** (laai ná `onderwereld.js`), die
+getalle in `data.js` onder “ONTSNAPPING EN DIE LEWE OP DIE VLUG”. Die ou “Probeer
+ontsnap”-knoppie (14% + slim/12, en dan niks) is weg. Niemand word seergemaak nie: die
+bewaarders vang jou, hulle skiet nie.
+
+| # | Wat | Gedoen |
+|---|---|---|
+| M1 | **Beplanning oor jare.** | ✅ Tronklewe → **“Beplan ’n ontsnapping”**. Een voorbereiding per jaar, elk met ’n prys: **’n tonnel met ’n lepel** (drie jaar se grawe, 12% per jaar om gevang te word), **lakens as ’n tou** (8%), **’n bewaarder se uniform** (20%), **die skofte en roete uitwerk** (geen risiko, maar 30% + slim/2 kans per jaar), **’n medegevangene as helper** (35% + geluk/3, +20 as jy vanjaar vriende gemaak het; 15% kans hy verklik jou en jy verloor iets), **’n bewaarder omkoop** (R25 000 en 25% kans hy is eerlik — *Fase 8b:* gratis en 10% as jou organisasie dit doen, R15 000 as jou eie mense dit reël), en **’n wegkomkar buite** (net deur ’n organisasie, jou eie mense of ’n kontak met rep 30+, R0–R40 000). Gevang met die goed is ’n dissiplinêre verhoor: ’n jaar by (twee vir omkopery), en omdat die vonnis dan nie meer die oorspronklike is nie, is **parool weg**. Elke jaar is daar boonop ’n **deursoeking** van jou sel: 4% + 7% per ding wat jy wegsteek (tonnel, tou, uniform). Een poging per jaar. **’n Jeugsorgsentrum het geen ontsnapping nie**: daar is nie tralies nie, jy is binnekort uit, en dit kom nie op ’n grootmens se rekord nie. |
+| M2 | **Die ontsnapping as stealth-mini-spel** in die Fase 7-raamwerk. | ✅ ’n Rooster van 9 × 11 van bo af: jou sel onder, ’n selgang, ’n muur met ’n deur, die binneplaas, ’n binnemuur met twee deure, die buitewerf, en die heining met een hek. Kratte keer beweging en sig. Vyf bewaarders patrolleer heen en weer (een in die selgang, twee op die binneplaas, twee op die buitewerf) en sien in ’n kegel van drie selle voor hulle uit; aan die einde van hul roete draai hulle om. Jy **tik** ’n sel langs jou (of verder: een tree in daardie rigting) of op jouself om te wag — geen sleutelbord. Haal die hek voor die oggendtelling (die kortste foutlose pad + 10 skuiwe, minstens 36). Word jy gesien, gaan die alarm af en jaag al die bewaarders jou (een sel per skuif; langs jou is gevang), en ná 5 skuiwe word die hek gesluit. **Foutloos is altyd uit**: elke kaart word eers met ’n BFS deur tyd (`osOplos()`) getoets, en net ’n kaart met ’n foutlose pad word gegee — **gemeet: 1 100 kaarte oor 11 voorbereidingsvlakke, die BFS-pad deur die spel se eie enjin teruggespeel, 100% uit sonder om gesien te word**. Elke voorbereiding verander die spel: die **tonnel** laat jou verder uitkom (1 jaar: op die binneplaas, 2: op die buitewerf, 3: langs die heining); die **tou** maak die hele heining ’n uitgang, ook as die hek gesluit is; die **uniform** laat die eerste bewaarder wat jou sien net knik (hy ignoreer jou daarna); die **roete** wys die patrollies se roetes en waarheen elkeen volgende kyk; die **helper** gee twee afleidings van vyf skuiwe waarin die bewaarders vries en niks sien nie; die **omgekoopte nagskof** haal die twee buitewerf-patrollies weg. **“Doen dit vinnig”** speel ’n bot op ’n nuwe kaart met jou voorbereiding (dit skaal dus vanself), en die ingang wys die kans (30 simulasies). **Gemeet** (400 kaarte per sel): ’n *goeie speler* (ken die patrollies, kyk 6 skuiwe vooruit, waag dit 3% van die tyd, 1,5% met die roete) teenoor *vinnig* (5 skuiwe vooruit, 6% / 4%): <br>• geen voorbereiding: goed **68%**, vinnig **56%** <br>• roete 77 / 66 · laken 77 / 71 · helper 75 / 69 · bewaarder 78 / 68 · uniform **90 / 87** <br>• tonnel 1 jaar 85 / 74 · 2 jaar 89 / 86 · 3 jaar 86 / 88 <br>• roete + uniform 90 / 89 · plus laken 93 / 94 · vyf dinge (sonder tonnel) **99 / 98** · alles **100 / 100** <br>Vinnig is dus 3–12 punte swakker sonder veel voorbereiding en gelyk (binne die ruis van ± 3) as jy goed voorberei is. |
+| M3 | **Ná die heining.** | ✅ Niemand het jou gesien nie: jy begin op die vlug met hitte **55**; die alarm het afgegaan: **85**; ’n kar het gewag: **35**. Wag die kar en het die alarm afgegaan, kies jy: **“Trap die petrol”** (die Fase 8b-jaagtog met 3 kanse, 47 hindernisse; weg = hitte 60 en rep +3) of **“Los die kar, hardloop”** (hitte 85). Elke ontsnapping kom op jou rekord en gee rep +6. **Misluk dit** (of verloor jy die jaagtog): 2–5 jaar by, parool weg, alles wat jy versamel het weg, hitte +20. “Gee op” in die spel sluip jou terug na jou sel sonder straf — behalwe as die alarm al loei. |
+| M4 | **Die lewe op die vlug (G5).** | ✅ ’n Kaart bo-aan Aktiwiteite wys hoeveel jaar oop is, die kans om volgende jaar gevang te word, en hoe lank nog tot jy vry is. Elke jaar (`vlugJaar()`, ná die hitteverval in `misdaadJaar()`) is die kans **12% + hitte × 0,3**, **+12%** as jy by jou ouers of familie bly (die eerste plek waar hulle soek), **+8%** as jy ’n huis besit, **−5%** op straat, **−8%** as jy verlede jaar laag gelê het, **−12%** as jy verlede jaar getrek het (−6% die jaar daarna), **−10%** met ’n vals ID, **−4%** in ’n organisasie, en **−1% per jaar** wat die spoor kouer word (tot −8%); tussen 2% en 85%. **Sonder ’n vals ID** is werk (voltyds, deeltyds, die skuiling se werk), ’n besigheid (behalwe smous), die spaarrekening, die JSE, ’n verband, ’n mediese fonds en die NGO toe; **los werk vir kontant** (twee keer per jaar), straatwerk en misdaad bly oop. **’n Vals ID** kos R10 000 (5% kans dit is ’n polisie-lokval) deur jou organisasie of jou eie mense, R20 000 (10%) deur ’n kontak as jy rep 25+ het, en R35 000 (25%) by ’n vreemdeling. **Trek weg** (R6 000, gratis op straat, een keer per jaar) skuif jou na ’n ander dorp; wie by sy ouers bly, trek in ’n kommune in. **Gevang** (in die jaarlikse soektog, by ’n lokval, of by enige hofsaak — jou vingerafdrukke verraai jou, selfs as jy onskuldig bevind word): jy sit die res van jou vonnis plus **2–4 jaar** vir die ontsnapping uit, **sonder parool**. **Gee jouself oor**: die res plus **net 1 jaar**, en parool bly moontlik. **Die pad uit**: ná **10 jaar** met ’n vals ID sit jou nuwe identiteit vas, ná **15 jaar** sonder een raak die saak koud. Twee nuwe gebeure (iemand herken jou in die winkel; jy kan nie jou ouers bel nie). Werk saam met die dakloosheid-modus (op straat soek hulle minder, maar die NGO is toe), die hof (`hofBeslis()` en `jeugHof()`), organisasies (rep, vals ID, ’n kar, ’n bewaarder) en die generasiespel (’n kind begin skoon). |
+
+**Hoe lank bly ’n vlugteling vry?** Gemeet met 300–600 gevangenes van 25 met ’n vonnis van
+14 jaar wat dadelik ontsnap (“vinnig”) en dan vir die res van hul lewe gevolg word:
+<br>• Wie **niks** doen nie: **74%** word gevang, die mediaan is **4 jaar** vry, 22% haal
+15 jaar en is vry, 4% sterf op die vlug.
+<br>• Wie **aktief** wegkruip (elke jaar laag lê, elke tweede jaar trek, ’n vals ID by ’n
+vreemdeling koop): **24%** loop in die lokval, nog **12%** word op die vlug gevang, **57%**
+is ná 10 jaar vry, 6% sterf. Met rep 30 (’n kontak in plaas van ’n vreemdeling): 10%
+lokval, 18% gevang, **66% vry**.
+<br>• Met voorbereiding in die tronk (3 dinge eers): 92% kom uiteindelik uit (die res kry
+parool of word in die proses gevang); wie op al 7 wag, kom in net **50%** van gevalle by
+’n poging uit — parool en deursoekings vreet die tyd op.
+<br>**0 foute** oor 600 passiewe lewens (gemiddelde ouderdom 59–61), 600 misdadiger-lewens
+wat elke tronkjaar lukraak beplan en ontsnap (3 186 pogings, 2 404 ontsnappings — 75% —
+en 6,6 jaar op die vlug per lewe), 300 kinder-lewens, 300 organisasie- en 300
+eie-organisasie-lewens, ± 4 000 gevolgde vlugtelinge, ’n ou stoor-lêer met ’n tronkvonnis
+sonder Fase 9-velde, en ’n vlugteling se kind in die generasiespel. In die blaaier gespeel:
+die beplanning, die stealth-spel (self en vinnig), die vlug-kaart, trek, ’n vals ID,
+oorgee, die alarm met die wegkomkar en die jaagtog, en stoor/laai.
+
+---
+
 ## J. Voorgestelde orde van werk
 
 ~~**Fase 1 — fixes (A1–A16).**~~ **✅ KLAAR (22 Oktober 2026).** Al 16 items is gedoen — sien die **Gedoen**-kolom in afdeling A. Die spel is nou eerliker: die fliek betaal reg, casino en Lotto verloor geld soos hulle moet, en die tronk breek nie meer jou skoolloopbaan nie.
@@ -428,6 +470,13 @@ misdaad-mini-spele. Misdaad betaal per poging, maar oor ’n lewe kos dit dekade
 moeiliker met erns en hitte) en ’n onderwêreld bygevoeg: rep, vier organisasies met
 range en jobs, en jou eie organisasie waar mense werf die moeilikste deel is.
 
+~~**Fase 9 — tronk-ontsnapping en die lewe op die vlug (M1–M4, G5).**~~ **✅ KLAAR (25
+Oktober 2026).** Sien afdeling M. ’n Ontsnapping is nou iets wat jy oor jare beplan —
+’n tonnel, ’n tou, ’n uniform, die roete, ’n helper, ’n omgekoopte bewaarder, ’n kar —
+en dan sluip jy self deur ’n stealth-mini-spel van bo af (foutloos is altyd uit). Daarna
+is jy ’n vlugteling: elke jaar soek die polisie jou, ’n vals ID maak die gewone lewe
+weer oop, en na 10 of 15 jaar is jy vry — of jy gee jouself oor.
+
 **Klaar tot dusver:**
 
 1. Die opdeel in aparte lêers (sien Lêerstruktuur bo), sodat die latere fases nie in
@@ -458,11 +507,10 @@ range en jobs, en jou eie organisasie waar mense werf die moeilikste deel is.
    heler, die hof en jeugreg, tien misdade met ’n vertraagde oudit, vyf
    misdaad-mini-spele, ’n jaagtog met kanse, rep en kriminele organisasies.
 
-**Volgende aan die beurt:** Fase 9 — tronk-ontsnapping as mini-game en die lewe op
-die vlug (G5). Gebruik `misdaad.js` se patroon: ’n spel gee ’n gehalte *q* terug, en
-`mdVinnig()` trek *q* rondom 0,6 sodat vinnig die kans gemiddeld nie skuif nie. ’n
-Vlugteling kan `s.hitte` gebruik (begin hoog, die polisie soek jou) en `hofSaak()` as
-hy gevang word. Dan Fase 10 (vaardigheid-mini-games). Daarna: die drie wat die meeste sal
+10. **Fase 9 (M1–M4; G5)** — ontsnapping oor jare beplan, ’n stealth-mini-spel met
+   ’n foutlose-pad-waarborg, en die lewe op die vlug.
+
+**Volgende aan die beurt:** Fase 10 (vaardigheid-mini-games). Daarna: die drie wat die meeste sal
 byvoeg, is waarskynlik **H2** (prestasies op die grafsteen — dit gee die
 generasiespel ’n telling om voor te speel), **H9** (die motor as ’n volle stelsel:
 lisensietoets, versekering, diens, ongeluk) en **H8** (eiendom om te verhuur, wat die

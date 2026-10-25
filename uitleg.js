@@ -22,6 +22,7 @@ function bar(naam, waarde, kleur){
 }
 function statusLyn(){
   if(!s.lewe) return 'Oorlede';
+  if(s.vlug && !s.tronk) return 'Vlugteling' + (s.dakloos ? ' op straat' : '') + ' (jaar ' + s.vlug.jare + ')';
   if(s.tronk) return (s.tronk.jeug ? 'Jeugsorgsentrum (' : 'In die tronk (') + (s.tronk.jare - s.tronk.gedien) + ' jaar oor)';
   if(s.dakloos) return 'Dakloos' + (s.dakloos.jare ? ' (jaar ' + s.dakloos.jare + ')' : '');
   if(s.beroep) return beroepTitel();
@@ -131,7 +132,7 @@ function renderMisdaad(){
 }
 function renderAkt(){
   var h = '';
-  if(s.dakloos && !s.tronk) return renderDakloos() + renderMisdaad();
+  if(s.dakloos && !s.tronk) return renderVlug() + renderDakloos() + renderMisdaad();
   if(s.tronk){
     var jeug = s.tronk.jeug;
     h += '<div class="titel">' + (jeug ? 'Jeugsorgsentrum' : 'Tronklewe') + '</div>';
@@ -142,9 +143,10 @@ function renderAkt(){
       '<button class="knop grys" onclick="tronkAksie(\'oefen\')">Oefen in die gym</button>'+
       '<button class="knop grys" onclick="tronkAksie(\'lees\')">Lees in die biblioteek</button>'+
       '<button class="knop grys" onclick="tronkAksie(\'vriende\')">Maak vriende in jou blok</button>'+
-      '<button class="knop rooi" onclick="tronkAksie(\'ontsnap\')">Probeer ontsnap</button></div>';
+      renderOntsnapKnop() + '</div>';
     return h;
   }
+  h += renderVlug();
   var groepe = [];
   AKTIWITEITE.forEach(function(a){ if(groepe.indexOf(a.g)<0) groepe.push(a.g); });
   groepe.forEach(function(g){

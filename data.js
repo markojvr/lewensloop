@@ -660,6 +660,58 @@ var EIE_JOBS = [
    buit:[200000,700000], rep:5, erns:4},
   {n:'’n Kontant-in-transito-roof', moeilik:5, orgRep:60, buit:[600000,2400000], rep:7, erns:5}
 ];
+
+/* ==========================================================================
+   ONTSNAPPING EN DIE LEWE OP DIE VLUG (Fase 9)
+   In die tronk berei jy een ding per jaar voor (ONTSNAP_ITEMS); elkeen
+   maak die ontsnapping-mini-spel makliker. Goed wat jy wegsteek, kan by
+   'n deursoeking gevind word. Wie uitkom, is 'n vlugteling (s.vlug): elke
+   jaar is daar 'n kans dat die polisie jou vind. Niemand word in enige
+   ontsnapping doodgemaak of seergemaak nie.
+   ========================================================================== */
+/* Die voorbereidings. 'risiko' is die % kans dat jy daarmee gevang word
+   (dan kry jy 'n jaar by, wat ook jou parool kos). */
+var ONTSNAP_ITEMS = [
+  {id:'tonnel', n:'Grawe ’n tonnel met ’n lepel', e:'\u{1F944}', risiko:12, jare:3,
+   sub:'Drie jaar se grawe; elke jaar kom jy verder uit'},
+  {id:'laken', n:'Knoop lakens in ’n tou', e:'\u{1F9F6}', risiko:8,
+   sub:'Jy kan oral oor die heining klim, nie net by die hek nie — ook as die hek gesluit word'},
+  {id:'uniform', n:'Steel ’n bewaarder se uniform', e:'\u{1F454}', risiko:20,
+   sub:'Die eerste bewaarder wat jou sien, knik net vir jou'},
+  {id:'roete', n:'Werk die skofte en die roete uit', e:'\u{1F5FA}', risiko:0,
+   sub:'Jy sien die patrollies se roetes en waarheen elkeen volgende kyk'},
+  {id:'helper', n:'Kry ’n medegevangene as helper', e:'\u{1F91D}', risiko:15,
+   sub:'Twee keer: ’n afleiding wat die bewaarders vyf skuiwe lank besig hou'},
+  {id:'bewaarder', n:'Koop ’n bewaarder om', e:'\u{1F4B5}', risiko:25, koste:25000,
+   sub:'Die nagskof op die buitewerf kyk weg: twee patrollies minder'},
+  {id:'kar', n:'Reël ’n wegkomkar buite', e:'\u{1F697}', risiko:0,
+   sub:'Buite is jy vinnig weg — en die polisie soek minder lank'}
+];
+/* Elke jaar: 'n deursoeking vind jou goed met DEURSOEK_BASIS plus
+   DEURSOEK_PER_ITEM per ding wat in jou sel weggesteek is. */
+var DEURSOEK_BASIS = 4, DEURSOEK_PER_ITEM = 7;
+/* Wat 'n mislukte ontsnapping kos. */
+var ONTSNAP_STRAF = [2, 5], ONTSNAP_HITTE = 20;
+/* Die hitte waarmee jy op die vlug begin: niemand het jou gesien nie,
+   die alarm het afgegaan, of 'n kar het buite gewag. */
+var VLUG_HITTE_STIL = 55, VLUG_HITTE_ALARM = 85, VLUG_HITTE_KAR = 35, VLUG_HITTE_JAAG = 60;
+/* Die kans om elke jaar gevang te word: VLUG_BASIS plus hitte maal
+   VLUG_PER_HITTE, plus of min die res (sien vlugKans()). Die spoor raak
+   elke jaar 1% kouer, tot VLUG_KOUD. */
+var VLUG_BASIS = 12, VLUG_PER_HITTE = 0.3, VLUG_OUERS = 12, VLUG_HUIS = 8, VLUG_STRAAT = 5,
+    VLUG_LAAG = 8, VLUG_TREK = 12, VLUG_VALS = 10, VLUG_ORG = 4, VLUG_KOUD = 8;
+/* Word jy gevang, sit jy die res van jou vonnis uit plus soveel jare vir
+   die ontsnapping (en geen parool); gee jy jouself oor, net een jaar. */
+var VLUG_EKSTRA = [2, 4], VLUG_OORGEE_EKSTRA = 1;
+/* Ná soveel jare sonder om gevang te word, is jy vry: met 'n vals ID
+   sit jou nuwe identiteit vas, sonder een raak die saak koud. */
+var VLUG_VRY_VALS = 10, VLUG_VRY = 15;
+var VLUG_TREK_KOSTE = 6000, VLUG_REP = 6;
+/* 'n Vals ID: via jou organisasie, 'n kontak (rep 25+) of 'n vreemdeling. */
+var VALS_ID = [
+  {koste:10000, risiko:5, wie:'org'}, {koste:20000, risiko:10, wie:'kontak', rep:25},
+  {koste:35000, risiko:25, wie:'vreemd'}
+];
 var BOEKE=[
   {n:'Fiela se Kind', a:'Dalene Matthee', slim:5, geluk:4},
   {n:'Kringe in ’n Bos', a:'Dalene Matthee', slim:5, geluk:3},

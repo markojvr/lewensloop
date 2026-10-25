@@ -34,6 +34,7 @@ blaaier).
 | `minispel.js` | Die mini-spele: blackjack, roulette, slots en video poker. |
 | `misdaad.js` | Misdaad en die hof: hitte, die heler, jeugreg, vonnisse en die misdaad-mini-spele. |
 | `onderwereld.js` | Jou rep as krimineel, die kriminele organisasies en jou eie organisasie. |
+| `ontsnap.js` | Tronk-ontsnapping: die beplanning oor jare, die stealth-mini-spel, en die lewe op die vlug. |
 | `begin.js` | Die inskryfpunt — laai laaste. |
 
 Dit is gewone `<script src>`-lêers en nie ES modules nie, sodat

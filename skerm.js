@@ -147,6 +147,7 @@ function wysGrafskrif(){
     (s.gene ? '<div class="eind-stat"><span>Familiegeskiedenis</span><b>' +
       veilig(s.gene.n) + '</b></div>' : '')+
     '<div class="eind-stat"><span>Jare in die tronk</span><b>' + (s.tronkJare||0) + '</b></div>'+
+    (s.vlugJare ? '<div class="eind-stat"><span>Jare op die vlug</span><b>' + s.vlugJare + '</b></div>' : '')+
     (s.dakloosJare ? '<div class="eind-stat"><span>Jare op straat</span><b>' +
       s.dakloosJare + '</b></div>' : '')+
     '<div class="eind-stat"><span>Geluk by die einde</span><b>' + s.geluk + '%</b></div>';

@@ -184,6 +184,7 @@ function vaardigheidVloei(){
 function besigheidVereis(x){
   if(s.besigheid) return 'Jy loop al ’n besigheid';
   if(s.tronk) return 'Jy is in die tronk';
+  if(vlugToe() && x.id!=='smous') return vlugToe() + ' kan jy niks registreer nie';
   if(s.dakloos && x.id!=='smous') return 'Sonder ’n adres begin niemand so iets nie';
   if(s.ouderdom < x.min) return 'Jy moet ' + x.min + ' jaar oud wees';
   if(s.swartlys>0 && x.kapitaal>100000) return 'Jy is gelys — niemand gee jou krediet nie';
@@ -449,6 +450,8 @@ function vraGeldVloei(){
 /* ---------- Tronk-aksies ---------- */
 function tronkAksie(wat){
   if(!s.tronk) return;
+  /* Fase 9 — die ontsnapping is nou 'n plan oor jare en 'n mini-spel (ontsnap.js). */
+  if(wat==='ontsnap'){ ontsnapMenu(); return; }
   if((s.gedoen['t_'+wat]||0)>=1){ wenk('Een keer per jaar.'); return; }
   s.gedoen['t_'+wat]=1;
   if(wat==='oefen'){ s.gesondheid=klem(s.gesondheid+tussen(3,9));
@@ -457,12 +460,6 @@ function tronkAksie(wat){
     noteer('Jy het die tronkbiblioteek leeggelees.','skool'); }
   else if(wat==='vriende'){ s.geluk=klem(s.geluk+tussen(3,8));
     noteer('Jy het vriende gemaak met die ouens in jou blok.','neutraal'); }
-  else if(wat==='ontsnap'){
-    if(kans(14 + s.slim/12)){ s.tronk=null; s.rekord.push('ontsnapping'); s.geluk=klem(s.geluk+20);
-      noteer('Jy het uit die tronk ontsnap! Jy is nou ’n vlugteling.','misdaad'); wenk('Jy is uit!'); }
-    else { s.tronk.jare += tussen(2,6); s.geluk=klem(s.geluk-12);
-      noteer('Jou ontsnappingspoging het misluk. Jou vonnis is verleng.','sleg'); wenk('Misluk.'); }
-  }
   stoor(); renderAlles();
 }
 
@@ -512,6 +509,7 @@ function dakloosAksie(wat){
   }
   else if(wat==='ngo'){
     if(s.dakloos.ngo){ wenk('Jy is al aangemeld.'); return; }
+    if(vlugToe()){ wenk('Die NGO wil jou ID-nommer hê — en dit is op die polisie se lys.'); return; }
     s.dakloos.ngo = true;
     s.geluk = klem(s.geluk + tussen(3,8));
     noteer('Jy het by ’n NGO aangemeld. Hulle het jou gehelp om ’n ID te kry en ' +
@@ -569,6 +567,8 @@ function werkVereis(j){
   if(s.slim < j.slim) return 'Slimheid ' + j.slim + '+ nodig';
   if(j.ervaring && s.jareGewerk < j.ervaring) return j.ervaring + ' jaar werkservaring nodig';
   if(j.skoon && s.rekord.length) return 'Geen kriminele rekord toegelaat';
+  /* Fase 9 — 'n vlugteling sonder 'n vals ID kan nie sy ID-nommer op 'n vorm skryf nie. */
+  if(vlugToe()) return vlugToe() + ' kan jy nie aansoek doen nie';
   return null;
 }
 /* Hoeveel onderhoude jy vanjaar kan kry. */
@@ -947,7 +947,8 @@ function bondOpsies(prys){
       var lening = prys - deposito;
       var paaiement = bondPaaiement(lening, jare);
       var rede = null;
-      if(s.swartlys>0) rede = 'Jy is gelys — nog ' + s.swartlys + ' jaar';
+      if(vlugToe()) rede = 'Die bank wil jou ID sien';
+      else if(s.swartlys>0) rede = 'Jy is gelys — nog ' + s.swartlys + ' jaar';
       else if(s.bond) rede = 'Jy het reeds ’n verband';
       else if(s.geld < deposito) rede = 'Jy kort ' + geld(deposito - s.geld) + ' deposito';
       else if(paaiement > bondVermoe()) rede = 'Te duur vir jou inkomste';
@@ -1011,6 +1012,7 @@ function betaalEkstraBond(bedrag){
 
 /* ---------- B5: die spaarrekening ---------- */
 function naSpaar(bedrag){
+  if(vlugBank()) return;
   if(bedrag==='alles') bedrag = s.geld;
   bedrag = Math.round(bedrag);
   if(bedrag<=0 || s.geld < bedrag){ wenk('Jy het nie soveel kontant nie.'); return; }
@@ -1019,6 +1021,7 @@ function naSpaar(bedrag){
   wenk('Gespaar: ' + geld(bedrag)); stoor(); renderAlles();
 }
 function uitSpaar(bedrag){
+  if(vlugBank()) return;
   if(bedrag==='alles') bedrag = s.spaar||0;
   bedrag = Math.round(bedrag);
   if(bedrag<=0 || (s.spaar||0) < bedrag){ wenk('Soveel is nie in die spaarrekening nie.'); return; }
@@ -1067,6 +1070,7 @@ function dakloosHuur(id){
   stoor(); renderAlles();
 }
 function bele(bedrag){
+  if(vlugBank()) return;
   if(bedrag==='alles') bedrag = s.geld;
   if(bedrag<=0 || s.geld < bedrag){ wenk('Jy het nie soveel geld nie.'); return; }
   s.geld -= bedrag; s.belegging += bedrag;
@@ -1074,6 +1078,7 @@ function bele(bedrag){
   wenk('Bele: ' + geld(bedrag)); stoor(); renderAlles();
 }
 function verkoopBelegging(){
+  if(vlugBank()) return;
   if(s.belegging<=0){ wenk('Jy het geen beleggings nie.'); return; }
   s.geld += s.belegging;
   noteer('Jy het jou beleggings van ' + geld(s.belegging) + ' verkoop.','geld');
@@ -1381,6 +1386,7 @@ function sluitFondsAan(id){
   MEDIESE_FONDSE.forEach(function(x){ if(x.id===id) f=x; });
   if(!f) return;
   if(s.mediesefonds && s.mediesefonds.id===id){ wenk('Jy is al op daardie plan.'); return; }
+  if(vlugToe()){ wenk('Die fonds wil jou ID-nommer hê. Jy het ’n vals ID nodig.'); return; }
   var premie = fondsPremieVan(f);
   if(premie > Math.max(0,s.geld) + (s.spaar||0) + Math.max(0, huishoudingBruto()*0.25)){
     wenk('Jy kan nie ' + geld(premie) + ' per jaar bekostig nie.'); return;

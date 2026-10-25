@@ -65,7 +65,10 @@ function nuweLewe(naam, van, geslag){
     hitte:0, opgeskort:null, misdaad:{pogings:0, gevang:0, buit:0, koste:0},
     /* Fase 8b — jou naam in die onderwêreld, die organisasie waarby jy
        is, en jou eie organisasie */
-    straatRep:0, bende:null, eieOrg:null
+    straatRep:0, bende:null, eieOrg:null,
+    /* Fase 9 — die lewe op die vlug ná 'n ontsnapping, en hoeveel jaar
+       jy altesaam op die vlug was */
+    vlug:null, vlugJare:0
   };
   /* F9 — die gene word heel eerste gerol, want elke ander stelsel kan
      daarna daarna kyk (watter siekte in die familie is, hoe lank jy leef). */
@@ -257,6 +260,10 @@ function vulNuweVelde(){
   if(!s.straatRep) s.straatRep = 0;
   if(s.bende===undefined) s.bende = null;
   if(s.eieOrg===undefined) s.eieOrg = null;
+  /* Fase 9 — die vlug, en die ontsnappingsplan van 'n ou tronkvonnis. */
+  if(s.vlug===undefined) s.vlug = null;
+  if(!s.vlugJare) s.vlugJare = 0;
+  if(s.tronk && !s.tronk.plan) s.tronk.plan = {tonnel:0, laken:false, uniform:false, roete:false, helper:false, bewaarder:false, kar:false};
   /* E7 — 'n ou kind het nog nie 'n eie lewe nie. kindLewe() bou dit
      agteruit uit sy ouderdom, sodat 'n 30-jarige seun nie skielik weer
      in Graad 1 begin nie. E12 doen dieselfde vir 'n eggenoot. */
@@ -868,6 +875,7 @@ function deeltydsVan(id){
 function deeltydsVereis(j){
   if(s.beroep) return 'Jy werk al voltyds';
   if(s.tronk) return 'Jy is in die tronk';
+  if(vlugToe()) return vlugToe() + ' neem niemand jou aan nie';
   if(s.dakloos) return 'Sonder ’n adres neem hulle jou nie aan nie';
   if(s.afgetree || s.ouderdom>=AFTREE_OUDERDOM) return 'Jy is te oud daarvoor';
   if(s.ouderdom < j.min) return 'Jy moet ' + j.min + ' jaar oud wees';
@@ -1880,13 +1888,14 @@ function troeteldierJaar(){
 /* ---------- Tronk ---------- */
 function tronkJaar(){
   if(!s.tronk) return;
+  tronkPlanJaar();                      /* Fase 9 — 'n deursoeking van jou sel */
   s.tronk.gedien++;
   s.tronkJare = (s.tronkJare||0) + 1;   /* elke jaar tel, ook die jaar waarin jy vrykom */
   /* G4 — parool: wie die helfte van sy vonnis uitgesit het (en dit nie
      met 'n ontsnappoging verleng het nie), kan elke jaar vrykom. Die res
      word 'n paroolperiode: word jy daarin skuldig bevind, sit jy dit uit. */
   var t = s.tronk, oor = t.jare - t.gedien;
-  if(oor > 0 && !t.jeug && t.jare >= 2 && t.jare === (t.vonnis||t.jare) &&
+  if(oor > 0 && !t.jeug && !t.geenParool && t.jare >= 2 && t.jare === (t.vonnis||t.jare) &&
      t.gedien >= Math.ceil(t.jare/2) && kans(PAROOL_KANS)){
     s.tronk = null; s.geluk = klem(s.geluk+14);
     s.opgeskort = {jare:oor, tot:s.ouderdom + oor, vir:'parool'};
@@ -1910,7 +1919,13 @@ function tronkJaar(){
    jy steeds skool. */
 function tronkToe(jare, waarvoor, opts){
   var jeug = !!(opts && opts.jeug);
-  s.tronk = {jare:jare, gedien:0, vonnis:jare, jeug:jeug};
+  /* Fase 9 — 'n vlugteling wat gevang word (of homself oorgee), sit die
+     res van sy vonnis uit plus die ontsnapping; gevang kry hy geen parool. */
+  var vlug = s.vlug ? vlugNaTronk(opts) : 0;
+  if(vlug) jeug = false;
+  jare += vlug;
+  s.tronk = {jare:jare, gedien:0, vonnis:jare, jeug:jeug, geenParool:vlug>0 && !(opts && opts.oorgee),
+    plan:{tonnel:0, laken:false, uniform:false, roete:false, helper:false, bewaarder:false, kar:false}};
   s.rekord.push(waarvoor);
   noteer(jeug ? 'Jy is vir ' + jare + ' jaar na ’n jeugsorgsentrum gestuur vir ' + waarvoor.replace(/ \(jeug\)$/,'') + '.'
     : 'Jy is gevonnis tot ' + jare + ' jaar in die tronk vir ' + waarvoor + '.','misdaad');
@@ -3467,6 +3482,8 @@ function gaanVoortAsKind(id){
   s.hitte = 0; s.opgeskort = null; s.misdaad = {pogings:0, gevang:0, buit:0, koste:0};
   /* Die ouer se naam in die onderwêreld en sy organisasie gaan saam met hom. */
   s.straatRep = 0; s.bende = null; s.eieOrg = null;
+  /* Fase 9 — die ouer se vlug het saam met hom geëindig. */
+  s.vlug = null; s.vlugJare = 0;
   /* --- sy lewensverhaal --- */
   s.log = [];
   noteer('Jy is ' + v.naam + ' ' + v.van + ', kind van ' + oud.naam + ' ' + oud.van +

@@ -451,11 +451,14 @@ function hofBeslis(a, k){
   if(opJare) teks.push('Jou opgeskorte vonnis van ' + opJare + ' jaar is in werking gestel.');
   if(v.soort==='tronk') teks.push('Skuldig aan ' + a.n + '. Die hof het jou tot ' + v.jare + ' jaar tronkstraf gevonnis.');
   if(borg){ s.geld += borg; teks.push('Jou borggeld is terugbetaal.'); }
-  if(jare){ s.geluk = klem(s.geluk - 4); tronkToe(jare, a.n); }
+  /* Fase 9 — 'n vlugteling se vingerafdrukke verraai hom, wat die uitspraak ook al is. */
+  if(s.vlug) teks.push('Hulle het jou vingerafdrukke geneem: jy is die gevangene wat ontsnap het. Jy sit die oorblywende ' +
+    s.vlug.oor + ' jaar uit, plus ' + s.vlug.ekstra + ' vir die ontsnapping.');
+  if(jare || s.vlug){ s.geluk = klem(s.geluk - 4); tronkToe(jare, jare ? a.n : 'ontsnapping uit die tronk'); }
   if(a.maat && a.maat.lewe) noteer(a.maat.naam + ' is saam met jou aangekla.','misdaad');
   var t = teks.join(' ');
   noteer(t, skuldig ? 'misdaad' : 'goed');
-  wenk(v.soort==='tronk' || jare ? 'Tronk: ' + jare + ' jaar.' : skuldig ? 'Skuldig bevind.' : 'Jy stap vry!');
+  wenk(s.tronk ? 'Tronk: ' + s.tronk.jare + ' jaar.' : skuldig ? 'Skuldig bevind.' : 'Jy stap vry!');
   return t;
 }
 
@@ -502,6 +505,7 @@ function jeugHof(a){
     tronkToe(jare, a.n + ' (jeug)', {jeug:true});
     wenk('Jeugsorgsentrum: ' + jare + ' jaar.');
   }
+  if(s.vlug){ teks += ' Maar hulle het jou ook herken as die ontsnapte gevangene.'; tronkToe(0, 'ontsnapping uit die tronk'); }
   stoor(); renderAlles();
   wysModaal('⚖ Die kinderhof', teks, [{t:'OK', doen:function(){ sluitModaal(); stoor(); renderAlles(); }}]);
 }
@@ -559,12 +563,14 @@ function misdaadJaar(){
     s.opgeskort = null;
   }
   ouditJaar();
+  vlugJaar();                           /* Fase 9 — die soektog na 'n vlugteling */
 }
 
 /* ---------- Hitte laat sak ---------- */
 function laagLe(){
   if(s.gedoen.laag){ wenk('Jy lê al laag.'); return; }
   s.gedoen.laag = 1;
+  if(s.vlug) s.vlug.laag = s.ouderdom;  /* Fase 9 — dit beskerm jou by volgende jaar se soektog */
   s.hitte = Math.round((s.hitte||0)/2);
   s.geluk = klem(s.geluk - 2);
   noteer('Jy lê laag: geen misdaad vanjaar nie, en die polisie se aandag verflou.','misdaad');
