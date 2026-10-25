@@ -22,6 +22,7 @@ met presies dieselfde gedrag — net makliker om in te werk:
 | `minispel.js` | **Fase 7.** Die mini-spel-raamwerk (’n volskerm-paneel met “Speel self” en “Doen dit vinnig”) en die vier casino-spele: blackjack, roulette, slots en video poker. Laai ná `skerm.js`. |
 | `misdaad.js` | **Fase 8.** Die hele misdaadvloei (teiken, maat, ontsnapvoertuig, mini-spel, uitslag), hitte, die heler, die hof (jeugreg, prokureur, borgtog, pleit, vonnis), die witboordjie-oudit, en die vyf misdaad-mini-spele. Die getalle staan in `data.js` onder “MISDAAD EN REG”. Laai ná `minispel.js`. |
 | `onderwereld.js` | **Fase 8b.** Jou rep as krimineel, die vier organisasies (aansluit, jobs, range) en jou eie organisasie (werf, jobs vir jou mense, lone). Laai ná `misdaad.js`. |
+| `dev.js` | **Playtest.** Die ontwikkelaar-paneel — net aktief met `?dev` in die adres (sien N1). Laai heel laaste, ná `begin.js`. |
 | `ontsnap.js` | **Fase 9.** Tronk-ontsnapping: die voorbereidings oor jare, die stealth-mini-spel (rooster, patrollies, kykkeëls, ’n foutlose-pad-oplosser en twee bots), en die lewe op die vlug (soektog, vals ID, trek, oorgee). Die getalle staan in `data.js` onder “ONTSNAPPING EN DIE LEWE OP DIE VLUG”. Laai ná `onderwereld.js`. |
 | `begin.js` | Die inskryfpunt. Laai heel laaste. |
 
@@ -420,6 +421,15 @@ eie-organisasie-lewens, ± 4 000 gevolgde vlugtelinge, ’n ou stoor-lêer met �
 sonder Fase 9-velde, en ’n vlugteling se kind in die generasiespel. In die blaaier gespeel:
 die beplanning, die stealth-spel (self en vinnig), die vlug-kaart, trek, ’n vals ID,
 oorgee, die alarm met die wegkomkar en die jaagtog, en stoor/laai.
+
+---
+
+## N. Playtest en regstellings (25 Oktober 2026)
+
+| # | Wat | Gedoen |
+|---|---|---|
+| N1 | **’n Ontwikkelaar-paneel om te playtest.** | ✅ Nuwe lêer **`dev.js`** (laai ná `begin.js`). Net aktief as die adres `?dev` of `#dev` bevat (`index.html?dev`, of `…github.io/lewensloop/?dev`); andersins verskyn niks en verander niks. ’n 🛠-knoppie onder-links maak ’n paneel oop met: die statte (ouderdom, kontant, geluk, gesondheid, slim, voorkoms, straat-rep, hitte) om te stel, “Alles 100”, +R1 m/+R10 m, **onsterflik** (`doodKontrole()` word oorgeslaan); **1/5/10 jaar spring** met outo-antwoord op vrae (dit stop by ’n mini-spel); **elke mini-spel direk** — die vier casino-spele met R10 000 se chips wat niks kos nie, die vier misdaad-spele, die jaagtog (Tazz, Porsche, bankroof) en die ontsnapping (sonder of met alle voorbereiding) — en die uitslag (*q*, ontsnap, stampe …) word gewys sonder enige gevolg in die spel; tronk toe, alle ontsnap-voorbereiding, ontsnap nou (die regte vloei), word vlugteling, laat vry, word dakloos, hitte en rekord skoon; by enige organisasie aansluit, rang op, jou eie organisasie stig, +3 lede; enige werk direk kry, enige motor (met ’n lisensie); en die stoor kopieer na of laai uit die knipbord, of ’n nuwe lewe. |
+| N2 | **Jobs waarvoor jy nie gearresteer kan word nie.** Drie organisasie-jobs is self nie ’n misdaad nie — jy kyk, spot of verken net — maar het ’n gevangskans gehad. | ✅ **“Hou die hoek dop vir die polisie”** (Vlakte-bende), **“Spot duur motors in die parkeerterreine”** (Chop-shop) en **“Verken ’n geldwa se roete”** (Sindikaat) is nou `veilig:true`: geen risiko, geen hitte, geen voertuig of hof — net betaling, rep en rangpunte (`orgJob()` stuur dit reguit na `misdaadBetaal()`). Die joblys sê “geen risiko”. Gemeet: 2 000 keer elk, **0 keer gevang**, hitte bly 0. *Om dop te hou:* omdat dit rangpunte gee, kan jy nou sonder risiko tot die hoogste rang styg (2 jobs per jaar = sowat 5 jaar), en dan kry jy elke jaar ’n deel van die wins. |
 
 ---
 

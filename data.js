@@ -608,10 +608,12 @@ var ERNS_JARE = [null, [1,2], [1,4], [2,6], [3,10], [8,18]];
 /* Range binne 'n organisasie: die punte wat jy nodig het. 'n Job wat
    slaag gee ORG_PUNTE_SLAAG plus die job se rang; een wat misluk kos 1. */
 var ORG_RANG_PUNTE = [0, 4, 10, 20], ORG_PUNTE_SLAAG = 2, ORG_JOBS_PER_JAAR = 2;
+/* veilig:true — die job self is nie 'n misdaad waarvoor jy gearresteer kan word nie
+   (jy kyk, spot of verken net). Dit het geen risiko, geen hitte en geen hofsaak nie. */
 var ORGANISASIES = [
   {id:'bende', n:'Die Vlakte-bende', e:'\u{1F9E2}', rep:0, min:14, deel:20000,
    sub:'’n Straatbende op die Kaapse Vlakte', range:['Loopjong','Soldaat','Vertroude','Luitenant'], jobs:[
-    {n:'Hou die hoek dop vir die polisie', rang:0, betaal:[1500,6000], risiko:10, erns:1, rep:1},
+    {n:'Hou die hoek dop vir die polisie', rang:0, betaal:[1500,6000], risiko:0, veilig:true, erns:1, rep:1},
     {n:'Smous namaak-goed by die taxistaanplek', rang:0, betaal:[3000,12000], risiko:16, erns:1, rep:1},
     {n:'Vat ’n pakkie na die ander kant van die dorp', rang:1, betaal:[8000,25000], risiko:24, erns:2, rep:2, voertuig:true},
     {n:'Breek in by ’n pakhuis', rang:2, betaal:[25000,90000], risiko:34, erns:3, rep:3, spel:'slot', voertuig:true},
@@ -619,7 +621,7 @@ var ORGANISASIES = [
   ]},
   {id:'chop', n:'Die Chop-shop-netwerk', e:'\u{1F527}', rep:20, min:16, deel:60000,
    sub:'Gesteelde motors kry hier nuwe nommerplate', range:['Spotter','Dief','Bestuurder','Voorman'], jobs:[
-    {n:'Spot duur motors in die parkeerterreine', rang:0, betaal:[5000,15000], risiko:12, erns:1, rep:1},
+    {n:'Spot duur motors in die parkeerterreine', rang:0, betaal:[5000,15000], risiko:0, veilig:true, erns:1, rep:1},
     {n:'Steel ’n Polo op bestelling', rang:0, betaal:[25000,60000], risiko:32, erns:3, rep:2, spel:'aanskakel', spoed:175},
     {n:'Ry ’n gesteelde bakkie oor die grens', rang:1, betaal:[50000,140000], risiko:36, erns:3, rep:3, spoed:170},
     {n:'Steel ’n BMW uit ’n beveiligde garage', rang:2, betaal:[120000,300000], risiko:44, erns:3, rep:4, spel:'aanskakel', spoed:250},
@@ -635,7 +637,7 @@ var ORGANISASIES = [
   ]},
   {id:'sindikaat', n:'Die Sindikaat', e:'\u{1F3A9}', rep:65, min:21, deel:400000,
    sub:'Die groot geld: kontant-in-transito en bankkluise', range:['Kontak','Spesialis','Beplanner','Regterhand'], jobs:[
-    {n:'Verken ’n geldwa se roete', rang:0, betaal:[30000,90000], risiko:18, erns:2, rep:2},
+    {n:'Verken ’n geldwa se roete', rang:0, betaal:[30000,90000], risiko:0, veilig:true, erns:2, rep:2},
     {n:'Kraak ’n kluis vir die span', rang:0, betaal:[150000,500000], risiko:44, erns:5, rep:6, spel:'kluis', wapen:true},
     {n:'Bestuur die ontsnapmotor by ’n kontantroof', rang:1, betaal:[200000,700000], risiko:50, erns:5, rep:7, voertuig:true, wapen:true},
     {n:'Beplan ’n bankkluis-heist', rang:2, betaal:[800000,3000000], risiko:56, erns:5, rep:9, spel:'kluis', voertuig:true, wapen:true},

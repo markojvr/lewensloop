@@ -35,12 +35,22 @@ blaaier).
 | `misdaad.js` | Misdaad en die hof: hitte, die heler, jeugreg, vonnisse en die misdaad-mini-spele. |
 | `onderwereld.js` | Jou rep as krimineel, die kriminele organisasies en jou eie organisasie. |
 | `ontsnap.js` | Tronk-ontsnapping: die beplanning oor jare, die stealth-mini-spel, en die lewe op die vlug. |
-| `begin.js` | Die inskryfpunt — laai laaste. |
+| `begin.js` | Die inskryfpunt. |
+| `dev.js` | Die ontwikkelaar-paneel vir playtest — laai heel laaste en doen niks sonder `?dev` nie. |
 
 Dit is gewone `<script src>`-lêers en nie ES modules nie, sodat
 dubbelklik op `index.html` werk. Alle paaie is relatief, so dieselfde
 lêers werk ook net so op GitHub Pages. `VERANDERINGE.md` is die
 meesterplan met alles wat al gedoen is en wat nog kom.
+
+## Playtest: die ontwikkelaar-paneel
+
+Sit `?dev` agter die adres, bv. `index.html?dev` of
+`https://markojvr.github.io/lewensloop/?dev`. Onder-links verskyn ’n 🛠-knoppie
+met kortpaaie: statte en geld stel, onsterflik, 1/5/10 jaar spring (met
+outo-antwoord), elke mini-spel direk oopmaak sonder gevolge, tronk/ontsnap/vlug/
+straat, organisasies en range, ’n werk of motor kry, en die stoor kopieer of laai.
+Sonder `?dev` sien ’n speler niks daarvan nie.
 
 ## Hosting op GitHub Pages
 

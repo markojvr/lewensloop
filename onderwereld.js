@@ -78,8 +78,9 @@ function orgJobs(){
   var lys = o.jobs.filter(function(j){ return j.rang <= s.bende.rang; });
   kiesLys(o.e + ' Jobs', 'Wat vra ' + o.n + ' vanjaar? (Jy is ' + o.range[s.bende.rang].toLowerCase() + '.)',
     lys.map(function(j){
-      return {t:j.n, sub:'Betaal ' + kortGeld(j.betaal[0]) + ' tot ' + kortGeld(j.betaal[1]) + ' · risiko ' + j.risiko +
-        '% · rep +' + (REP_PER_ERNS[j.erns] + j.rep), doen:function(){ orgJob(o, j); }};
+      return {t:j.n, sub:'Betaal ' + kortGeld(j.betaal[0]) + ' tot ' + kortGeld(j.betaal[1]) + ' · ' +
+        (j.veilig ? 'geen risiko' : 'risiko ' + j.risiko + '%') +
+        ' · rep +' + (REP_PER_ERNS[j.erns] + j.rep), doen:function(){ orgJob(o, j); }};
     }));
 }
 /* Bou 'n misdaad uit die job, en stuur dit deur die gewone vloei. */
@@ -88,6 +89,13 @@ function orgJob(o, j){
   var m = {id:'org', n:j.n, e:o.e, erns:j.erns, hitte:2 + j.erns*2, maat:false, voertuig:!!j.voertuig,
     spel:j.spel, jare:ERNS_JARE[j.erns], wapen:!!j.wapen};
   var t = {n:o.n, buit:j.betaal, risiko:j.risiko, spoed:j.spoed};
+  /* 'n Veilige job (kyk, spot, verken) is self nie 'n misdaad nie: geen
+     voertuig, geen gevangskans, geen hitte en geen hof — net betaling. */
+  if(j.veilig){
+    misdaadTel().pogings++; s.misdaad.laas = s.ouderdom;
+    misdaadBetaal({m:m, t:t, job:j, org:o}, tussen(j.betaal[0], j.betaal[1]), '');
+    return;
+  }
   misdaadVoertuig({m:m, t:t, job:j, org:o});
 }
 /* Die misdaadvloei roep dit as die job slaag of misluk. */

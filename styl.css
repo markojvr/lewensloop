@@ -283,3 +283,23 @@ body{background:#05080c;color:var(--teks);
 .os-sel.kegel{background-color:#6b2a27}
 .os-sel.ek{box-shadow:inset 0 0 0 2px var(--geel)}
 .os-sel i{position:absolute;right:1px;bottom:0;font-size:10px;font-style:normal;color:#ffd0c8}
+
+/* ---------- Ontwikkelaar-paneel (dev.js, net met ?dev) ---------- */
+#dev-knop{position:absolute;left:10px;bottom:84px;z-index:45;width:34px;height:34px;border-radius:50%;
+  border:1px solid #f0b429;background:#2a2110;color:#f0b429;font-size:16px;cursor:pointer;opacity:.85}
+#dev-paneel{position:absolute;inset:0;z-index:35;background:#0b0f16;color:#d8dee9;overflow-y:auto;
+  display:none;padding:12px 12px 40px;font-size:13px}
+#dev-paneel.wys{display:block}
+.dev-kop{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#f0b429}
+.dev-x{background:none;border:0;color:#d8dee9;font-size:18px;cursor:pointer}
+.dev-blok{border:1px solid #232b38;border-radius:10px;padding:9px;margin-bottom:9px}
+.dev-t{font-weight:700;margin-bottom:6px;color:#9fb3c8}
+.dev-rooster{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.dev-rooster label{display:flex;flex-direction:column;font-size:11px;color:#8a97a8}
+.dev-rooster input{background:#151b25;border:1px solid #2c3646;color:#fff;border-radius:6px;padding:5px;font-size:13px}
+.dev-k{background:#1b2331;border:1px solid #2c3646;color:#d8dee9;border-radius:7px;padding:6px 8px;
+  margin:2px;font-size:12px;cursor:pointer}
+.dev-k.groen{background:#1f4d2c;border-color:#2f7a45}
+.dev-k.rooi{background:#4d1f1f;border-color:#7a2f2f}
+.dev-vink{display:block;margin-top:6px;font-size:12px}
+.dev-klein{font-size:11px;color:#6f7c8d;margin-top:4px}
