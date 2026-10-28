@@ -713,7 +713,7 @@ function vlugJaar(){
   var v = s.vlug;
   v.jare++; s.vlugJare = (s.vlugJare||0) + 1;
   if(kans(vlugKans(s.ouderdom - 1))){
-    var t = 'Ná ' + v.jare + (v.jare===1 ? ' jaar' : ' jaar') + ' op die vlug het die polisie jou in ' + s.dorp + ' opgespoor.';
+    var t = 'Ná ' + v.jare + ' jaar op die vlug het die polisie jou in ' + s.dorp + ' opgespoor.';
     misdaadTel().gevang++;
     s.hitte = klem((s.hitte||0) + HITTE_GEVANG); s.geluk = klem(s.geluk - 14);
     noteer(t,'misdaad');
@@ -723,7 +723,7 @@ function vlugJaar(){
   }
   var vry = v.vals ? VLUG_VRY_VALS : VLUG_VRY;
   if(v.jare >= vry){
-    s.vlug = null; stelVlag('vlugVry');
+    s.vlug = null;
     noteer(v.vals ? 'Ná ' + v.jare + ' jaar sit jou nuwe identiteit vas. Niemand soek meer na jou nie.' :
       'Ná ' + v.jare + ' jaar het die saak koud geword: die polisie het opgehou soek.','goed');
     return;
@@ -848,7 +848,7 @@ function renderOntsnapKnop(){
 
 /* ---------- Gebeure vir 'n vlugteling ---------- */
 GEBEURE.push(
-  {min:16, max:120, as:function(){ return !!s.vlug && !s.tronk; },
+  {waar:'enige', min:16, max:120, as:function(){ return !!s.vlug && !s.tronk; },
    vraag:'Iemand in die ry by die winkel kyk jou te lank aan. Dan haal hy sy foon uit.',
    opsies:[
     {t:'Los jou trollie en loop', doen:function(){ s.geluk = klem(s.geluk - 4);
@@ -858,7 +858,7 @@ GEBEURE.push(
       else { s.hitte = klem((s.hitte||0) + 15);
         noteer('Hy het die polisie gebel. Jy was weg voor hulle daar was, maar hulle weet nou waar om te soek.','sleg'); } }}
    ]},
-  {min:16, max:120, as:function(){ return !!s.vlug && !s.tronk && lewendeOuers().length > 0; },
+  {waar:'enige', min:16, max:120, as:function(){ return !!s.vlug && !s.tronk && lewendeOuers().length > 0; },
    doen:function(){ s.geluk = klem(s.geluk - tussen(4,9));
      return ['Jy kon nie eers jou ouers met Kersfees bel nie: die polisie luister hul foon af.','sleg']; }}
 );

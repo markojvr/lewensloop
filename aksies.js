@@ -8,7 +8,7 @@ var AKTIWITEITE=[
   /* --- Liggaam en gees --- */
   {id:'gim', g:'Liggaam en gees', n:'Gaan gimnasium', e:'\u{1F3CB}', koste:1200, min:14, maks:1,
    doen:function(){ s.gesondheid=klem(s.gesondheid+tussen(4,10)); s.voorkoms=klem(s.voorkoms+tussen(0,3));
-     return ['Jy het die jaar gereeld gym toe gegaan.','goed']; }},
+     return ['Jy het die jaar gereeld gimnasium toe gegaan.','goed']; }},
   {id:'draf', g:'Liggaam en gees', n:'Draf in die bos', e:'\u{1F3C3}', koste:0, min:8, maks:1,
    doen:function(){ s.gesondheid=klem(s.gesondheid+tussen(2,6)); s.geluk=klem(s.geluk+2);
      return ['Jy het gereeld in die bos gaan draf.','goed']; }},
@@ -23,7 +23,7 @@ var AKTIWITEITE=[
      if(los){
        var tt = toestandVan(los.id);
        vraBehandeling(los);
-       return ['Die dokter het oor ' + tt.n.toLowerCase() + ' met jou gepraat.','neutraal'];
+       return ['Die dokter het oor ' + siekteNaam(tt) + ' met jou gepraat.','neutraal'];
      }
      /* Niks verkeerd nie? Dan is dit 'n ondersoek wat iets kan oplig. */
      if(s.ouderdom>=35 && kans(14)){
@@ -61,7 +61,7 @@ var AKTIWITEITE=[
 
   /* --- Gesin --- */
   {id:'sakgeld', g:'Gesin', n:'Vra jou ouers vir geld', e:'\u{1F64F}', min:5, maks:2,
-   kosteTeks:'Hulle se nie altyd ja nie', as:function(){ return s.ouderdom<26 && lewendeOuers().length>0; },
+   kosteTeks:'Hulle sê nie altyd ja nie', as:function(){ return s.ouderdom<26 && lewendeOuers().length>0; },
    vloei:vraGeldVloei},
 
   /* --- Skool --- */
@@ -232,7 +232,6 @@ function beginBesigheid(id){
     bemarking:0, toerusting:0, jare:0, omset:0, koste:0, wins:0, verliesJare:0,
     totaalWins:0, beste:0, kapitaalIn:x.kapitaal};
   s.geluk = klem(s.geluk + tussen(8,16));
-  stelVlag('besigheidBegin', {n:s.besigheid.naam});
   noteer('Jy het ' + s.besigheid.naam + ' begin (' + x.n.toLowerCase() + ') vir ' +
     geld(x.kapitaal) + '.','werk');
   wenk(s.besigheid.naam + ' is oop!');
@@ -392,7 +391,7 @@ function vakansieMaat(k){
   }
   var teks = teJonkAlleen()
     ? 'Jy is te jonk om alleen te reis \u2014 \u2019n grootmens moet saamgaan.'
-    : 'Iemand saamvat kos 80% meer, maar is baie lekkerder.';
+    : 'Iemand saamvat kos 80% meer — julle deel ’n kamer — maar is baie lekkerder.';
   kiesPersoon('Wie gaan saam?', teks,
     saamgaanFilter(), function(v){
       betaalEnDoen(Math.round(k.koste * (v?1.8:1)), 'die vakansie', function(){
@@ -436,7 +435,7 @@ function vraGeldVloei(){
           if(kans(kansie)){ s.geld += b;
             klaarAkt('sakgeld', p.naam + ' het jou ' + geld(b) + ' gegee.','geld'); }
           else { s.geluk = klem(s.geluk-3); p.band = klem(p.band-1);
-            klaarAkt('sakgeld', p.naam + ' het nee gese. "Geld groei nie aan bome nie."','sleg'); }
+            klaarAkt('sakgeld', p.naam + ' het nee gesê. "Geld groei nie aan bome nie."','sleg'); }
         }});
     });
   });
@@ -541,7 +540,8 @@ function vraFamilieHulp(v){
   } else {
     v.band = klem(v.band - tussen(4,12));
     s.geluk = klem(s.geluk - tussen(4,10));
-    noteer(v.naam + ' het gesê hulle kan nie help nie. Dit was ’n swaar oproep.','sleg');
+    noteer(v.naam + ' het gesê ' + (v.geslag==='v'?'sy':'hy') +
+      ' kan nie help nie. Dit was ’n swaar oproep.','sleg');
     wenk(v.naam + ' het nee gesê.');
   }
   stoor(); renderAlles();
@@ -682,9 +682,9 @@ function neemDeeltyds(id){
 }
 function losDeeltyds(){
   if(!s.deeltyds){ wenk('Jy het nie deeltydse werk nie.'); return; }
-  noteer('Jy het jou deeltydse werk by ' + s.deeltyds.t + ' opgese.','werk');
+  noteer('Jy het jou deeltydse werk by ' + s.deeltyds.t + ' opgesê.','werk');
   s.deeltyds = null; s.geluk = klem(s.geluk+3);
-  wenk('Jy het opgese.'); stoor(); renderAlles();
+  wenk('Jy het opgesê.'); stoor(); renderAlles();
 }
 
 /* ==========================================================================
@@ -702,9 +702,9 @@ function stelPensioenKoers(k){
   stoor(); renderAlles();
 }
 function magAftree(){ return s.ouderdom>=VROEG_AFTREE && !s.afgetree; }
-/* Twee keuses by aftrede: alles in ’n lewende annuiteit, of eers ’n
+/* Twee keuses by aftrede: alles in ’n lewende annuïteit, of eers ’n
    derde kontant uit (die eerste R550 000 daarvan is belastingvry) en
-   die res in die annuiteit. Meer kontant nou is minder inkomste later. */
+   die res in die annuïteit. Meer kontant nou is minder inkomste later. */
 function wysAftrede(){
   if(!magAftree()){
     wenk(s.afgetree ? 'Jy is reeds afgetree.' : 'Jy moet ' + VROEG_AFTREE + ' wees om af te tree.');
@@ -724,7 +724,7 @@ function wysAftrede(){
     'Jou pensioenfonds is ' + geld(fonds) + ' werd' +
     (vroeg ? '. Jy tree vroeg af, so die fonds moet langer hou' : '') + '.',
     [
-      {t:'Alles in ’n lewende annuiteit',
+      {t:'Alles in ’n lewende annuïteit',
        sub:'Geen kontant nou · ' + geld(Math.round(fonds*ANNUITEIT_TREK)) + ' per jaar',
        doen:function(){ sluitModaal(); treeAf(0); }},
       {t:'Neem ’n derde kontant',
@@ -788,11 +788,8 @@ function trekPensioenUit(){
 function apsVereis(st, u){ return klem(st.aps + (u.apsEkstra||0), 14, APS_MAKS); }
 /* C1 — die vakvereistes. Jou vlak in 'n vak wat jy nooit gehad het nie
    is 0, en daarom is dit hier waar die Graad 10-keuse die deur toemaak. */
-/* 'a, b en c' in plaas van 'a en b en c'. */
-function lysEn(lys, woord){
-  if(lys.length<2) return lys.join('');
-  return lys.slice(0,-1).join(', ') + ' ' + (woord||'en') + ' ' + lys[lys.length-1];
-}
+/* 'a, b en c' in plaas van 'a en b en c' — lysTeks() in hulp.js doen dit. */
+function lysEn(lys, woord){ return lysTeks(lys, woord); }
 function vakTeKort(st){
   var k, mis = [];
   if(st.vak) for(k in st.vak) if(vakVlak(k) < st.vak[k]) mis.push(k + ' op vlak ' + st.vak[k]);
@@ -820,7 +817,7 @@ function wysStudies(){
   if(s.skool.vlak==='universiteit'||s.skool.vlak==='nagraads'){ wenk('Jy studeer alreeds.'); return; }
   /* C9 — na twee akademiese uitsluitings is die deur toe. */
   if((s.skool.uitgeskop||0) >= UITSLUIT_MAKS){
-    wenk('Na ' + UITSLUIT_MAKS + ' uitsluitings neem geen universiteit jou weer nie.'); return; }
+    wenk('Ná ' + UITSLUIT_MAKS + ' uitsluitings neem geen universiteit jou weer nie.'); return; }
   var aps = s.skool.aps||0;
   var opsies = UNIES.map(function(u){
     var oop = oopProgramme(u).length;
@@ -902,6 +899,8 @@ function koopBate(id){
   var b = null;
   TE_KOOP.forEach(function(x){ if(x.id===id) b=x; });
   if(!b) return;
+  /* O — jy gaan nie uit die tronk 'n motor of 'n huis koop nie. */
+  if(s.tronk){ wenk('Jy is in die tronk.'); return; }
   if(b.t==='motor' && !magBestuur()){
     wenk('Jy moet 18 wees en ’n rylisensie hê om ’n motor te koop.'); return; }
   /* B2 — ’n huis hoef jy nie kontant te koop nie: die bank leen jou die res. */
@@ -1074,8 +1073,8 @@ function bele(bedrag){
   if(bedrag==='alles') bedrag = s.geld;
   if(bedrag<=0 || s.geld < bedrag){ wenk('Jy het nie soveel geld nie.'); return; }
   s.geld -= bedrag; s.belegging += bedrag;
-  noteer('Jy het ' + geld(bedrag) + ' in ’n JSE-indeksfonds bele.','geld');
-  wenk('Bele: ' + geld(bedrag)); stoor(); renderAlles();
+  noteer('Jy het ' + geld(bedrag) + ' in ’n JSE-indeksfonds belê.','geld');
+  wenk('Belê: ' + geld(bedrag)); stoor(); renderAlles();
 }
 function verkoopBelegging(){
   if(vlugBank()) return;
@@ -1088,11 +1087,11 @@ function verkoopBelegging(){
 /* ---------- Verhoudings ---------- */
 function soekLief(){
   if(s.ouderdom<15){ wenk('Jy is te jonk.'); return; }
+  if(s.tronk){ wenk('Hier binne ontmoet jy niemand nie.'); return; }
   if(maat()){ wenk('Jy is al in \u2019n verhouding.'); return; }
   if((s.gedoen.soek||0) >= 2){ wenk('Genoeg gesoek vir vanjaar.'); return; }
   var bekend = s.verhoudings.filter(function(v){
-    return v.lewe && ['vriend','klasmaat','kollega'].indexOf(v.tipe)>=0 &&
-      v.ouderdom>=15 && Math.abs(v.ouderdom - s.ouderdom) <= 12; });
+    return v.lewe && ['vriend','klasmaat','kollega'].indexOf(v.tipe)>=0 && liefOuderdomPas(v.ouderdom); });
   bekend.sort(function(a,b){ return b.band - a.band; });
   var opsies = bekend.slice(0,8).map(function(v){
     return {t:'Vra ' + v.naam + ' uit', sub: rol(v) + ' \u00b7 ' + v.ouderdom + ' jaar \u00b7 band ' + v.band + '%',
@@ -1104,8 +1103,20 @@ function soekLief(){
   kiesLys('Liefde', bekend.length ? 'Jy ken reeds \u2019n paar mense:'
     : 'Jy ken nog niemand goed genoeg nie \u2014 maak eers by die skool of werk vriende.', opsies);
 }
+/* E9 — die ouderdomsgaping. Die ou reël was 'n verskil van tot 12 jaar
+   vanaf 15, dus kon 'n 16-jarige met 'n werk 'n 28-jarige kollega
+   uitvra. Onder 18 moet albei kinders wees, en die gaping is klein. */
+function liefOuderdomPas(o){
+  var my = s.ouderdom;
+  if(my<15 || o<15) return false;
+  if(my<18 || o<18) return (my<18 && o<18) && Math.abs(o-my)<=2;
+  return Math.abs(o-my) <= 12;
+}
 function vreemdeling(){
-  var k = nuweMens(kans(50)?'m':'v', Math.max(15, s.ouderdom + tussen(-4,4)), kies(VANNE));
+  /* Onder 18 is die vreemdeling ook 'n kind van naastenby jou ouderdom. */
+  var o = s.ouderdom<18 ? klem(s.ouderdom + tussen(-2,2), 15, 17)
+    : Math.max(18, s.ouderdom + tussen(-4,4));
+  var k = nuweMens(kans(50)?'m':'v', o, kies(VANNE));
   k.voorkoms = tussen(20,95); k.tipe='vriend'; k.band = tussen(30,60);
   wysModaal('Jy het iemand ontmoet',
     k.naam + ' ' + k.van + '\nOuderdom: ' + k.ouderdom + '\nVoorkoms: ' + k.voorkoms + '/100',
@@ -1114,7 +1125,8 @@ function vreemdeling(){
         var p = 40 + (s.voorkoms - k.voorkoms)/2 + (s.geluk-50)/6;
         if(kans(p)){ k.tipe='lief'; k.band=tussen(55,80); s.verhoudings.push(k);
           s.geluk=klem(s.geluk+16);
-          noteer('Jy en ' + k.naam + ' is nou saam!','liefde'); wenk('Hulle het ja gese!'); }
+          noteer('Jy en ' + k.naam + ' is nou saam!','liefde');
+          wenk((k.geslag==='v'?'Sy':'Hy') + ' het ja gesê!'); }
         else { s.geluk=klem(s.geluk-7);
           noteer(k.naam + ' het jou afgesit.','sleg'); wenk('Afgesit. Ai.'); }
         sluitModaal(); stoor(); renderAlles(); }},
@@ -1143,21 +1155,23 @@ function oopPersoon(id){
     o.push({t:'Maak indruk op die baas', sub:'Goed vir jou prestasie', doen:function(){ raak(v,'indruk'); }});
   if(v.tipe==='klasmaat' && s.skool.vlak==='hoerskool')
     o.push({t:'Werk saam aan huiswerk', sub:'Goed vir albei se punte', doen:function(){ raak(v,'huiswerk'); }});
-  if(['vriend','klasmaat','kollega'].indexOf(v.tipe)>=0 && s.ouderdom>=15 && v.ouderdom>=15 && !maat())
+  if(['vriend','klasmaat','kollega'].indexOf(v.tipe)>=0 && liefOuderdomPas(v.ouderdom) && !maat())
     o.push({t:'Vra op \u2019n date uit', klas:'pienk', doen:function(){ raak(v,'date'); }});
-  if(v.tipe==='lief' && s.ouderdom>=18)
+  if(v.tipe==='lief' && s.ouderdom>=18 && !s.tronk)
     o.push({t:'Vra ten huwelik', klas:'pienk', doen:function(){ raak(v,'trou'); }});
-  /* E4 — 'n baba is nie meer net vir 'n eggenoot nie. */
-  if((v.tipe==='eggenoot'||v.tipe==='lief') && s.ouderdom>=18)
+  /* E4 — 'n baba is nie meer net vir 'n eggenoot nie. Uit die tronk
+     gebeur dit egter nie. */
+  if((v.tipe==='eggenoot'||v.tipe==='lief') && s.ouderdom>=18 && !s.tronk)
     o.push({t:'Probeer vir \u2019n baba', klas:'pienk',
       sub: v.tipe==='lief' ? 'Julle is nie getroud nie' : '', doen:function(){ raak(v,'baba'); }});
   /* E7 — jou kind se eie lewe: help hom, en lees wat van hom geword het. */
   if(v.tipe==='seun'||v.tipe==='dogter'||v.tipe==='kleinkind'){
     if(v.ouderdom>=6 && v.ouderdom<18)
-      o.push({t:'Help met die huiswerk', sub:'Dit maak sy punte in matriek beter',
+      o.push({t:'Help met die huiswerk', sub:'Dit maak ' + besit(v) + ' punte in matriek beter',
         doen:function(){ raak(v,'kindhuiswerk'); }});
     o.push({t:'Lees ' + v.naam + ' se lewensverhaal', klas:'grys',
-      sub:'Wat alles met hom gebeur het', doen:function(){ wysKindLewe(v); }});
+      sub:'Wat alles met ' + (v.geslag==='v'?'haar':'hom') + ' gebeur het',
+      doen:function(){ wysKindLewe(v); }});
   }
   /* Fase 9b — jou eie organisasie: vra om aan te sluit, of bestuur die lid. */
   var lid = s.eieOrg ? eieLidVan(v) : null;
@@ -1278,7 +1292,7 @@ function koopTroeteldier(id){
 function noemTroeteldier(d){
   var voorstel = kies(TROETELNAME);
   wysModaal('Jou nuwe ' + d.n.toLowerCase(), 'Wat gaan jy hom of haar noem?', [
-    {t:'Neem hom huis toe', doen:function(){
+    {t:'Neem dit huis toe', doen:function(){
       var inv = el('m-invoer');
       var naam = (inv && inv.value.trim()) || voorstel;
       registreerDier(d, naam.slice(0,16)); }},
@@ -1289,7 +1303,10 @@ function noemTroeteldier(d){
    hond wat jou in gebeure.js huis toe volg. */
 function voegDierBy(d, naam, ouderdom){
   if(!s.diere) s.diere=[];
+  /* O — 'n dier het ook 'n geslag: die spel het altyd "hy" gesê, ook vir
+     'n teef. dierHy()/dierHom() lees dit. */
   s.diere.push({id:'d'+(volgendeId++), soort:d.n, naam:veilig(naam), e:d.e, ouderdom:ouderdom||0,
+    geslag: kies(['m','v']),
     band:tussen(60,90), onderhoud:d.onderhoud, maks:tussen(d.jare[0], d.jare[1]), artsBonus:0});
   s.geluk = klem(s.geluk + tussen(8,16));
 }
@@ -1307,7 +1324,7 @@ function oopTroeteldier(id){
     {t:'Speel met ' + d.naam, doen:function(){ troetelAksie(d,'speel'); }},
     {t:'Gee \u2019n lekkerny', sub:'R120', doen:function(){ troetelAksie(d,'lekker'); }},
     {t:'Gaan stap saam', doen:function(){ troetelAksie(d,'stap'); }},
-    {t:'Leer hom \u2019n truuk', doen:function(){ troetelAksie(d,'truuk'); }},
+    {t:'Leer ' + dierHom(d) + ' \u2019n truuk', doen:function(){ troetelAksie(d,'truuk'); }},
     {t:'Neem na die dierearts', sub:'R1 400', doen:function(){ troetelAksie(d,'arts'); }},
     {t:'Sluit', klas:'grys', doen:function(){ sluitModaal(); }}
   ]);
@@ -1337,7 +1354,7 @@ function troetelAksie(d, wat){
       var ekstra = '';
       if((d.artsBonus||0) < 2){
         d.artsBonus = (d.artsBonus||0) + 1; d.maks += 1;
-        ekstra = ' Die dierearts dink hy sal langer lewe as gevolg daarvan.';
+        ekstra = ' Die dierearts dink ' + dierHy(d) + ' sal langer lewe as gevolg daarvan.';
       }
       klaar(d.naam + ' is deur die dierearts nagekyk en is gesond.' + ekstra); }, true); }
 }
@@ -1464,11 +1481,13 @@ function beginGewoonte(id){
   if(!g) return;
   var v = gewoonteVlak(id);
   if((s.gedoen['gw'+id]||0) >= 1){ wenk('Genoeg daarvan vir vanjaar.'); return; }
+  /* Die wettige ouderdom in SA is 18 vir drank. Jonger is dit nie
+     onmoontlik nie — net gevaarliker, en jou ouers kan jou vang.
+     Die toets staan voor die jaarmerk: anders het 'n te jong poging
+     steeds 'gewoonteLaas' gestel en die gewoonte "lewendig" gehou. */
+  if(s.ouderdom < g.min){ wenk('Jy is te jonk daarvoor.'); return; }
   s.gedoen['gw'+id] = 1;
   s.gewoonteLaas[id] = s.ouderdom;   /* F4 — hoe onlangs jy dit opgesoek het */
-  /* Die wettige ouderdom in SA is 18 vir drank. Jonger is dit nie
-     onmoontlik nie — net gevaarliker, en jou ouers kan jou vang. */
-  if(s.ouderdom < g.min){ wenk('Jy is te jonk daarvoor.'); return; }
   var tejonk = id==='drink' && s.ouderdom<18;
   var koste = Math.round((id==='drink' ? 450 : id==='rook' ? 120 : 900) * dorpFaktor());
   if(s.geld < koste && s.ouderdom<18){ wenk('Jy het nie die geld nie.'); return; }
@@ -1487,7 +1506,7 @@ function beginGewoonte(id){
     /* Die spiraal werk ook as jy dit self opsoek. */
     if(v<3 && kans(g.spiraal[v] + 10)){
       s.gewoontes[id] = v+1;
-      noteer('Jy is nou ' + g.vlakke[v+1] + '.','sleg');
+      noteer('Jy ' + g.vlakke[v+1] + '.','sleg');
     }
   }
   if(tejonk) teJonkGevang(g);
@@ -1498,7 +1517,6 @@ function beginGewoonte(id){
   /* F4 — en dan die vraag wat 'n lewe kan kos. */
   if(id==='drink' && s.lisensie && magBestuur() && hetMotor()) vraRyHuisToe();
 }
-function hetMotor(){ return s.bates.some(function(b){ return b.t==='motor'; }); }
 /* F4 + Fase 1 se lisensiestelsel: dronkbestuur het regte gevolge. */
 function vraRyHuisToe(){
   var uber = Math.round(380 * dorpFaktor());
@@ -1543,7 +1561,7 @@ function dronkBestuur(){
     noteer('Die sperwyer het jou gevang. Boete ' + geld(boete) +
       ', en jou lisensie is ' + s.lisensieWeg + ' jaar opgeskort.','misdaad');
   } else {
-    noteer('Jy het dronk huis toe gery en niks het gebeur. Dié keer.','neutraal');
+    noteer('Jy het dronk huis toe gery en niks het gebeur nie. Dié keer.','neutraal');
   }
   stoor(); renderAlles();
 }
@@ -1555,8 +1573,7 @@ function wysOphou(id){
   if(!v){ wenk('Jy doen dit nie.'); return; }
   if((s.gedoen['op'+id]||0) >= 1){ wenk('Jy het dit vanjaar al probeer.'); return; }
   var opsies = [
-    {t:'Probeer op jou eie ophou', sub: ONTNUGTER_SELF + (v<2 ? ' + ' : '') +
-      (v<2 ? '30' : '0') + '% kans · gratis',
+    {t:'Probeer op jou eie ophou', sub: (ONTNUGTER_SELF + (v<2 ? 30 : 0)) + '% kans · gratis',
       doen:function(){ probeerOphou(id, 'self'); }},
     {t:'Gaan kliniek toe', sub:'Die staat se program · gratis · ' +
       Math.round(ONTNUGTER_KANS*0.62) + '% kans',
@@ -1567,7 +1584,7 @@ function wysOphou(id){
       (s.mediesefonds ? ' · jou fonds help' : ''),
     doen:function(){ probeerOphou(id, 'rehab'); }});
   kiesLys('Ophou met ' + g.n.toLowerCase(),
-    'Jy is ' + g.vlakke[v] + '. ' + (v>=3
+    'Jy ' + g.vlakke[v] + '. ' + (v>=3
       ? 'Dit het jou vas, en dit gaan nie van self weggaan nie.'
       : 'Nou is dit nog makliker as later.'), opsies);
 }
@@ -1599,7 +1616,7 @@ function probeerOphou(id, hoe){
     s.geluk = klem(s.geluk - tussen(4,11));
     noteer('Jy het probeer ophou met ' + g.n.toLowerCase() + ' en dit nie gehou nie.','sleg');
     if(v<3 && kans(22)){ s.gewoontes[id] = v+1;
-      noteer('Dit is nou erger as voorheen: jy is ' + g.vlakke[v+1] + '.','sleg'); }
+      noteer('Dit is nou erger as voorheen: jy ' + g.vlakke[v+1] + '.','sleg'); }
   }
   sluitModaal(); stoor(); renderAlles();
 }

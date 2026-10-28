@@ -12,9 +12,9 @@ met presies dieselfde gedrag — net makliker om in te werk:
 |---|---|
 | `index.html` | Net die HTML-raam en die `<script>`-lyste. 35 reëls. |
 | `styl.css` | Al die uitleg en kleure. |
-| `hulp.js` | Klein hulpfunksies: `R()`, `kans()`, `geld()`, `klem()`. |
+| `hulp.js` | Klein hulpfunksies: `R()`, `kans()`, `geld()`, `klem()`, en ná afdeling O die vier taalhelpers `meerv()`, `lysTeks()`, `rangTel()` en `hoofletter()`. |
 | `data.js` | Al die lyste: name, skole, unies, beroepe, bates, misdade, flieks, diere. Onder "SKOOL EN STUDIE" staan die vakke, die APS-tabel en die slaagkanse; onder "EKONOMIE" staan al die geldgetalle bymekaar: dorpskoste, huurpryse, verbandkoerse, rente en pensioen; onder "GESIN EN GESONDHEID" staan die grootouer-dade, die voorbehoeding, die siektes (`TOESTANDE`), die mediese fondse, die gewoontes en die gene. |
-| `gebeure.js` | `GEBEURE` — die lukrake dinge wat met jou gebeur. Ná Fase 6 is dit 197 gebeure, waarvan 53 ’n keuse het: die oorspronklike lys, dan blokke per lewensfase, dan blokke wat by die stelsels inhaak (siektes, gewoontes, die straat, jou besigheid, jou vaardighede, jou kinders), en heel onder die **vlagverhale** (H14) wat ’n vroeëre keuse later laat terugkom. |
+| `gebeure.js` | `GEBEURE` — die lukrake dinge wat met jou gebeur. Elkeen het `min`/`max`, opsioneel `as()`, en ná afdeling O ’n `waar`-veld wat sê of dit ook in die tronk of op straat kan gebeur. Ná Fase 6 is dit 197 gebeure, waarvan 53 ’n keuse het: die oorspronklike lys, dan blokke per lewensfase, dan blokke wat by die stelsels inhaak (siektes, gewoontes, die straat, jou besigheid, jou vaardighede, jou kinders), en heel onder die **vlagverhale** (H14) wat ’n vroeëre keuse later laat terugkom. |
 | `lewe.js` | Die status `s`, stoor/laai, en `wordOuer()` — die jaarmasjien. Fase 6 se drie nuwe blokke staan onderaan: die vlagstelsel (H14), vaardighede (H3), die besigheidsjaar (H4) en die generasie-oorgang (H1). |
 | `aksies.js` | Alles wat die speler self kies: aktiwiteite, werk, studie, bates, verhoudings, diere. |
 | `uitleg.js` | Bou die HTML vir elke tab, insluitend die Gesond-blad (siektes, mediese fonds, leefstyl, voorbehoeding). |
@@ -208,7 +208,7 @@ seun van 34 nie skielik weer in Graad 1 begin nie.
 | E6 | **Geen aanneming, IVF of surrogaatskap.** Ook: geslag word heeltemal geïgnoreer, so twee mans kan 'n biologiese baba hê. | — |
 | E7 | **Kinders doen niks.** Hulle verouder, "verlaat die huis" op 18 en bly dan staties — geen skool, geen graad, geen werk, geen troue, geen kleinkinders (al verwys een gebeurtenis na kleinkinders). | ✅ Elke kind kry `v.kl` — sy eie slimheid, skool, matriek-APS, studie, beroep, salaris, maat, kinders, gewoontes, siektes en 'n eie lewensverhaal. `kindJaar()` speel dit jaar vir jaar: Graad 1 op 6, hoërskool op 13, matriek met 'n APS uit 42 op 18 (jou band met hom en “Help met die huiswerk” maak dit beter), dan 'n vraag aan jou of jy sy graad betaal, dan werk, 'n eie maat, en jou kleinkinders — wat self as mense in `s.verhoudings` staan en hul eie kinderjare deurloop. Op 62 tree hy af. Jy lees alles onder “Lees sy lewensverhaal”, en die grafsteen sê wat van elke kind geword het. Die struktuur is doelbewus ruim vir Fase 6 se generasiespel. |
 | E8 | **Geen ouer-kind-interaksie as stelsel:** geen huiswerk help, geen dissipline, geen keuse oor jou kind se skool. | — |
-| E9 | **Ouderdomsgaping-probleem.** `soekLief()` laat 'n verskil van tot 12 jaar toe (`aksies.js:447`) en kollegas is 22–58 oud — so 'n 16-jarige met 'n werk kan 'n 28-jarige kollega uitvra. Dit moet hard geblokkeer word onder 18. | — |
+| E9 | ✅ **KLAAR (28 Okt 2026 — sien O32.)** `liefOuderdomPas()` blokkeer dit hard: onder 18 moet albei kinders wees en die gaping hoogstens twee jaar; `vreemdeling()` gebruik dieselfde reël. ~~`soekLief()` laat 'n verskil van tot 12 jaar toe en kollegas is 22–58 oud — so 'n 16-jarige met 'n werk kan 'n 28-jarige kollega uitvra.~~ | `aksies.js` |
 | E10 | **Geen ontrouheid, geen saamblyery, geen verlowing.** Troue is een knoppie teen band ≥ 70. | — |
 | E11 | **Geen huweliksgoederebedeling.** In SA maak "binne of buite gemeenskap van goed" (met of sonder accrual) die hele verskil by 'n egskeiding — en die spel verdeel net kontant (sien A10). | — |
 | E12 | **Jou eggenoot verdien niks.** Een huishouding = een inkomste, plus R26 000 ekstra koste. Nodig: 'n eggenoot met 'n beroep, inkomste en loopbaan. | ✅ `maatBeroepKies()` gee jou eggenoot by die troue 'n pos uit `BEROEPE` wat by haar opleiding pas (wat weer aan joune hang — mense trou met mense soos hulself), met 72–118% van daardie pos se salaris. `maatWerkJaar()` gee verhogings tot by die pos se plafon, kan haar afdank, kan haar weer laat werk kry, en laat haar op 62 aftree. `inkomsteJaar()` belas haar salaris apart (soos SARS doen) en gooi dit by die huishouding se kontant; die nuwe `huishoudingBruto()` laat die bank, die krediteure en die huurmark na albei inkomste kyk. |
@@ -295,11 +295,11 @@ VAARDIGHEDE", "H4 — JOU EIE BESIGHEID" en "H1 — DIE BOEDEL".
 
 | # | Verandering |
 |---|---|
-| I1 | `klasGebeurtenis()` sê altyd "op die rugbyveld gestry", ongeag geslag of skool. |
+| I1 | ✅ **KLAAR (28 Okt 2026 — sien O10.)** `klasRusiePlek()` kies die plek nou volgens geslag en skool. ~~`klasGebeurtenis()` sê altyd "op die rugbyveld gestry", ongeag geslag of skool.~~ |
 | I2 | Die Graad 8-jaar (ouderdom 13) kry geen "jy is in Graad 8"-log nie — net die skoolkeuse. |
 | I3 | Privaatskole het geen nadeel nie: `kanBekostig()` keer dit af, maar jou ouers betaal nooit werklik die R44 000–R98 000 nie, so dit is 'n gratis stat-bonus. |
 | I4 | 'n Bate kan in dieselfde jaar gekoop en teen volle waarde verkoop word, sonder kommissie of koste. |
-| I5 | `vakansieMaat()` sê "80% meer" vir twee mense — moet 100% wees, of as 'n gedeelde-kamer-afslag verduidelik word. |
+| I5 | ✅ **KLAAR (28 Okt 2026 — sien O25.)** Die teks verduidelik nou die afslag: "80% meer — julle deel ’n kamer". |
 | I6 | Jy kan nie jou log/lewensverhaal stoor, uitvoer of met iemand deel nie. |
 | I7 | Daar is net 6 vorige lewens in `GESKIEDENIS`, en geen statistieke oor al jou lewens heen nie. |
 | I8 | Geen klank, geen animasie by die jaar-oorgang, geen "jy is dood"-oorgang behalwe die modaal. |
@@ -436,6 +436,139 @@ oorgee, die alarm met die wegkomkar en die jaagtog, en stoor/laai.
 
 ---
 
+## O. Taal- en logikafoute — ✅ KLAAR (28 Oktober 2026)
+
+Die gebruiker: *“Daars baie instansies waar die taal nie sin maak. Vind al
+hierdie situasies en maak ’n oplossing vir elkeen. Daars ook baie logiese foute.
+’n Hond kan my nie huistoe volg as ek in die tronk is nie. My broer sal my nie
+inneem om by hom te bly as ons nie eers ’n verhouding het nie.”*
+
+Hierdie afdeling is nie nuwe inhoud nie — dit is net foute. **47 items: 25 taal,
+22 logika.** Twee ou oop items is in dieselfde slag afgehandel: **I1** (die
+rugbyveld) en **E9** (die ouderdomsgaping), en **I5** is as ’n teksfout opgelos.
+
+### Nuwe hulpmiddels
+
+Die meeste taalfoute kom uit string-konkatenasie, en dieselfde fout het op
+twintig plekke voorgekom. Daarom is daar vier nuwe helpers onderaan `hulp.js`
+in plaas van twintig los lappies:
+
+| Helper | Wat dit oplos |
+|---|---|
+| `meerv(n, enkel, meervoud)` | “1 jare”, “2 dier(e)”, “1 werker”, “1 verliesjare” |
+| `lysTeks(lys)` | “Anna en Jan en Pieter” → “Anna, Jan en Pieter” |
+| `rangTel(n)` | “sy 2e jaar” → “sy 1ste jaar” |
+| `hoofletter(t)` | ’n frase wat voor in ’n sin ingeplak word |
+
+Daarby in `lewe.js`: `siekteNaam(tt)` (die klein-letter-vorm van ’n siekte se
+naam, met `lk` in `data.js`), `ouerWoord()`, `klasRusiePlek()`, `dierHy()` /
+`dierHom()`, en die toestandhelpers onder **O26**.
+
+### Taalfoute
+
+| # | Probleem | Waar | Gedoen |
+|---|---|---|---|
+| O1 | **Ontbrekende diakritiese tekens** in speler-sigbare teks. Die kodebasis was inkonsekwent: dieselfde woord het soms met en soms sonder sy kappie of deelteken gestaan. | `gebeure.js`, `lewe.js`, `aksies.js`, `uitleg.js`, `skerm.js`, `data.js` | ✅ 44 plekke reggemaak: *geëet, beïndruk (3×), gesê (5×), gelê (2×), geërf (3×), belê (4×), opgesê (2×), Akne, Hoërskool (3 skoolname + 2 modale), annuïteit (4×), Lewensoriëntering (5×), Môrester, Wêreld, dokumentêr, onderwêreld (2×)*. ’n Nuwe toets (`diakrit.js` in die harnas) vang dit outomaties: dit groepeer elke woord in die bron volgens sy vorm sonder tekens en wys elke groep wat albei vorme bevat. |
+| O2 | **Ontbrekende tweede `nie`.** Afrikaans verlang `nie … nie`; ’n sin wat uit fragmente gebou word, verloor maklik die tweede een. | `gebeure.js`, `lewe.js`, `aksies.js` | ✅ 5 plekke: “Niks het gebeur**.**” → “Niks het gebeur **nie**.”, “Doen niks daaraan” → “Doen niks daaraan **nie**” (twee plekke), “Een student doen niks **nie** en vra …”, “Jou ouers weet niks **nie**.”, “… en niks het gebeur **nie**. Dié keer.” |
+| O3 | **Woordorde.** Gekonkateneerde bysinne kry die V2-/werkwoord-finale reël verkeerd. | `gebeure.js` | ✅ “Niemand het ’n lisensie nie behalwe die oudste” → “**Niemand behalwe die oudste** het ’n lisensie nie”; “iemand wat werk soek vir ’n mens” → “iemand wat **vir mense werk kry**”; “het jou voorgekeer en **vra** vir jou lekkergeld” → “en **vir jou lekkergeld gevra**” (tydsvorm). |
+| O4 | **Lyste met “en … en … en”.** `name()` het met komma’s saamgevoeg (sonder “en”) en `sluitGroep()` met “ en ” tussen elke naam. | `lewe.js` | ✅ `lysTeks()`. “Heinrich en Suzanne en Elsabe en Juanita” → “Heinrich, Suzanne, Elsabe **en** Juanita”; “Andries, Lize, Elmarie ontmoet” → “Andries, Lize **en** Elmarie ontmoet”. Ook die grootouerreël en `lysEn()` in `aksies.js` loop nou deur dieselfde helper. |
+| O5 | **Enkelvoud/meervoud.** | `lewe.js`, `uitleg.js` | ✅ `meerv()` oral: “Jy het 2 **dier(e)**” (die letterlike noodoplossing in `uitleg.js`), “kontak verloor met 1 ander **klasmaats**”, “Andries het jou **vriende** gebly” (een naam), “**Jou grootouers is** X” (een grootouer), “1 **werker**”, “1 **verliesjaar**”, “1 **chroniese toestand**”. |
+| O6 | **Ranggetalle.** “is in sy **2e** jaar” — Afrikaans skryf 1ste, 2de, 3de; en dit was boonop een jaar voor. | `lewe.js` | ✅ `rangTel()` plus die af-by-een: ’n eerstejaar is nou “in **sy 1ste jaar**”, nie “sy 2e jaar” nie. |
+| O7 | **Hakies binne hakies.** `rol()` gee self “Oupa (ma se kant)”, en twee plekke het dit weer in hakies gesit. | `lewe.js` | ✅ “Andries **(Oupa (ma se kant))** is oorlede” → “Andries, **oupa (ma se kant)**, is oorlede”; en dieselfde by die geboortereël oor jou grootouers. |
+| O8 | **Ontbrekende lidwoorde.** `plek.n.toLowerCase()` en `tt.n.toLowerCase()` is sonder ’n lidwoord in ’n sin ingeplak. | `lewe.js`, `data.js` | ✅ “Huur vir **’n** agterkamer by ’n huis”, “Huur **’n** kamer in ’n kommune”; en ’n nuwe `lk`-veld per toestand: “jy het **’n gebreekte been**”, “**’n maagvirus**”, “**’n rugbesering**”, “**die nagevolge van ’n beroerte**”, en “**HIV**” in plaas van “hiv”. |
+| O9 | **Geslagsooreenkoms.** Oral waar ’n hardgekodeerde manlike vorm gestaan het waar die persoon ’n vrou kan wees. | `lewe.js`, `aksies.js`, `gebeure.js`, `skerm.js` | ✅ Jou **eggenoot** (“uit **haar** pos getree”, “**haar** werk verloor” — ook as hy ’n man is), jou **kind** (“ek betaal **sy** klasgeld”, “**Hy** kry ’n beurs”, “**Sy** punte is goed genoeg”, “**sy** eerste rugbywedstryd” → netbal vir ’n dogter), die **klasmaat** (“**sy** kosblik gedeel”), die **familielid** (“het gesê **hulle** kan nie help nie” → hy/sy), die **kleinkind** en die **skooltoer-kind** (“hy” → “hy of sy”, en die naam self), die **vlagverhaal** van die nuwe kind (die vlag onthou nou ook die geslag), die **grafsteen** (“speel **sy** lewe verder”), en die **troeteldier** (nuwe `geslag`-veld plus `dierHy()`/`dierHom()`: “Die dierearts dink **sy** sal langer lewe”). |
+| O10 | **I1 — “op die rugbyveld gestry”** ongeag geslag of skool. | `lewe.js` | ✅ `klasRusiePlek()`: twee meisies stry **op die netbalbaan**, en by tuisonderrig **oor die tafel**. |
+| O11 | **“Bernard is swanger.”** Die spel het altyd die maat se naam gebruik — ook as die speler self die vrou is. | `lewe.js` | ✅ Is jy die vrou, staan daar “**Jy** is swanger”. |
+| O12 | **“Pa was nie beïndruk nie”** vir ’n kind sonder ’n pa (die `geenPa`-vlag) of met ’n pa wat oorlede is. | `gebeure.js` | ✅ `ouerWoord()` gee “Pa”, “Ma” of “Die huis”, na wie ook al nog leef. |
+| O13 | **“Jy nie”** op die Gesond-blad. `GEWOONTES.vlakke[0]` was net `'nie'`, en vier verskillende rame het dit anders probeer gebruik. | `data.js`, `uitleg.js`, `lewe.js`, `aksies.js` | ✅ `vlakke` is nou die stuk wat ná “jy” kom: “jy **drink nie**”, “jy **rook soms**”, “jy **is verslaaf aan drank**”. Al vier rame (die blad, die spiraal-log, “Dit is nou erger”, en die ophou-venster) is daarby aangepas; die statusreël maak “Verslaaf aan drank” daarvan. |
+| O14 | **Hoofletter middel-in ’n sin.** “Jy kom uit ’n familie wat baie oud word — **J**ou ouma se ma het 97 geword.” | `uitleg.js` | ✅ Dit is nou twee sinne. |
+| O15 | **Anglisismes** in speler-sigbare teks. | `aksies.js`, `uitleg.js` | ✅ “Gaan **gym** toe” en “Oefen in die **gym**” → **gimnasium**. |
+| O16 | **ALL-CAPS as beklemtoning** pas nie by die res van die teks nie. | `gebeure.js` | ✅ “Die meubelwinkel het **JOU** gedagvaar” → “het **jóú** gedagvaar”. |
+| O17 | **Twee getalle langs mekaar in plaas van hul som.** Die ophou-venster het “19 + 30% kans” gewys. | `aksies.js` | ✅ Dit wys nou die som: “**49%** kans”. |
+| O18 | **Teks wat nie by die kode pas nie.** Die vraag sê “’n jaar se salaris”, maar die kode vat 20% van jou inkomste. | `gebeure.js` | ✅ “’n **deel van** ’n jaar se inkomste”. |
+| O19 | **Dieselfde naam twee keer.** “In jou klas … Andries, Andries en Marko”, twee oumas wat albei Anel heet, en “Andries is getroud met **Andries** Swanepoel”. | `lewe.js` | ✅ `maakGroep()`, `maakGrootouer()` en `kindMaat()` probeer tot twaalf keer vir ’n naam wat nog nie in jou lewe is nie. |
+| O20 | **“Andries (Jou baas) is oorlede.”** `rol()` het vir ’n baas “Jou baas” gegee, wat in hakies verkeerd lees. | `lewe.js` | ✅ `baas:'Baas'`. |
+| O21 | **“Die baba is in ’n privaat kraamsaal, kontant gebore (R0).”** | `lewe.js` | ✅ “… **kontant betaal** gebore”, die bedrag val weg as dit nul is, en vir ’n tienerouer staan daar “**deur jou ouers betaal**” — want dit is wie regtig betaal het. |
+| O22 | **’n Onvoltooide sin.** “Jy het karate te lank laat lê. Jy **kan dit skaars meer**.” | `lewe.js` | ✅ “… Jy kan dit skaars meer **doen**.” |
+| O23 | **`na` waar `ná` hoort.** | `lewe.js`, `aksies.js` | ✅ “vriende gebly **ná** laerskool / ná skool / ná die werk / ná jou studies / ná jou uitsluiting”, “verdien (**ná** belasting)” (twee plekke), “**Ná** twee uitsluitings neem geen universiteit jou weer nie”. |
+| O24 | **Klein leestekens en konsekwentheid.** | `data.js`, `minispel.js`, `onderwereld.js`, `ontsnap.js` | ✅ “taxi-staanplek” en “taxistaanplek” was albei in gebruik (nou een vorm); “Die bal rol **...**” → ’n egte ellips; en twee oorblywende drieledige uitdrukkings waarvan albei takke dieselfde was (`l.tronk===1 ? ' jaar' : ' jaar'`). |
+| O25 | **I5 — “Iemand saamvat kos 80% meer”** sonder om te sê hoekom dit nie 100% is nie. | `aksies.js` | ✅ “80% meer — **julle deel ’n kamer** — maar is baie lekkerder”. |
+
+### Logiese foute
+
+| # | Probleem | Waar | Gedoen |
+|---|---|---|---|
+| O26 | **Gebeure wat vuur in ’n toestand waarin hulle onmoontlik is.** Dit is die gebruiker se hond-voorbeeld: ’n hond volg jou huis toe terwyl jy in die tronk sit, jou geyser bars terwyl jy op straat slaap, jou matriekafskeid is ’n groot sukses nadat jy die skool verlaat het. Van die 197 gebeure het **nul** na `s.tronk` of `s.vlug` gekyk en net vyf na `s.dakloos`. | `lewe.js`, `gebeure.js` | ✅ Elke gebeurtenis het nou ’n **`waar`-veld** langs `min`/`max`/`as`, en `lukrakeGebeure()` toets dit saam met die res. Vier waardes: **niks** = die gewone lewe buite (die verstek, want dit geld vir die meeste), **`'enige'`** = oral, ook toegesluit en op straat (die liggaam en die jare: griep, grys hare, ’n knie wat gaan staan — 11 gebeure), **`'tronk'`**, en **`'straat'`** (die vyf dakloosgebeure se `as:`-toets is hierheen verskuif). Die verstek keer dus voortaan **elke** gebeurtenis wat nie uitdruklik anders gemerk is nie uit die tronk en van die straat af. **Gemeet:** 400 tronklewens, 400 dakloos-lewens en 400 lewens wat die skool op 16 verlaat — **0 oortredings** teen ’n lys verbode reëls (`beweer.js`), teenoor honderde voorheen. |
+| O27 | **Skoolgebeure sonder ’n skool.** Dieselfde probleem op ’n ander as: die boelie in die gang, die eksamenvraestel, die beroepsdag en die wiskunde-olimpiade het gevuur nadat jy die skool verlaat het. | `lewe.js`, `gebeure.js` | ✅ Drie helpers: **`opSkool()`** (jy kry werklik onderrig), **`opHoerskool()`** en **`inKlas()`** (daar is ’n egte klas — sien O30). 26 gebeure is daarmee gemerk. |
+| O28 | **Gebeure wat iets aanneem wat jy nie het nie.** | `gebeure.js`, `lewe.js` | ✅ ’n `as:`-toets by elkeen: **’n motor** (“Jou motor se diens is agterstallig” het gevuur sonder ’n motor — `hetMotor()`), **’n huis** (“Die geyser, die dak of die pomp het gebreek”, “Jy het ’n bank in die tuin gesit” — `hetHuis()`), **’n eie dak** (die geyser wat bars en die yskas wat afskakel, by jou ouers se huis — `eieDak()`), **’n huurplek** (“Jou huisgenoot het getrek”), **’n werk** (“’n Werwer in Perth bel: dieselfde werk, drie keer die geld” terwyl jy werkloos is; “jou werkgewer wil jou verskuif”; die onderwyser se vergadering “in werksure”), **inkomste** (die SAID se brief, en ’n hele Saterdag met e-filing), **’n lewende ouer** (“Jou ouers vra wat jy nou gaan doen”, “die mense wat jou grootgemaak het is nou oud”, en die hengeltog wat altyd “jou pa” gesê het), **’n broer of suster** (die laaste stukkie melktert, waar die “Deel dit”-opsie niemand gehad het om mee te deel nie) en **kinders** (“jou lewensverhaal vir die kinders”). |
+| O29 | **’n Matriekafskeid buite matriek.** Dit was `min:16, max:18` sonder enige toets, dus kon ’n Graad 10-leerling of iemand wat lankal weg is uit die skool een hê. | `gebeure.js` | ✅ Nou `opHoerskool() && s.skool.graad>=12`. |
+| O30 | **Tuisonderrig het klasmaats gegee.** “In jou klas by **Tuisonderrig by die huis** het jy Andries, Lize en Elmarie ontmoet” — en daarna al die klasgebeure. | `data.js`, `lewe.js`, `gebeure.js` | ✅ ’n `tuis`-vlag op daardie skool; `maakKlasmaats()` skryf “Jy leer by die huis. Daar is geen klas om in te sit nie” en maak niemand nie; en `inKlas()` hou die elf klasgebonde gebeure (die klas se troeteldier, die spelbye, die ruit, die nuwe kind in die klas, die boelie in die gang …) weg. |
+| O31 | **Familie wat jou intrek sonder dat daar ’n verhouding is.** Dit is die gebruiker se broer-voorbeeld: `familieHuis()` het net gevra of jou broer **leef** en **21+** is — nie of julle mekaar ken nie. | `data.js`, `lewe.js` | ✅ Twee nuwe konstantes in `data.js`: **`OUERHUIS_BAND = 25`** (’n ouer neem jou makliker terug in) en **`FAMILIEHUIS_BAND = 50`** (’n broer of suster se spaarkamer vra meer). `familieHuis()`, die nuwe `ouerHuis()`, `terugvalBlyplek()`, `huisMense()` en `familieHelpers()` gebruik hulle almal. `DAKLOOS_FAMILIE_BAND` (72) bly hoër, want dit is familie wat jou **self** op straat kom soek sonder dat jy gevra het. `sekwestrasie()` en `verkoopBateUit()` loop nou ook deur `terugvalBlyplek()` in plaas van hul eie kopie van die reël. |
+| O32 | **E9 — ’n 16-jarige kon ’n 28-jarige uitvra.** `soekLief()` het ’n gaping van 12 jaar vanaf 15 toegelaat, en `vreemdeling()` het ’n vreemdeling van jou ouderdom ±4 gegee. | `aksies.js` | ✅ `liefOuderdomPas()`: onder 18 moet **albei** onder 18 wees en die gaping hoogstens **twee** jaar; van 18 af bly die 12 jaar. Dit geld vir die kenniselys, die “Vra op ’n date uit”-knoppie op ’n persoon se kaart, én vir die vreemdeling wat jy ontmoet. |
+| O33 | **’n Grootmens sleep ’n kind in ’n roof in.** `misdaadMaat()` het enigiemand van 12 af gewys. | `misdaad.js` | ✅ Is jy 18+, moet jou maat 18+ wees; is jy ’n kind, moet dit ’n maat van jou eie ouderdom wees (±4 jaar). |
+| O34 | **Toestand-oorgange wat nie kan nie.** Trou, ’n baba probeer, ’n motor of ’n huis koop en iemand uitvra — alles vanuit die tronk. | `aksies.js` | ✅ `!s.tronk` by “Vra ten huwelik”, “Probeer vir ’n baba”, `koopBate()` en `soekLief()`. (`doenMisdaad()` kry dieselfde wag, vir die geval iets dit buite die blad af roep.) |
+| O35 | **“Waar gaan jy bly?”** is ook gevra terwyl jy toegesluit was of op straat geslaap het. | `lewe.js` | ✅ `vraBlyplek()` keer albei. |
+| O36 | **Sakgeld op straat.** ’n Dakloos 16-jarige het elke jaar sakgeld van sy ouers gekry. | `lewe.js` | ✅ `sakgeldJaar()` toets nou ook `s.dakloos` (dit het al na `s.tronk` gekyk). |
+| O37 | **Die aftreeoord het niks beteken nie.** Jy betaal R220 000 om in te trek, die `aftreeoord`-vlag word gestel — en dan vra `blyplekJaar()` die volgende jaar weer huur asof niks gebeur het nie. | `gebeure.js`, `lewe.js`, `uitleg.js` | ✅ Die keuse stel `s.blyplek = 'aftreeoord'`, `blyplekJaar()` lees die vlag en vra geen huur meer nie, en die Bates-blad wys ’n kaart in plaas van ’n lys huurplekke. |
+| O38 | **`kies()` twee keer in een uitdrukking.** `kies(f).band = klem(kies(f).band + …)` lees die band van een mens en skryf dit by ’n **ander**. | `gebeure.js` | ✅ Twee plekke: die familielid wat vir ’n begrafnis geld leen, en die kleinkind wat ’n week kom bly. |
+| O39 | **Dooie kode wat niks doen nie.** | `gebeure.js` | ✅ `Math.max(s.geld-v, s.geld-v)` (altyd dieselfde waarde — die foon se skerm het dus nooit niks gekos nie, maar die bedoeling was duidelik ’n gewone rekening), `s.geld += 0`, en `s.aansien = (s.aansien||0) + 0` en `s.aansien = (s.aansien||0)` by die sopkombuis en die handsak. |
+| O40 | **Vlae wat gestel word maar nooit gelees word nie.** A13 se les, nog elf keer. | `gebeure.js`, `aksies.js`, `ontsnap.js` | ✅ `besigheidBegin`, `gapingsjaar`, `gesprekGehad`, `grootKliënt`, `groottoer`, `kopieGevang`, `olimpiade`, `tweedeKans`, `vennootIn`, `vlugVry` en `werkGeruil` is verwyder; `aftreeoord` word nou gelees (O37). Die oudit is ’n skrif in die harnas (`vlagoudit.sh`): dit stel elke `stelVlag`-skryf teenoor elke lees op. **Nou: 0 gestel-maar-nie-gelees, 0 gelees-maar-nie-gestel.** Wil ’n mens later ’n beloning vir een van hulle skryf, is dit nuwe inhoud en hoort dit in ’n nuwe fase. |
+| O41 | **Ouers wat nie bestaan nie, tree op.** “**Jou ouers** het jou staatshospitaal toe gevat” en “**Jou ouers** het dit swaar gevat” het ook gestaan vir ’n kind wie se ouers albei dood is. | `lewe.js` | ✅ Albei noem nou die ouer by die naam, of laat die sin weg as daar niemand is nie. |
+| O42 | **“Jy is nou ’n oupa!”** by elke kleinkind, nie net die eerste nie. | `lewe.js` | ✅ Net by die eerste. |
+| O43 | **Die jaarmerk voor die toets.** `beginGewoonte()` het `gedoen` en `gewoonteLaas` gestel **voordat** dit getoets het of jy oud genoeg is — dus het ’n geweierde poging die gewoonte “lewendig” gehou en die verval-reël uitgestel. | `aksies.js` | ✅ Die ouderdomstoets staan nou eerste. |
+| O44 | **Die verkeerde mens betaal.** Die yskas wat afskakel was `min:12` en het die kind laat betaal vir die kos in sy ouers se yskas. | `gebeure.js` | ✅ Nou `min:18` plus `eieDak()`. |
+| O45 | **Alle ouderdomme in ’n lys.** `maakGroep()` kon dieselfde naam twee keer kies (sien O19) — dit is ’n logiese fout sowel as ’n taalfout, want twee broers of twee oumas met dieselfde naam is nie ’n gesin nie. | `lewe.js` | ✅ Sien O19. |
+| O46 | **Die vlugteling se twee gebeure** is in Fase 9 met `GEBEURE.push()` bygevoeg en sou deur O26 se verstek uit die straat-toestand gehou gewees het. | `ontsnap.js` | ✅ Albei is `waar:'enige'` gemerk; hul eie `as:` keer steeds dat hulle in die tronk vuur. |
+| O47 | **Die dorp word geïgnoreer.** “Jy het ’n pragtige sonsondergang **oor Tafelberg** gesien” terwyl jy in Vryburg woon, 1 200 km daarvandaan. | `gebeure.js` | ✅ Dit gebruik nou `s.dorp`. |
+
+### Hoe dit getoets is
+
+’n Headless harnas in die scratchpad (nie in die repo nie) laai die lêers in
+`index.html` se volgorde met stubs vir `document`, `localStorage` en `window`,
+en antwoord die modale self.
+
+* **Crash-toets.** 2 000 passiewe lewens (net “+1 jaar”, gemiddelde ouderdom
+  56,7) plus 300 lewens elk in die tronk, op straat, op die vlug, in die
+  onderwêreld en met kinders — **0 foute**.
+* **Bewerings.** `beweer.js` haak `noteer()` af, onthou in watter toestand elke
+  log-reël geskryf is, en toets dit teen ’n lys reëls wat daar nie mag wees nie
+  (die hond, die geyser, die yskas, die matriekafskeid, die sakgeld, die
+  blyplekvraag, die klasrusie …). 400 tronklewens, 400 dakloos-lewens en 400
+  lewens wat die skool op 16 verlaat: **0 oortredings**.
+* **Taal-sif.** Elke log-reël, modaalteks, knoppie en wenk oor al daardie lewens
+  word versamel (≈162 000 reëls), met plekhouers vir name en bedrae ontdubbel
+  tot sowat 7 900 sjablone, en dan teen ’n lys regexe getoets (ontbrekende
+  tweede `nie`, “1 jare”, `(e)`, ’n punt in ’n persentasie, dubbele spasies,
+  ontbrekende diakritiese tekens, dubbele woorde, Engelse oorblyfsels). Dit loop
+  ook oor elke string-literal in die bron. **Skoon**, buiten vals treffers
+  (“Kontant, geen kontrak” is ’n geldige fragment; `hoerskool` is ’n interne
+  sleutel, nie teks nie). ’n Paar honderd unieke reëls is ook self deurgelees —
+  dit is waar O7, O11, O13, O19, O20 en O21 uitgekom het, wat geen regex sou
+  vang nie.
+* **Ou stoor-data.** ’n Lewe in die Fase 1-formaat (geen spaargeld, geen gene,
+  geen vaardighede, geen dier-geslag) laai steeds en speel 40 jaar verder sonder
+  ’n fout; ’n ou `eieOrg` met die ou lede-formaat skakel om; en die nuwe
+  `aftreeoord`-blyplek breek niks. Elke nuwe veld (`d.geslag`, `lk` per toestand,
+  `tuis` per skool, `s.blyplek==='aftreeoord'`) kry sy verstek in `vulNuweVelde()`.
+* **In die blaaier**, 375 breed: geboorte, kleuterskool, die laerskoolkeuse
+  (tuisonderrig — geen klasmaats), Graad 8 by Hoërskool Durbanville, agt jaar
+  tronk (net liggaamsgebeure), die Aktiwiteite-, Mense-, Gesond- en Bates-blaaie,
+  die aftreeoord-kaart en die dakloos-paneel. **Geen konsole-foute.**
+
+### Wat oopgelaat is
+
+* Die matriekpersentasies loop maklik teen 100% vas (Lewensoriëntering se +18 op
+  ’n `klem(…, 0, 100)`). Dit is ’n **balans**-item, nie ’n taal- of logikafout
+  nie, en dit hoort by C3 wanneer die drie NSC-slaagvlakke gedoen word.
+* Die elf vlae van O40 is verwyder eerder as gelees. Elkeen ’n beloning gee
+  (’n gapingsjaar wat later iets beteken, ’n besigheidsvennoot wat terugkom)
+  is **nuwe inhoud**, nie ’n fout nie.
+* ’n Afgetrede mens kan steeds vir ’n werk aansoek doen en sy pensioen bly
+  aanhou. Dit is nie onmoontlik nie (pensioenarisse werk), maar die wisselwerking
+  tussen `s.afgetree` en `s.beroep` is nog nooit ontwerp nie.
+
+---
+
 ## J. Voorgestelde orde van werk
 
 ~~**Fase 1 — fixes (A1–A16).**~~ **✅ KLAAR (22 Oktober 2026).** Al 16 items is gedoen — sien die **Gedoen**-kolom in afdeling A. Die spel is nou eerliker: die fliek betaal reg, casino en Lotto verloor geld soos hulle moet, en die tronk breek nie meer jou skoolloopbaan nie.
@@ -523,7 +656,20 @@ weer oop, en na 10 of 15 jaar is jy vry — of jy gee jouself oor.
 10. **Fase 9 (M1–M4; G5)** — ontsnapping oor jare beplan, ’n stealth-mini-spel met
    ’n foutlose-pad-waarborg, en die lewe op die vlug.
 
-**Volgende aan die beurt:** Fase 10 (vaardigheid-mini-games). Daarna: die drie wat die meeste sal
+11. **Playtest N1–N5 (25 en 28 Okt 2026)** — die `?dev`-paneel, veilige
+   organisasie-jobs, ’n betroubare pad na bo, werf uit vriende en familie, en
+   elke lid apart.
+
+12. **Afdeling O (28 Okt 2026)** — **al die taal- en logikafoute.** 47 items:
+   25 taalfoute (diakritiese tekens, die tweede `nie`, woordorde, lyste,
+   enkelvoud/meervoud, ranggetalle, lidwoorde, geslagsooreenkoms) en 22 logiese
+   foute. Die grootste daarvan is die nuwe **`waar`-veld** op elke gebeurtenis:
+   voorheen het al 197 gebeure oral gevuur, en nou volg ’n hond jou nie meer
+   huis toe terwyl jy in die tronk sit nie. Familie neem jou ook net in as die
+   band daar is, en ’n 16-jarige kan nie meer ’n 28-jarige uitvra nie (E9). Vier
+   nuwe taalhelpers in `hulp.js` vat elke herhalende fout op een plek vas.
+
+**Volgende aan die beurt:** Fase 10 (vaardigheid-mini-games) — afdeling O het die taal en die logika skoongemaak, so die volgende werk kan weer inhoud wees. Daarna: die drie wat die meeste sal
 byvoeg, is waarskynlik **H2** (prestasies op die grafsteen — dit gee die
 generasiespel ’n telling om voor te speel), **H9** (die motor as ’n volle stelsel:
 lisensietoets, versekering, diens, ongeluk) en **H8** (eiendom om te verhuur, wat die

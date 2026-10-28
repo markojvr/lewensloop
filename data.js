@@ -20,9 +20,9 @@ var DORPE=['Durbanville','Kaapstad','Stellenbosch','Paarl','Worcester','George',
 var LAERSKOLE=[
   {n:'Laerskool Eversdal', t:'Openbare skool', koste:0, slim:2, geluk:2},
   {n:'Laerskool Welgemoed', t:'Openbare skool', koste:0, slim:2, geluk:1},
-  {n:'Laerskool Morester', t:'Klein plattelandse skool', koste:0, slim:1, geluk:3},
+  {n:'Laerskool Môrester', t:'Klein plattelandse skool', koste:0, slim:1, geluk:3},
   {n:'Sint Michael Privaatskool', t:'Privaatskool', koste:44000, slim:4, geluk:0},
-  {n:'Tuisonderrig by die huis', t:'Tuisskool', koste:0, slim:3, geluk:-2}
+  {n:'Tuisonderrig by die huis', t:'Tuisskool', koste:0, slim:3, geluk:-2, tuis:true}
 ];
 
 /* 'bied' is die keusevakke wat die skool in Graad 10 aanbied (C1).
@@ -32,16 +32,16 @@ var SKOOL_BIED=['Fisiese Wetenskappe','Lewenswetenskappe','Rekeningkunde','Besig
   'Ekonomie','Geografie','Geskiedenis','Rekenaartoepassingstegnologie','Toerisme',
   'Verbruikerstudies','Visuele Kunste'];
 var HOERSKOLE=[
-  {n:'Hoerskool Durbanville', t:'Openbare skool', koste:0, slim:2, gesondheid:1, geluk:2,
+  {n:'Hoërskool Durbanville', t:'Openbare skool', koste:0, slim:2, gesondheid:1, geluk:2,
     bied:SKOOL_BIED.concat(['Inligtingstegnologie','Dramatiese Kunste','Gasvryheidstudies'])},
-  {n:'Hoerskool Stellenberg', t:'Openbare skool', koste:0, slim:2, gesondheid:2, geluk:1,
+  {n:'Hoërskool Stellenberg', t:'Openbare skool', koste:0, slim:2, gesondheid:2, geluk:1,
     bied:SKOOL_BIED.concat(['Inligtingstegnologie','Musiek','Landbouwetenskappe'])},
   {n:'Paul Roos Gimnasium', t:'Sport- en akademieskool', koste:70000, slim:3, gesondheid:4, geluk:2,
     bied:SKOOL_BIED.concat(['Inligtingstegnologie','Dramatiese Kunste','Musiek'])},
   {n:'Die Akademie', t:'Privaat akademieskool', koste:98000, slim:5, gesondheid:0, geluk:-1, vereisSlim:58,
     bied:['Fisiese Wetenskappe','Lewenswetenskappe','Rekeningkunde','Besigheidstudies','Ekonomie',
       'Geografie','Geskiedenis','Inligtingstegnologie','Musiek','Visuele Kunste']},
-  {n:'Tegniese Hoerskool Bellville', t:'Tegniese skool', koste:0, slim:1, gesondheid:2, geluk:3,
+  {n:'Tegniese Hoërskool Bellville', t:'Tegniese skool', koste:0, slim:1, gesondheid:2, geluk:3,
     bied:['Fisiese Wetenskappe','Lewenswetenskappe','Ingenieursgrafika en Ontwerp',
       'Siviele Tegnologie','Elektriese Tegnologie','Meganiese Tegnologie',
       'Rekenaartoepassingstegnologie','Besigheidstudies','Geografie','Toerisme']}
@@ -117,18 +117,18 @@ var NAGRAADS=[
    (C2), en hoe swaar dit is om 'n jaar op universiteit te slaag (C9).
    ========================================================================== */
 
-/* C1 — die NSC vra sewe vakke: twee tale, Lewensorientering, Wiskunde OF
+/* C1 — die NSC vra sewe vakke: twee tale, Lewensoriëntering, Wiskunde OF
    Wiskundige Geletterdheid, en drie keusevakke.
    'moeilik' is wat die vak aan jou punt doen teenoor jou algemene vlak.
    Dit is die hart van die Wiskunde-keuse: Wiskunde kos jou agt punte,
    Wiskundige Geletterdheid gee jou nege — maar sonder Wiskunde is die
-   helfte van die universiteitsprogramme toe. Lewensorientering se +18 is
+   helfte van die universiteitsprogramme toe. Lewensoriëntering se +18 is
    nie 'n fout nie; daarom tel dit ook nie vir toelating nie.
    'wisk' merk die vakke wat 'n skool net vir Wiskunde-leerlinge oopmaak. */
 var VAKKE=[
   {n:'Afrikaans Huistaal', moeilik:4, verplig:true},
   {n:'Engels Eerste Addisionele Taal', moeilik:2, verplig:true},
-  {n:'Lewensorientering', moeilik:18, verplig:true, nieAps:true},
+  {n:'Lewensoriëntering', moeilik:18, verplig:true, nieAps:true},
   {n:'Wiskunde', moeilik:-8, kern:true},
   {n:'Wiskundige Geletterdheid', moeilik:9, kern:true},
   {n:'Fisiese Wetenskappe', moeilik:-9, wisk:true,
@@ -153,12 +153,12 @@ var VAKKE=[
   {n:'Toerisme', moeilik:6},
   {n:'Verbruikerstudies', moeilik:6}
 ];
-var VAKKE_VERPLIG=['Afrikaans Huistaal','Engels Eerste Addisionele Taal','Lewensorientering'];
+var VAKKE_VERPLIG=['Afrikaans Huistaal','Engels Eerste Addisionele Taal','Lewensoriëntering'];
 var KEUSEVAKKE=3;              /* hoeveel keusevakke jy bo die verpligte vier kies */
 var VAKKEUSE_GRAAD=10;         /* in watter graad jy kies */
 
 /* C2 — die NSC se sewe vlakke. 'n Vlak is wat 'n persentasie werd is, en
-   jou APS is die som van jou ses beste vakke sonder Lewensorientering:
+   jou APS is die som van jou ses beste vakke sonder Lewensoriëntering:
    7 vlakke x 6 vakke = 42. */
 var APS_VLAKKE=[
   {vanaf:80, vlak:7, n:'Uitstekende prestasie'},
@@ -333,6 +333,13 @@ var HUURPLEKKE=[
 /* Bly jy by jou ouers, dra jy net by tot die rekeninge — en net as jy
    self 'n inkomste het. */
 var OUERHUIS_MAAND=950;
+/* O — wie jou werklik sal inneem. Voorheen is net na ouderdom gekyk, dus
+   het 'n broer met wie jy skaars praat jou ingetrek. 'n Ouer gee
+   makliker as 'n broer of suster, daarom is die drempel laer; en
+   DAKLOOS_FAMILIE_BAND hier onder bly hoër, want dit is familie wat jou
+   SELF op straat kom soek sonder dat jy gevra het. */
+var OUERHUIS_BAND=25;          /* 'n ouer neem jou terug in */
+var FAMILIEHUIS_BAND=50;       /* 'n broer of suster se spaarkamer vra meer */
 
 /* B2 — 'n verband (huislening). Die koers is prima plus 'n bietjie,
    soos 'n gewone SA-verband in 2026. */
@@ -763,7 +770,7 @@ var BOEKE=[
   {n:'Spud', a:'John van de Ruit', slim:2, geluk:9},
   {n:'Die Sneeubal', a:'Alice Schroeder oor Warren Buffett', slim:8, geluk:1},
   {n:'’n Wiskunde-studiegids', a:'400 oefeninge, geen prentjies', slim:9, geluk:-5},
-  {n:'Die Hele Wereld se Geskiedenis', a:'E.H. Gombrich', slim:7, geluk:2},
+  {n:'Die Hele Wêreld se Geskiedenis', a:'E.H. Gombrich', slim:7, geluk:2},
   {n:'’n Asteriks-strokiesprent', a:'Goscinny en Uderzo', slim:1, geluk:6},
   {n:'Die Ongelooflike Avonture van Hanna Hoekom', a:'Marita van der Vyver', slim:4, geluk:6}
 ];
@@ -774,7 +781,7 @@ var FLIEKS=[
   {n:'Die nuwe superheld-fliek', koste:180, kinderPrys:110, ouderdomsbeperking:10, geluk:8},
   {n:'’n Afrikaanse romantiese komedie', koste:160, kinderPrys:95, ouderdomsbeperking:13, geluk:6},
   {n:'’n Grillerprent', koste:170, kinderPrys:100, ouderdomsbeperking:18, geluk:5, gesondheid:-2},
-  {n:'’n Natuurdokumenter', koste:150, kinderPrys:90, ouderdomsbeperking:0, geluk:4, slim:4},
+  {n:'’n Natuurdokumentêr', koste:150, kinderPrys:90, ouderdomsbeperking:0, geluk:4, slim:4},
   {n:'’n Ou klassieke fliek by die Labia', koste:120, kinderPrys:70, ouderdomsbeperking:7, geluk:7, slim:2}
 ];
 var VAKANSIES=[
@@ -906,10 +913,10 @@ var TOESTANDE=[
   {id:'griep', n:'Griep', e:'\u{1F912}', gewig:30, soort:'akuut', min:0, erns:0.10,
    gesond:[3,8], koste:950, behandelF:0.7, jare:[1,1],
    sub:'Drie weke hoes en ’n week in die bed'},
-  {id:'maag', n:'Maagvirus', e:'\u{1F922}', gewig:22, soort:'akuut', min:0, erns:0.08,
+  {id:'maag', n:'Maagvirus', lk:'’n maagvirus', e:'\u{1F922}', gewig:22, soort:'akuut', min:0, erns:0.08,
    gesond:[2,6], koste:800, behandelF:0.7, jare:[1,1],
    sub:'Niks bly binne nie. Jy het vyf kilogram verloor'},
-  {id:'been', n:'Gebreekte been', e:'\u{1FAFC}', gewig:9, soort:'akuut', min:3, erns:0.12,
+  {id:'been', n:'Gebreekte been', lk:'’n gebreekte been', e:'\u{1FAFC}', gewig:9, soort:'akuut', min:3, erns:0.12,
    gesond:[6,14], koste:14000, behandelF:0.8, jare:[1,2],
    sub:'Ses weke in gips, en daarna fisioterapie'},
   {id:'blinde', n:'Blindedermontsteking', e:'\u{1F52A}', gewig:3, soort:'akuut', min:5, erns:1.6,
@@ -921,7 +928,7 @@ var TOESTANDE=[
   {id:'tb', n:'Tuberkulose', e:'\u{1F9A0}', gewig:3, soort:'akuut', min:8, erns:1.4,
    gesond:[10,20], koste:0, behandelF:0.88, jare:[1,2], staatGratis:true,
    sub:'Ses maande se pille, elke dag, sonder om een oor te slaan'},
-  {id:'rug', n:'Rugbesering', e:'\u{1F6CF}', gewig:8, soort:'akuut', min:16, erns:0.10,
+  {id:'rug', n:'Rugbesering', lk:'’n rugbesering', e:'\u{1F6CF}', gewig:8, soort:'akuut', min:16, erns:0.10,
    gesond:[4,10], koste:9500, behandelF:0.7, jare:[1,3],
    sub:'Jy het verkeerd gelig en iets het geskeur'},
   /* --- chronies --- */
@@ -940,7 +947,7 @@ var TOESTANDE=[
   {id:'hart', n:'Hartsiekte', e:'\u{1FAC0}', gewig:7, soort:'chronies', min:40, erns:1.5,
    gesond:[1,4], koste:34000, behandelF:0.7,
    sub:'Jou are is besig om toe te slaan'},
-  {id:'hiv', n:'HIV', e:'\u{1F397}', gewig:3, soort:'chronies', min:14, erns:2.2,
+  {id:'hiv', n:'HIV', lk:'HIV', e:'\u{1F397}', gewig:3, soort:'chronies', min:14, erns:2.2,
    gesond:[1,4], koste:0, behandelF:0.9, staatGratis:true,
    sub:'Met ARV’s elke dag leef jy ’n volle lewe; sonder hulle nie'},
   {id:'kanker', n:'Kanker', e:'\u{1F380}', gewig:6, soort:'chronies', min:18, erns:4.5,
@@ -952,7 +959,7 @@ var TOESTANDE=[
   {id:'longe', n:'Chroniese longsiekte', e:'\u{1F6AD}', gewig:3, soort:'chronies', min:38, erns:2.0,
    gesond:[2,5], koste:38000, behandelF:0.6,
    sub:'Elke trap is nou ’n berg. Dit is die sigarette'},
-  {id:'beroerte', n:'Nagevolge van ’n beroerte', e:'\u{1F9E0}', gewig:4, soort:'chronies', min:45, erns:2.6,
+  {id:'beroerte', n:'Nagevolge van ’n beroerte', lk:'die nagevolge van ’n beroerte', e:'\u{1F9E0}', gewig:4, soort:'chronies', min:45, erns:2.6,
    gesond:[2,5], koste:52000, behandelF:0.62,
    sub:'Jou een hand werk nie meer soos hy moet nie'}
 ];
@@ -972,6 +979,11 @@ var SIEK_MAKS=42;              /* nooit meer as dit per jaar nie */
 var ROOK_TOESTANDE=['longe','kanker','hart'];
 var DRINK_TOESTANDE=['lewer','hart'];
 var DWELM_TOESTANDE=['hiv','lewer','hart'];
+
+/* O — 'lk' is die klein-letter-vorm van 'n toestand se naam vir 'n sin
+   soos "Die dokter sê jy het …". Sonder dit het die spel
+   tt.n.toLowerCase() gebruik en "jy het gebreekte been" en "jy het hiv"
+   geskryf. siekteNaam() in lewe.js lees dit. */
 
 /* ---------- F2: mediese fonds, staat of privaat ---------- */
 /* 'premie' is per maand vir een grootmens; 'n maat kos 80% daarvan en
@@ -998,19 +1010,22 @@ var PRIVAAT_F=1.0;             /* die volle rekening, uit jou eie sak */
 /* ---------- F4: drank, sigarette en dwelms ---------- */
 /* Vlak 0 = niks, 1 = soms, 2 = gereeld, 3 = verslaaf. 'spiraal' is die
    kans per jaar om 'n vlak op te skuif as jy aanhou. */
+/* O — 'vlakke' is die stuk wat NÁ "jy" kom: "jy drink nie", "jy rook
+   soms", "jy is verslaaf aan drank". Voorheen was vlak 0 net 'nie', en
+   die Gesond-blad het "Jy nie" gewys. */
 var GEWOONTES=[
   {id:'drink', n:'Drank', e:'\u{1F37B}', min:18,
-   vlakke:['nie','soms ’n dop','gereeld','verslaaf aan drank'],
+   vlakke:['drink nie','drink soms ’n dop','drink gereeld','is verslaaf aan drank'],
    koste:[0,4800,19000,46000], gesond:[0,0,2,6], geluk:[0,2,0,-6],
    spiraal:[0,11,7,0], werk:[0,0,4,14], band:[0,0,3,9],
    sub:'Die wettige ouderdom in SA is 18'},
   {id:'rook', n:'Sigarette', e:'\u{1F6AC}', min:14,
-   vlakke:['nie','soms','’n pakkie ’n dag','twee pakkies ’n dag'],
+   vlakke:['rook nie','rook soms','rook ’n pakkie ’n dag','rook twee pakkies ’n dag'],
    koste:[0,3600,19000,38000], gesond:[0,1,3,6], geluk:[0,1,0,-3],
    spiraal:[0,24,9,0], werk:[0,0,1,3], band:[0,0,2,4],
    sub:'’n Pakkie kos vandag ongeveer R52'},
   {id:'dwelms', n:'Dwelms', e:'\u{1F48A}', min:15,
-   vlakke:['nie','het dit al probeer','gebruik gereeld','verslaaf'],
+   vlakke:['gebruik nie dwelms nie','het dwelms al probeer','gebruik gereeld dwelms','is verslaaf aan dwelms'],
    koste:[0,6000,48000,120000], gesond:[0,2,6,12], geluk:[0,3,-4,-16],
    spiraal:[0,28,16,0], werk:[0,2,14,38], band:[0,2,10,22],
    sub:'Dit begin by ’n partytjie en eindig nie daar nie'}
@@ -1203,7 +1218,7 @@ var VAARDIG_WERK_BONUS=7;      /* elke vlak help so baie met 'n aansoek */
 var BESIGHEDE=[
   {id:'smous', n:'Straatstalletjie', e:'\u{1F34E}', min:16, kapitaal:9000, vaste:14000,
    waarde:[2200,4200], basis:30, perWerker:26, loon:62000, groei:[4,11], risiko:22,
-   plaaslik:true, sub:'Vrugte, lekkers en koeldrank by die taxi-staanplek',
+   plaaslik:true, sub:'Vrugte, lekkers en koeldrank by die taxistaanplek',
    wat:'kliënte per week'},
   {id:'webwerf', n:'Webwerwe vir klein besighede', e:'\u{1F4BB}', min:16, kapitaal:12000,
    vaste:22000, waarde:[9000,21000], basis:14, perWerker:20, loon:240000,

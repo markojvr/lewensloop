@@ -28,8 +28,9 @@ function statusLyn(){
   if(s.beroep) return beroepTitel();
   /* H4 — wie sy eie ding loop, is nie werkloos nie. */
   if(s.besigheid) return 'Eienaar van ' + s.besigheid.naam;
-  if(verslaaf()) return GEWOONTES.filter(function(g){
-    return gewoonteVlak(g.id)>=3; })[0].vlakke[3];
+  /* "is verslaaf aan drank" word hier 'n statusreël: "Verslaaf aan drank". */
+  if(verslaaf()) return hoofletter(GEWOONTES.filter(function(g){
+    return gewoonteVlak(g.id)>=3; })[0].vlakke[3].replace(/^is /,''));
   if(s.skool.vlak==='universiteit'||s.skool.vlak==='nagraads') return 'Student: ' + s.skool.studie;
   if(s.skool.vlak==='laerskool'||s.skool.vlak==='hoerskool') return 'Graad ' + s.skool.graad;
   if(s.skool.vlak==='kleuterskool') return 'Kleuterskool';
@@ -98,7 +99,7 @@ function renderDakloos(){
    hoe om dit te laat sak), dan die misdade in drie groepe. */
 function renderMisdaad(){
   var h = '<div class="titel">Misdaad</div>';
-  if(s.ouderdom<12) return h + '<div class="kaart klein">Jy is nog te jonk vir die onderwereld.</div>';
+  if(s.ouderdom<12) return h + '<div class="kaart klein">Jy is nog te jonk vir die onderwêreld.</div>';
   var hi = s.hitte||0;
   h += '<div class="kaart"><div class="ry"><div class="emo">\u{1F525}</div><div class="groei">'+
     '<div class="hoof">Hitte: ' + hi + ' / 100</div>'+
@@ -140,7 +141,7 @@ function renderAkt(){
       '<div class="klein">' + (jeug ? 'Jy gaan hier skool, maar jy kom nie huis toe nie.' :
         'Jy kan nie werk of studeer terwyl jy hier is nie.' + (s.tronk.jare>=2 ?
         ' Parool is moontlik ná ' + Math.ceil(s.tronk.jare/2) + ' jaar.' : '')) + '</div>'+
-      '<button class="knop grys" onclick="tronkAksie(\'oefen\')">Oefen in die gym</button>'+
+      '<button class="knop grys" onclick="tronkAksie(\'oefen\')">Oefen in die gimnasium</button>'+
       '<button class="knop grys" onclick="tronkAksie(\'lees\')">Lees in die biblioteek</button>'+
       '<button class="knop grys" onclick="tronkAksie(\'vriende\')">Maak vriende in jou blok</button>'+
       renderOntsnapKnop() + '</div>';
@@ -175,7 +176,8 @@ function renderAkt(){
   h += '<div class="titel">Troeteldiere</div>';
   h += '<div class="kaart klik" onclick="wysTroeteldierwinkel()"><div class="ry">'+
     '<div class="emo">\u{1F43E}</div><div class="groei"><div class="hoof">Gaan troeteldierwinkel toe</div>'+
-    '<div class="klein">' + ((s.diere||[]).length ? 'Jy het ' + s.diere.length + ' dier(e) \u00b7 ' : '') +
+    '<div class="klein">' + ((s.diere||[]).length ? 'Jy het ' +
+      meerv(s.diere.length, 'dier', 'diere') + ' \u00b7 ' : '') +
     'kyk onder Mense om met hulle te speel</div></div><div class="regs">\u276F</div></div></div>';
   /* Liefde */
   h += '<div class="titel">Liefde</div>';
@@ -229,7 +231,7 @@ function renderBesigheid(){
     h += '<div class="kaart"><div class="ry"><div class="emo">' + (x.e||'\u{1F4BC}') + '</div>'+
       '<div class="groei"><div class="hoof">' + veilig(b.naam) + '</div>'+
       '<div class="klein">' + veilig(x.n||'') + ' \u00b7 ' + (b.jare||0) + ' jaar oop \u00b7 ' +
-      (b.werkers||0) + ' werker' + ((b.werkers||0)===1?'':'s') + '</div></div>'+
+      meerv(b.werkers||0, 'werker', 'werkers') + '</div></div>'+
       '<div class="regs' + ((b.wins||0)<0 ? ' ' : '') + '" style="color:' +
       ((b.wins||0)>=0 ? 'var(--groen)' : 'var(--rooi)') + '">' + kortGeld(b.wins||0) +
       '<br><span class="klein">wins verlede jaar</span></div></div>';
@@ -241,8 +243,8 @@ function renderBesigheid(){
       '%;background:var(--blou)"></div></div>';
     if(kap && b.kliente/kap >= 0.95)
       h += '<div class="slot">Jy is vol. Huur iemand of koop toerusting as jy wil groei.</div>';
-    if(b.verliesJare) h += '<div class="slot">' + b.verliesJare +
-      (b.verliesJare===1 ? ' verliesjaar' : ' verliesjare') + ' agtermekaar \u00b7 nog ' +
+    if(b.verliesJare) h += '<div class="slot">' +
+      meerv(b.verliesJare, 'verliesjaar', 'verliesjare') + ' agtermekaar \u00b7 nog ' +
       (BESIG_VERLIES_MAKS - b.verliesJare) + ' en dit is bankrot</div>';
     h += '<div class="klein" style="margin-top:6px">Bemarking: ' +
       (b.bemarking ? geld(b.bemarking) + ' per jaar' : 'niks') + ' \u00b7 toerusting: ' +
@@ -287,7 +289,7 @@ function renderDeeltyds(){
       /* C9 — langs jou klasse kos dit jou kans om die jaar te slaag. */
       (studeerTans() ? '<div class="slot">Dit kos jou ' + Math.abs(SLAAG_DEELTYDS) +
         ' persentpunte van jou kans om die akademiese jaar te slaag.</div>' : '')+
-      '<button class="knop klein2 grys" onclick="losDeeltyds()">Se die werk op</button></div>';
+      '<button class="knop klein2 grys" onclick="losDeeltyds()">Sê die werk op</button></div>';
   }
   if(s.beroep || s.afgetree || s.tronk || s.dakloos) return '';
   if(s.ouderdom < 15 || s.ouderdom >= AFTREE_OUDERDOM) return '';
@@ -373,7 +375,7 @@ function renderWerk(){
       '</div></div>';
   } else if(s.afgetree){
     h += '<div class="kaart"><div class="hoof">Op pensioen</div>'+
-      '<div class="klein">Jou lewende annuiteit betaal ' + geld(s.pensioen) + ' per jaar uit \u2019n ' +
+      '<div class="klein">Jou lewende annuïteit betaal ' + geld(s.pensioen) + ' per jaar uit \u2019n ' +
       'fonds van ' + geld(s.pensioenFonds||0) + '.</div></div>';
   } else if(s.skool.vlak==='laerskool' || s.skool.vlak==='hoerskool'){
     /* A15 — solank jy op skool is, is voltydse werk toe. */
@@ -596,7 +598,13 @@ function renderBlyplek(){
     });
     return h;
   }
-  var ouers = lewendeOuers().length;
+  /* O — 'n aftreeoord: voorheen het die blad steeds huurplekke gewys
+     asof jy nooit ingetrek het nie. */
+  if(s.blyplek==='aftreeoord')
+    return h + '<div class="kaart"><div class="hoof">In ’n aftreeoord</div><div class="klein">'+
+      'Die intrekfooi is betaal. Jy betaal geen huur meer nie, en daar is altyd '+
+      'iemand naby.</div></div>';
+  var ouers = ouerHuis().length;
   var byFam = s.blyplek==='familie' ? huisMense('familie')[0] : null;
   if(byFam)
     h += '<div class="kaart"><div class="ry"><div class="emo">\u{1F46A}</div><div class="groei">'+
@@ -667,8 +675,8 @@ function renderBates(){
     '<div class="klein">Waarde: ' + geld(s.belegging) + ' · hoë risiko: meeste jare ' +
       JSE_JARE[2].r[0] + '\u2013' + JSE_JARE[2].r[1] + '%, sowat een uit tien \u2019n crash tot ' +
       JSE_JARE[0].r[0] + '%. Oor 20 jaar klop dit meestal die spaarrekening.</div>'+
-    '<div class="knoppe"><button class="knop klein2" onclick="bele(10000)">Bele R10k</button>'+
-    '<button class="knop klein2" onclick="bele(100000)">Bele R100k</button>'+
+    '<div class="knoppe"><button class="knop klein2" onclick="bele(10000)">Belê R10k</button>'+
+    '<button class="knop klein2" onclick="bele(100000)">Belê R100k</button>'+
     '<button class="knop klein2 grys" onclick="bele(\'alles\')">Alles</button></div>'+
     '<button class="knop klein2 rooi" onclick="verkoopBelegging()">Verkoop alles</button></div>';
   h += renderBlyplek();
@@ -722,10 +730,10 @@ function renderGesond(){
   var ch = chronies().length;
   h += '<div class="titel">Jou liggaam</div>';
   h += '<div class="kaart"><div class="hoof">Gesondheid ' + s.gesondheid + '/100</div>'+
-    '<div class="klein">' + (s.gene ? 'Jy kom uit ' + veilig(s.gene.n) +
-      (s.gene.sub ? ' — ' + veilig(s.gene.sub) : '') + '.' : '') + '</div>'+
+    '<div class="klein">' + (s.gene ? 'Jy kom uit ' + veilig(s.gene.n) + '.' +
+      (s.gene.sub ? ' ' + veilig(s.gene.sub) + '.' : '') : '') + '</div>'+
     '<div class="klein" style="margin-top:6px">' +
-      (ch ? 'Jy leef met ' + ch + ' chroniese toestand' + (ch>1?'e':'') +
+      (ch ? 'Jy leef met ' + meerv(ch, 'chroniese toestand', 'chroniese toestande') +
         (s.siekJare ? ', al ' + s.siekJare + ' jaar' : '') + '.'
           : 'Jy het geen chroniese toestand nie.') + '</div></div>';
 

@@ -71,7 +71,8 @@ function buitTeks(m, t){
 function doenMisdaad(id){
   var m = misdaadVan(id);
   if(!m || !s.lewe) return;
-  if(s.ouderdom<12){ wenk('Jy is te jonk vir die onderwereld.'); return; }
+  if(s.tronk){ wenk('Jy is in die tronk.'); return; }
+  if(s.ouderdom<12){ wenk('Jy is te jonk vir die onderwêreld.'); return; }
   var slot = misdaadSlot(m);
   if(slot){ wenk('Nog nie: ' + slot + '.'); return; }
   if(s.gedoen.laag){ wenk('Jy lê vanjaar laag.'); return; }
@@ -88,8 +89,11 @@ function doenMisdaad(id){
 function misdaadMaat(c){
   if(!c.m.maat){ misdaadVoertuig(c); return; }
   var opsies = [{t:'Gaan alleen', sub:'Die hele buit is joune', doen:function(){ misdaadVoertuig(c); }}];
-  s.verhoudings.filter(function(v){ return v.lewe && v.ouderdom>=12 && !v.tronk &&
-      ['vriend','broer','suster','klasmaat','kollega','lief','eggenoot'].indexOf(v.tipe)>=0; })
+  /* O — 'n grootmens sleep nie 'n kind in 'n roof in nie, en 'n kind
+     se medepligtige is 'n maat van sy eie ouderdom. */
+  s.verhoudings.filter(function(v){ return v.lewe && !v.tronk &&
+      ['vriend','broer','suster','klasmaat','kollega','lief','eggenoot'].indexOf(v.tipe)>=0 &&
+      (s.ouderdom>=18 ? v.ouderdom>=18 : v.ouderdom>=12 && Math.abs(v.ouderdom-s.ouderdom)<=4); })
     .sort(function(a,b){ return b.band - a.band; }).slice(0,8)
     .forEach(function(v){
       opsies.push({t:'Vra ' + v.naam, sub: rol(v) + ' · band ' + v.band + '% · julle deel die buit',

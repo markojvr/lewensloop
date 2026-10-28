@@ -106,7 +106,7 @@ function rol(v){
   var m={ma:'Ma', pa:'Pa', broer:'Broer', suster:'Suster',
     lief: v.geslag==='m'?'Kerel':'Meisie', eggenoot: v.geslag==='m'?'Man':'Vrou',
     seun:'Seun', dogter:'Dogter', vriend: v.geslag==='m'?'Vriend':'Vriendin',
-    klasmaat:'Klasmaat', kollega:'Kollega', baas:'Jou baas',
+    klasmaat:'Klasmaat', kollega:'Kollega', baas:'Baas',
     /* E1 en E7 */
     ouma:'Ouma', oupa:'Oupa',
     kleinkind: v.geslag==='m'?'Kleinseun':'Kleindogter',
@@ -121,6 +121,9 @@ function rol(v){
 /* Afrikaans stem die besitlike vorm met die geslag saam: sy seun, haar
    dogter. Sonder hierdie helper staan daar "Carike het sy graad gekry". */
 function besit(v){ return v && v.geslag==='v' ? 'haar' : 'sy'; }
+/* Dieselfde vir 'n troeteldier: "Die dierearts dink sy sal langer lewe". */
+function dierHy(d){ return d && d.geslag==='v' ? 'sy' : 'hy'; }
+function dierHom(d){ return d && d.geslag==='v' ? 'haar' : 'hom'; }
 
 /* ==========================================================================
    H14 — VLAE WAT ONTHOU
@@ -232,6 +235,8 @@ function vulNuweVelde(){
   if(!s.gewoonteLaas) s.gewoonteLaas = {};
   if(!s.opgehou) s.opgehou = {};
   if(!s.rehabs) s.rehabs = 0;
+  /* O — 'n dier het nou 'n geslag (vir "hy" teenoor "sy"). */
+  (s.diere||[]).forEach(function(d){ if(!d.geslag) d.geslag = kies(['m','v']); });
   if(!s.lisensieWeg) s.lisensieWeg = 0;
   if(!s.dronkbestuur) s.dronkbestuur = 0;
   if(!s.voorbehoeding) s.voorbehoeding = 'geen';        /* E4 */
@@ -455,7 +460,7 @@ function skoolJaarVerloor(waar){
 /* ==========================================================================
    C1 — VAKKEUSE IN GRAAD 10
    In Graad 10 kies jy sewe vakke, en daardie keuse bepaal alles daarna.
-   Die verpligte vier is twee tale, Lewensorientering en Wiskunde OF
+   Die verpligte vier is twee tale, Lewensoriëntering en Wiskunde OF
    Wiskundige Geletterdheid. Die ander drie kies jy uit wat jou skool
    aanbied. Sonder Wiskunde kan jy nooit die vakvlak kry wat
    Ingenieurswese, Geneeskunde, Rekeningkunde of Rekenaarwetenskap vra.
@@ -536,7 +541,7 @@ function verstekVakke(){
    C2 — DIE APS
    Matriek gee nie 'n persentasie-gemiddeld vir toelating nie. Elke vak
    kry 'n vlak van 1 tot 7, en jou APS is die som van jou ses beste vakke
-   sonder Lewensorientering: 6 x 7 = 42.
+   sonder Lewensoriëntering: 6 x 7 = 42.
    ========================================================================== */
 function apsVlak(persent){
   var v = 1;
@@ -588,7 +593,7 @@ function uitslagTeks(){
     return r.n + ' ' + r.p + '% (' + r.vlak + ')'; }).join(', ');
 }
 /* C3 later: sk.uitslag hou elke vak se persentasie en vlak, en daarmee
-   kan 'n Hoer Sertifikaat-, Diploma- en Bachelor's-slaag bereken word
+   kan 'n Hoër Sertifikaat-, Diploma- en Bachelor's-slaag bereken word
    sonder om aan hierdie funksie te raak. */
 function matriekJaar(){
   var sk = s.skool;
@@ -609,7 +614,7 @@ function matriekJaar(){
       '%. Dis ’n harde slag.','sleg');
     noteer('Jou uitslag: ' + uitslagTeks(),'skool');
   }
-  sluitGroep('klasmaat','na skool');
+  sluitGroep('klasmaat','ná skool');
 }
 
 /* ==========================================================================
@@ -666,7 +671,7 @@ function studieJaar(){
   s.geluk = klem(s.geluk + 14);
   sk.vlak='klaar'; sk.studie=null; sk.koste=0; sk.beurs=false;
   sk.jare=0; sk.herhaal=0; sk.geslaagJare=0;
-  sluitGroep('klasmaat','na jou studies');
+  sluitGroep('klasmaat','ná jou studies');
 }
 function druipJaar(ywer){
   var sk = s.skool;
@@ -686,7 +691,7 @@ function uitgesluit(){
   noteer('Akademiese uitsluiting: ' + (s.uni?s.uni.n:'die universiteit') +
     ' het jou na ' + sk.herhaal + ' mislukte jare uitgeskryf.','sleg');
   s.geluk = klem(s.geluk - 20);
-  sluitGroep('klasmaat','na jou uitsluiting');
+  sluitGroep('klasmaat','ná jou uitsluiting');
   sk.vlak='klaar'; sk.studie=null; sk.koste=0; sk.beurs=false;
   sk.jareOor=0; sk.jare=0; sk.herhaal=0; sk.geslaagJare=0; sk.ywer=0;
   s.aansien = 0;
@@ -715,7 +720,7 @@ function skoolJaar(){
     noteer('Jy is in Graad ' + sk.graad + ' by ' + (s.laerskool?s.laerskool.n:'die skool') + '.','skool');
     klasGebeurtenis(); return;
   }
-  if(g===8 && sk.vlak==='laerskool'){ sluitGroep('klasmaat','na laerskool'); kiesHoerskool(); return; }
+  if(g===8 && sk.vlak==='laerskool'){ sluitGroep('klasmaat','ná laerskool'); kiesHoerskool(); return; }
   if(g>=9 && g<=12 && sk.vlak==='hoerskool'){
     sk.graad = g; skoolBonus(s.hoerskool);
     noteer('Jy is in Graad ' + sk.graad + ' by ' + (s.hoerskool?s.hoerskool.n:'die skool') +
@@ -742,7 +747,7 @@ function kiesLaerskool(){
   var opsies = LAERSKOLE.filter(function(x){ return kanBekostig(x.koste); }).map(function(x){
     return { t:x.n, sub: x.t + ' \u00b7 ' + (x.koste ? geld(x.koste) + ' per jaar (jou ouers betaal)' : 'gratis'),
       doen:function(){ s.laerskool = x; skoolBonus(x);
-        noteer('Jy het Graad 1 by ' + x.n + ' begin.','skool'); maakKlasmaats(x.n); } };
+        noteer('Jy het Graad 1 by ' + x.n + ' begin.','skool'); maakKlasmaats(x); } };
   });
   wagry.push({titel:'Jou eerste skooldag', vraag:'Waarheen gaan jy laerskool toe?', opsies:opsies});
 }
@@ -752,9 +757,9 @@ function kiesHoerskool(){
       return kanBekostig(x.koste) && (!x.vereisSlim || s.slim>=x.vereisSlim); }).map(function(x){
     return { t:x.n, sub: x.t + ' \u00b7 ' + (x.koste ? geld(x.koste) + ' per jaar (jou ouers betaal)' : 'gratis'),
       doen:function(){ s.hoerskool = x; skoolBonus(x);
-        noteer('Jy het Graad 8 by ' + x.n + ' begin.','skool'); maakKlasmaats(x.n); } };
+        noteer('Jy het Graad 8 by ' + x.n + ' begin.','skool'); maakKlasmaats(x); } };
   });
-  wagry.push({titel:'Hoerskool', vraag:'Watter hoerskool kies jy?', opsies:opsies});
+  wagry.push({titel:'Hoërskool', vraag:'Watter hoërskool kies jy?', opsies:opsies});
 }
 
 function lewendeOuers(){
@@ -762,16 +767,33 @@ function lewendeOuers(){
 }
 function maakGroep(tipe, aantal, ouderdomF, lo, hi){
   var nuut=[];
+  /* O — twee klasmaats met presies dieselfde naam ("Andries, Andries en
+     Marko") lees verkeerd. Ons probeer 'n paar keer vir 'n naam wat nog
+     nie in jou lewe is nie. */
+  var gebruik = s.verhoudings.filter(function(v){ return v.lewe; })
+    .map(function(v){ return v.naam; });
   for(var i=0;i<aantal;i++){
-    var p = nuweMens(null, ouderdomF(), kies(VANNE));
+    var p = null;
+    for(var k=0;k<12;k++){
+      p = nuweMens(null, ouderdomF(), kies(VANNE));
+      if(gebruik.indexOf(p.naam)<0) break;
+    }
+    gebruik.push(p.naam);
     p.tipe = tipe; p.band = tussen(lo,hi);
     s.verhoudings.push(p); nuut.push(p);
   }
   return nuut;
 }
-function name(lys){ return lys.map(function(p){ return p.naam; }).join(', '); }
+/* O — "Anna, Jan en Pieter", nie "Anna, Jan, Pieter" nie. */
+function name(lys){ return lysTeks(lys.map(function(p){ return p.naam; })); }
 
-function maakKlasmaats(plek){
+function maakKlasmaats(skool){
+  var plek = skool && skool.n ? skool.n : skool;
+  /* O — by tuisonderrig is daar geen klas en dus geen klasmaats nie. */
+  if(skool && skool.tuis){
+    noteer('Jy leer by die huis. Daar is geen klas om in te sit nie.','skool');
+    return;
+  }
   var nuut = maakGroep('klasmaat', tussen(3,5), function(){ return s.ouderdom + tussen(-1,1); }, 30, 65);
   noteer('In jou klas by ' + plek + ' het jy ' + name(nuut) + ' ontmoet.','skool');
 }
@@ -789,12 +811,15 @@ function sluitGroep(tipe, rede){
     if(v.band>=48){ v.tipe='vriend'; bly.push(v.naam); } else { v.weg=true; weg++; }
   });
   s.verhoudings = s.verhoudings.filter(function(v){ return !v.weg; });
-  if(bly.length) noteer(bly.join(' en ') + ' het jou vriende gebly ' + rede + '.','goed');
-  if(weg) noteer('Jy het kontak verloor met ' + weg + ' ander ' +
-    (tipe==='kollega'?'kollegas':'klasmaats') + ' ' + rede + '.','neutraal');
+  if(bly.length) noteer(lysTeks(bly) + ' het jou ' +
+    meerv(bly.length, 'vriend', 'vriende', true) + ' gebly ' + rede + '.','goed');
+  if(weg) noteer('Jy het kontak verloor met ' +
+    meerv(weg, 'een ander ' + (tipe==='kollega'?'kollega':'klasmaat'),
+          weg + ' ander ' + (tipe==='kollega'?'kollegas':'klasmaats'), true) +
+    ' ' + rede + '.','neutraal');
 }
 function losWerkMense(){
-  sluitGroep('kollega','na die werk');
+  sluitGroep('kollega','ná die werk');
   s.verhoudings = s.verhoudings.filter(function(v){ return v.tipe!=='baas'; });
 }
 /* 'n Klasmaat of kollega word 'n regte vriend sodra die band sterk genoeg is. */
@@ -805,6 +830,14 @@ function pasVriendskapAan(v){
     noteer(v.naam + ' is nou \u2019n regte vriend, nie net \u2019n ' + oud + ' nie.','goed');
   }
 }
+/* I1 — waar twee klasmaats stry. 'n Rugbyveld is net 'n rugbyveld as
+   daar rugby gespeel word: twee meisies stry op die netbalbaan, en by
+   'n skool sonder sportvelde is dit die gang. */
+function klasRusiePlek(){
+  var sk = (s.skool.vlak==='hoerskool' ? s.hoerskool : s.laerskool) || {};
+  if(sk.tuis) return 'oor die tafel';
+  return (s.geslag==='v') ? 'op die netbalbaan' : 'op die rugbyveld';
+}
 function klasGebeurtenis(){
   var maats = s.verhoudings.filter(function(v){ return v.lewe && v.tipe==='klasmaat'; });
   if(!maats.length || !kans(45)) return;
@@ -812,9 +845,12 @@ function klasGebeurtenis(){
   if(w===0){ m.band=klem(m.band+tussen(6,14)); s.slim=klem(s.slim+2);
     noteer('Jy en ' + m.naam + ' het saam aan \u2019n projek gewerk.','skool'); }
   else if(w===1){ m.band=klem(m.band-tussen(8,18)); s.geluk=klem(s.geluk-4);
-    noteer('Jy en ' + m.naam + ' het op die rugbyveld gestry.','sleg'); }
+    /* I1 — dit het altyd "op die rugbyveld" gesê, ook vir twee meisies
+       en ook by 'n skool wat nie rugby speel nie. Nou hang die plek aan
+       wie julle is en waar julle is. */
+    noteer('Jy en ' + m.naam + ' het ' + klasRusiePlek() + ' gestry.','sleg'); }
   else if(w===2){ m.band=klem(m.band+tussen(4,10));
-    noteer(m.naam + ' het sy kosblik met jou gedeel.','goed'); }
+    noteer(m.naam + ' het ' + besit(m) + ' kosblik met jou gedeel.','goed'); }
   else { m.band=klem(m.band+tussen(3,9)); s.geluk=klem(s.geluk+3);
     noteer('Jy en ' + m.naam + ' het die hele pouse gelag.','goed'); }
 }
@@ -910,7 +946,7 @@ function beroepTitel(){
 
 /* B17 — op 65 vra die spel self of jy wil aftree, of jy nou nog 'n werk
    het of nie. Jou fonds bepaal jou pensioen, nie of jy daardie oomblik
-   toevallig aangestel is nie. Se jy nee, vra dit weer oor vyf jaar. */
+   toevallig aangestel is nie. Sê jy nee, vra dit weer oor vyf jaar. */
 function aftreeJaar(){
   if(s.afgetree || s.tronk || s.ouderdom < AFTREE_OUDERDOM+5) return;
   if(s.ouderdom < (s.vlagge.aftreeGevra||0) + 5) return;
@@ -919,7 +955,7 @@ function aftreeJaar(){
   s.vlagge.aftreeGevra = s.ouderdom;
   var derde = Math.round(fonds/3), opsies = [];
   if(fonds>0){
-    opsies.push({t:'Ja — alles in ’n lewende annuiteit',
+    opsies.push({t:'Ja — alles in ’n lewende annuïteit',
       sub:geld(Math.round(fonds*ANNUITEIT_TREK)) + ' per jaar',
       doen:function(){ treeAf(0); }});
     opsies.push({t:'Ja — en neem ’n derde kontant',
@@ -1038,7 +1074,7 @@ function inkomsteJaar(){
     var belasbaar = Math.max(0, bruto - bydrae);
     netto = Math.round(belasbaar * (1 - belastingKoers(belasbaar)));
     s.geld += netto; s.totaalVerdien += netto;
-    noteer('Jy het ' + geld(netto) + ' verdien (na belasting' +
+    noteer('Jy het ' + geld(netto) + ' verdien (ná belasting' +
       (bydrae ? ' en jou pensioenbydrae' : '') + ')' +
       (besigheidWins()>0 ? ' — jou salaris en ' + s.besigheid.naam + ' se wins saam' : '') +
       '.','geld');
@@ -1051,7 +1087,7 @@ function inkomsteJaar(){
     var mNetto = Math.round(mSal * (1 - belastingKoers(mSal)));
     s.geld += mNetto; s.totaalVerdien += mNetto; netto += mNetto;
     noteer(m.naam + ' het ' + geld(mNetto) + ' verdien as ' +
-      m.werk.t.toLowerCase() + ' (na belasting).','geld');
+      m.werk.t.toLowerCase() + ' (ná belasting).','geld');
   }
   return netto;
 }
@@ -1062,7 +1098,7 @@ function inkomsteJaar(){
    twee per maand. Verdien jy self, hou die sakgeld op. */
 function sakgeldJaar(){
   var o = s.ouderdom;
-  if(o<6 || o>=18 || s.tronk || s.beroep || s.deeltyds) return 0;
+  if(o<6 || o>=18 || s.tronk || s.dakloos || s.beroep || s.deeltyds) return 0;
   var week = (o - 4) * SAKGELD_WEEK * s.rykf;
   if(!lewendeOuers().length) week = week/2;  /* niemand by die huis nie — familie help bietjie */
   var jaar = Math.round(week * 52 * tussen(85,115)/100);
@@ -1082,19 +1118,28 @@ function huurTarief(id){
 }
 function huurPerJaar(id){ return Math.round(huurTarief(id).maand * 12 * dorpFaktor()); }
 /* B18 — 'n broer of suster wat oud genoeg is om jou in te neem as jy
-   nie meer 'n plek het nie. */
+   nie meer 'n plek het nie.
+   O — en wat jou WIL inneem: voorheen is net na ouderdom gekyk, dus het
+   'n broer met wie jy skaars praat (band 5) jou ingetrek. Nou vra dit
+   ook 'n band — dieselfde drempel wat dakloosJaar() al gebruik het. */
 function familieHuis(){
   return s.verhoudings.filter(function(v){
-    return v.lewe && (v.tipe==='broer'||v.tipe==='suster') && v.ouderdom>=21; });
+    return v.lewe && (v.tipe==='broer'||v.tipe==='suster') &&
+      v.ouderdom>=21 && v.band>=FAMILIEHUIS_BAND; });
+}
+/* Wie van jou ouers jou sou inneem. 'n Ouer gee makliker as 'n broer,
+   daarom is die drempel laer — maar dit is nie nul nie. */
+function ouerHuis(){
+  return lewendeOuers().filter(function(v){ return v.band>=OUERHUIS_BAND; });
 }
 /* Waarheen jy terugval as jy nie meer vir 'n plek kan betaal nie: eers
    die ouerhuis, dan 'n broer of suster se huis, anders moet jy huur. */
 function terugvalBlyplek(){
-  return lewendeOuers().length ? 'ouers' : (familieHuis().length ? 'familie' : 'huur');
+  return ouerHuis().length ? 'ouers' : (familieHuis().length ? 'familie' : 'huur');
 }
 /* Wie se huis is dit waarin jy bly? */
 function huisMense(wat){
-  return wat==='ouers' ? lewendeOuers() : wat==='familie' ? familieHuis() : [];
+  return wat==='ouers' ? ouerHuis() : wat==='familie' ? familieHuis() : [];
 }
 /* Is daar iets wat jy kan verkoop om 'n rekening te dek? */
 function hetIetsOmTeVerkoop(){
@@ -1118,6 +1163,10 @@ function blyplekJaar(netto){
      Die pad terug loop deur dakloosJaar() en die aksies op die
      Aktiwiteite-blad. */
   if(s.dakloos){ s.blyplek='dakloos'; return 0; }
+  /* O — 'n aftreeoord. Die intrekfooi is eenmalig betaal en daarna bly
+     jy daar: voorheen het die 'aftreeoord'-vlag niks beteken nie en het
+     die spel net aangehou huur vra asof jy nooit getrek het nie. */
+  if(hetVlag('aftreeoord') && !hetHuis() && !s.tronk){ s.blyplek='aftreeoord'; return 0; }
   /* Besit jy 'n huis, bly jy daarin. Die verband en die onderhoud word
      elders bereken; blyplek self kos jou dan niks. */
   if(hetHuis()){
@@ -1173,7 +1222,7 @@ function blyplekJaar(netto){
     return huur;
   }
   var betaal = betaalWatJyKan(huur, 'jou huur');
-  noteer('Huur vir ' + plek.n.toLowerCase() + ' in ' + s.dorp + ': ' + geld(huur) + '.','geld');
+  noteer('Huur vir ’n ' + plek.n.toLowerCase() + ' in ' + s.dorp + ': ' + geld(huur) + '.','geld');
   s.geluk = klem(s.geluk + Math.round(plek.geluk/5));
   /* B18 — kon jy nie eens die huur bybring nie, moet jy kleiner trek of
      by familie gaan bly. Is daar nie 'n kleiner plek, geen familiehuis
@@ -1215,6 +1264,9 @@ function betaalWatJyKan(bedrag, wat){
 function vraBlyplek(){
   if(s.vlagge.blyplekGevra || s.ouderdom<18) return;
   if(s.skool.vlak==='laerskool' || s.skool.vlak==='hoerskool') return;
+  /* O — die spel het ook "Waar gaan jy bly?" gevra terwyl jy toegesluit
+     was of op straat geslaap het. */
+  if(s.tronk || s.dakloos) return;
   s.vlagge.blyplekGevra = 1;
   var vermoe = blyVermoe(huishoudingBruto());
   var opsies = [{t:'Bly by my ouers',
@@ -1223,7 +1275,7 @@ function vraBlyplek(){
   HUURPLEKKE.forEach(function(p){
     var koste = huurPerJaar(p.id);
     if(koste > Math.max(vermoe, 60000)) return;
-    opsies.push({t:'Huur ' + p.n.toLowerCase(), sub:geld(koste) + ' per jaar \u00b7 ' + p.sub,
+    opsies.push({t:'Huur ’n ' + p.n.toLowerCase(), sub:geld(koste) + ' per jaar \u00b7 ' + p.sub,
       doen:function(){ s.blyplek='huur'; s.huurPlek=p.id;
         s.geluk = klem(s.geluk + Math.round(p.geluk/2));
         noteer('Jy het in \u2019n ' + p.n.toLowerCase() + ' ingetrek.','geld'); }});
@@ -1335,7 +1387,7 @@ function verkoopBateUit(b, f){
     s.bond = null;
   }
   if(b.t==='huis' && !hetHuis() && s.blyplek==='eie')
-    s.blyplek = lewendeOuers().length ? 'ouers' : 'huur';
+    s.blyplek = terugvalBlyplek();
   return opbrengs;
 }
 
@@ -1476,7 +1528,7 @@ function magSekwestreer(){
 }
 function skuldJaar(){
   if(s.geld<0) dekUitSpaar(-s.geld);
-  /* Uit die skuld is 'n skoon blad: het jy vroeer geweier om te verkoop,
+  /* Uit die skuld is 'n skoon blad: het jy vroeër geweier om te verkoop,
      mag jy weer kies as dit weer so ver kom. */
   if(s.geld>=0){ s.vlagge.weierVerkoop = 0; return; }
   var perk = skuldPerk();
@@ -1542,7 +1594,7 @@ function sekwestrasie(){
   s.geld = 0; s.spaar = 0; s.belegging = 0; s.bates = []; s.bond = null;
   s.swartlys = 10; s.geluk = klem(s.geluk-30);
   s.vlagge.boedelJaar = s.ouderdom;
-  s.blyplek = lewendeOuers().length ? 'ouers' : 'huur';
+  s.blyplek = terugvalBlyplek();
   s.huurPlek = HUURPLEKKE[0].id;
   noteer('Die hof het ’n boedelbevel teen jou toegestaan. ' + geld(skuld) +
     ' se skuld is afgeskryf, maar alles wat jy besit het, is weg.','sleg');
@@ -1668,7 +1720,8 @@ function familieTrekJouIn(v){
 function familieHelpers(){
   return s.verhoudings.filter(function(v){
     return v.lewe && ['ma','pa','broer','suster'].indexOf(v.tipe)>=0 &&
-      (v.tipe==='ma' || v.tipe==='pa' || v.ouderdom>=21);
+      (v.tipe==='ma' || v.tipe==='pa' ? v.band>=OUERHUIS_BAND
+        : v.ouderdom>=21 && v.band>=FAMILIEHUIS_BAND);
   }).sort(function(a,b){ return b.band - a.band; });
 }
 
@@ -1684,7 +1737,7 @@ function dakloosJaar(){
   s.geluk = klem(s.geluk - tussen(DAKLOOS_GELUK[0], DAKLOOS_GELUK[1]));
   noteer('Jaar ' + d.jare + ' op straat in ' + s.dorp + '.','sleg');
   if(kans(45)) noteer(kies(DAKLOOS_NAGTE),'sleg');
-  /* Het jy weer 'n huis gekry (geerf of gekoop), trek jy dadelik in. */
+  /* Het jy weer 'n huis gekry (geërf of gekoop), trek jy dadelik in. */
   if(hetHuis()){
     uitDakloosheid(null, 'Jy het ’n huis van jou eie en het die dag ingetrek.');
     s.blyplek = 'eie';
@@ -1724,7 +1777,7 @@ function dakloosJaar(){
   if(s.geld >= dakUitKoste()) vraDakTerug();
 }
 /* Werk deur 'n skuiling — een van die paaie uit. Gee terug of dit
-   geluk het. 'wie' is net die naam in die log-reel. */
+   geluk het. 'wie' is net die naam in die log-reël. */
 function skuilingWerk(wie){
   if(s.beroep) return false;
   var oop = BEROEPE.filter(function(j){
@@ -1822,12 +1875,15 @@ function verhoudingsJaar(){
       v.lewe = false;
       if(v.tipe==='seun'||v.tipe==='dogter') s.kinders = Math.max(0, s.kinders-1);
       if(v.tipe==='kleinkind') s.kleinkinders = Math.max(0, (s.kleinkinders||0)-1);
-      noteer(v.naam + ' (' + rol(v) + ') is oorlede op ouderdom ' + v.ouderdom + '.','sleg');
+      /* rol() gee self "Oupa (ma se kant)", dus het die ou reël
+         "Andries (Oupa (ma se kant))" geskryf — hakies binne hakies. */
+      noteer(v.naam + ', ' + rol(v).toLowerCase() + ', is oorlede op ouderdom ' +
+        v.ouderdom + '.','sleg');
       s.geluk = klem(s.geluk - (v.tipe==='ma'||v.tipe==='pa'||v.tipe==='eggenoot' ? tussen(18,32) :
         (v.tipe==='ouma'||v.tipe==='oupa') ? tussen(10,22) : tussen(6,16)));
       if(v.tipe==='ma'||v.tipe==='pa'||v.tipe==='eggenoot'){
         var erf = Math.round(tussen(0,220000) * s.rykf);
-        if(erf>2000){ s.geld += erf; noteer('Jy het ' + geld(erf) + ' geerf.','geld'); }
+        if(erf>2000){ s.geld += erf; noteer('Jy het ' + geld(erf) + ' geërf.','geld'); }
       }
       /* E1 — 'n grootouer los gewoonlik minder, en dit word tussen baie
          kleinkinders verdeel, maar vir 'n jong mens beteken dit baie. */
@@ -1941,11 +1997,90 @@ function tronkToe(jare, waarvoor, opts){
   }
 }
 
+/* ==========================================================================
+   O — WAAR 'N GEBEURTENIS KAN GEBEUR
+   Voor hierdie afdeling het ELKE gebeurtenis in GEBEURE oral gevuur:
+   'n hond het jou huis toe gevolg terwyl jy in die tronk sit, jou geyser
+   het gebars terwyl jy op straat slaap, en jy het matriekafskeid toe
+   gegaan nadat jy die skool verlaat het.
+
+   Die min/max/as-stelsel het al bestaan, maar 'n as()-toets op elkeen
+   van 199 gebeure vir elkeen van vier toestande sou onleesbaar wees.
+   Daarom kry elke gebeurtenis nou een ekstra veld, 'waar':
+
+     (niks)     die gewone lewe buite — nie toegesluit nie, nie op straat
+                nie. Dit is die verstek, want dit geld vir die meeste.
+     'enige'    oral, ook in die tronk en op straat. Dit is die liggaam
+                en die jare: griep, grys hare, 'n knie wat gaan staan.
+     'tronk'    net in die tronk (of jeugsorgsentrum).
+     'straat'   net terwyl jy dakloos is.
+
+   Die vereistes wat NIE met 'n plek te doen het nie (jy moet 'n motor,
+   'n huis, 'n werk, 'n ouer of 'n broer hê) bly in as(), met die klein
+   helpers hieronder.
+   ========================================================================== */
+/* Die gewone lewe buite. */
+function gewoneLewe(){ return !s.tronk && !s.dakloos; }
+function gebeurPlekPas(g){
+  if(g.waar==='enige') return true;
+  if(g.waar==='tronk')  return !!s.tronk;
+  if(g.waar==='straat') return !!s.dakloos && !s.tronk;
+  return gewoneLewe();
+}
+/* Is jy werklik op skool? Nie net 'n vlak in s.skool nie: die tronk en
+   die straat haal jou daar uit (sien skoolJaarVerloor). 'n Jeugsorg-
+   sentrum laat jou wel skoolgaan, maar nie matriekafskeid toe nie. */
+function opSkool(){
+  if(s.skool.uit || s.dakloos) return false;
+  if(s.tronk) return false;
+  return ['laerskool','hoerskool'].indexOf(s.skool.vlak)>=0;
+}
+function opHoerskool(){ return opSkool() && s.skool.vlak==='hoerskool'; }
+/* Sit jy in 'n KLAS? Tuisonderrig is ook skool, maar daar is geen
+   klasmaats, geen pouse en geen skoolterrein nie — en juis daardie
+   gebeure het voorheen ook vir 'n tuisskoolkind gevuur. */
+function inKlas(){
+  if(!opSkool()) return false;
+  var sk = (s.skool.vlak==='hoerskool' ? s.hoerskool : s.laerskool) || {};
+  return !sk.tuis;
+}
+/* Het jy 'n dak waarin iets kan breek — 'n geyser, 'n plafon, 'n tuin?
+   By jou ouers is dit hulle se huis, nie joune nie. */
+function eieDak(){
+  return gewoneLewe() && (s.blyplek==='eie' || s.blyplek==='huur');
+}
+/* Leef daar nog 'n pa, of nog 'n ma? */
+function hetOuer(tipe){
+  return s.verhoudings.some(function(v){ return v.lewe && v.tipe===tipe; });
+}
+/* Lewende broers en susters — en met band, vir wie werklik iets vir jou
+   sou doen. */
+function lewendeBroersSusters(){
+  return s.verhoudings.filter(function(v){
+    return v.lewe && (v.tipe==='broer'||v.tipe==='suster'); });
+}
+/* Een lewende kind onder 18 wat tuis is — vir die gebeure wat "jou
+   kind" aanspreek en dan sy band moet skuif. */
+function kindTuisKies(){
+  var k = s.verhoudings.filter(function(v){
+    return v.lewe && (v.tipe==='seun'||v.tipe==='dogter') && v.ouderdom<18; });
+  return k.length ? kies(k) : null;
+}
+/* Besit jy 'n motor wat kan breek? */
+function hetMotor(){ return s.bates.some(function(b){ return b.t==='motor'; }); }
+/* "Pa" of "Ma", na wie ook al nog leef — party gebeure het altyd "Pa"
+   gesê, ook vir 'n kind met die geenPa-vlag of 'n pa wat oorlede is. */
+function ouerWoord(){
+  if(hetOuer('pa')) return 'Pa';
+  if(hetOuer('ma')) return 'Ma';
+  return 'Die huis';
+}
+
 /* ---------- Lukrake gebeure ---------- */
 function lukrakeGebeure(){
   if(s.ouderdom<1) return;
   var geskik = GEBEURE.filter(function(g){
-    return s.ouderdom>=g.min && s.ouderdom<=g.max && (!g.as || g.as());
+    return s.ouderdom>=g.min && s.ouderdom<=g.max && gebeurPlekPas(g) && (!g.as || g.as());
   });
   if(!geskik.length) return;
   var hoeveel = s.tronk ? 1 : (kans(32) ? 2 : 1);
@@ -2058,7 +2193,7 @@ function ongelukKans(){
   /* F4 — dronk agter die stuur, en dwelms, maak elke jaar gevaarliker. */
   if(s.gewoontes.drink>=2) p += s.gewoontes.drink===3 ? 0.42 : 0.14;
   if(s.gewoontes.dwelms>=2) p += s.gewoontes.dwelms===3 ? 0.65 : 0.20;
-  if(s.rekord.length) p += 0.10;      /* die onderwereld bly aan jou vashou */
+  if(s.rekord.length) p += 0.10;      /* die onderwêreld bly aan jou vashou */
   return p;
 }
 function doodKontrole(){
@@ -2104,7 +2239,12 @@ function rolGene(){
    elkeen word apart gerol — party is al dood voor jy gebore word. */
 function maakGrootouer(ouer, tipe, kant){
   var o = ouer.ouderdom + tussen(OUMA_OUER[0], OUMA_OUER[1]);
-  var g = nuweMens(tipe==='ouma'?'v':'m', o, kant==='pa' ? ouer.van : kies(VANNE));
+  var g = null;
+  /* O — twee oumas met presies dieselfde naam lees verkeerd. */
+  for(var k=0;k<12;k++){
+    g = nuweMens(tipe==='ouma'?'v':'m', o, kant==='pa' ? ouer.van : kies(VANNE));
+    if(!s.verhoudings.some(function(v){ return v.naam===g.naam; })) break;
+  }
   g.tipe = tipe; g.kant = kant;
   g.band = tussen(55,100);
   /* Dood voor jou geboorte, of al oud genoeg dat die kromme hom vat. */
@@ -2127,10 +2267,14 @@ function grootouers(){
 function grootouerGeboorte(){
   var lewe = grootouers();
   var weg = s.verhoudings.filter(function(v){ return v.voorGeboorte; });
-  if(lewe.length) noteer('Jou grootouers is ' + lewe.map(function(v){
-    return v.naam + ' (' + rol(v).toLowerCase() + ')'; }).join(', ') + '.','goed');
-  if(weg.length) noteer(weg.map(function(v){ return 'jou ' + rol(v).toLowerCase(); }).join(' en ') +
-    ' is voor jou geboorte oorlede.','neutraal');
+  /* rol() gee self al "ouma (ma se kant)", dus het die ou reël
+     "Anna (ouma (ma se kant))" geskryf — hakies binne hakies. */
+  if(lewe.length) noteer(meerv(lewe.length,'Jou grootouer is','Jou grootouers is',true) +
+    ' ' + lysTeks(lewe.map(function(v){
+    return v.naam + ', ' + rol(v).toLowerCase(); })) + '.','goed');
+  if(weg.length) noteer(hoofletter(lysTeks(weg.map(function(v){
+      return 'jou ' + rol(v).toLowerCase(); }))) +
+    (weg.length===1 ? ' is' : ' is') + ' voor jou geboorte oorlede.','neutraal');
 }
 /* Een keer per jaar doen 'n grootouer iets met jou. Dit is die hart van
    E1: 'n kind se lewe staan vol sulke middae. */
@@ -2165,9 +2309,9 @@ function grootouerJaar(){
 }
 
 /* ---------- E12: jou eggenoot se beroep ---------- */
-/* Mense trou met mense soos hulself, daarom hang haar opleiding aan
-   joune. Daarna kry sy 'n pos uit BEROEPE wat by haar opleiding,
-   ouderdom en 'n bietjie geluk pas. */
+/* Mense trou met mense soos hulself, daarom hang sy of haar opleiding
+   aan joune. Daarna kom 'n pos uit BEROEPE wat by daardie opleiding,
+   die ouderdom en 'n bietjie geluk pas. */
 function maatBeroepKies(v){
   v.werk = null;
   v.afgetree = v.ouderdom >= MAAT_AFTREE;
@@ -2191,14 +2335,16 @@ function maatBeroepKies(v){
   noteer(v.naam + ' werk as ' + b.t.toLowerCase() + ' en verdien ' +
     geld(v.werk.salaris) + ' per jaar.','werk');
 }
-/* Haar loopbaan loop ook aan: verhogings, 'n plafon, soms 'n afdanking,
-   en op 62 is sy klaar. */
+/* Sy loopbaan loop ook aan: verhogings, 'n plafon, soms 'n afdanking,
+   en op 62 is hy of sy klaar.
+   O — al die teks hier het "haar" gesê, ook as jou eggenoot 'n man is.
+   besit(v) gee "sy" of "haar" volgens sy geslag. */
 function maatWerkJaar(v){
   if(v.werk===undefined){ maatBeroepKies(v); return; }
   if(v.afgetree) return;
   if(v.ouderdom>=MAAT_AFTREE){
     v.afgetree = true;
-    if(v.werk){ noteer(v.naam + ' het op ' + v.ouderdom + ' uit haar pos as ' +
+    if(v.werk){ noteer(v.naam + ' het op ' + v.ouderdom + ' uit ' + besit(v) + ' pos as ' +
       v.werk.t.toLowerCase() + ' getree.','werk'); }
     v.werk = null; return;
   }
@@ -2207,12 +2353,12 @@ function maatWerkJaar(v){
     v.werk.salaris = Math.round(v.werk.salaris * (1 + tussen(MAAT_GROEI[0],MAAT_GROEI[1])/100));
     if(v.werk.plafon && v.werk.salaris > v.werk.plafon) v.werk.salaris = v.werk.plafon;
     if(kans(MAAT_WERKLOOS_KANS)){
-      noteer(v.naam + ' het haar werk as ' + v.werk.t.toLowerCase() + ' verloor.','sleg');
+      noteer(v.naam + ' het ' + besit(v) + ' werk as ' + v.werk.t.toLowerCase() + ' verloor.','sleg');
       v.werk = null; v.band = klem(v.band - tussen(2,8)); s.geluk = klem(s.geluk - tussen(4,10));
     }
     return;
   }
-  /* Sonder werk: sy soek, of sy is by die kinders tuis tot hulle groot is. */
+  /* Sonder werk: hy of sy soek, of bly by die kinders tuis tot hulle groot is. */
   if(v.tuis && kindersTuis()>0) return;
   if(v.tuis) v.tuis = 0;
   if(kans(MAAT_WERK_KANS)){
@@ -2260,14 +2406,23 @@ function swangerskap(v, onbeplan){
     ? Math.round(KRAAM_KOSTE[1] * (1 - mediesefonds().dek))
     : (sorgVlak()>=1 && s.geld > KRAAM_KOSTE[1]*1.5 ? KRAAM_KOSTE[1] : KRAAM_KOSTE[0]);
   var waar = s.mediesefonds ? 'in ’n privaat kraamsaal'
-    : (koste>=KRAAM_KOSTE[1] ? 'in ’n privaat kraamsaal, kontant' : 'in die staatshospitaal');
+    : (koste>=KRAAM_KOSTE[1] ? 'in ’n privaat kraamsaal, kontant betaal'
+       : 'in die staatshospitaal');
   kryBabaMet(v, onbeplan);
-  if(koste>0 && s.ouderdom>=18) betaalWatJyKan(koste, 'die kraamkoste');
-  noteer('Die baba is ' + waar + ' gebore (' + geld(koste) + ').','geld');
+  /* O — is jy nog 'n kind, betaal jou ouers die rekening; die log het
+     dit steeds as joune aangegee. */
+  var self = s.ouderdom>=18;
+  if(koste>0 && self) betaalWatJyKan(koste, 'die kraamkoste');
+  noteer('Die baba is ' + waar + ' gebore' +
+    (koste>0 ? ' (' + geld(koste) + (self ? '' : ', deur jou ouers betaal') + ')' : '') +
+    '.','geld');
   if(tiener){
     s.geluk = klem(s.geluk - tussen(10,24));
-    lewendeOuers().forEach(function(p){ p.band = klem(p.band - tussen(10,30)); });
-    noteer('Jy is ’n ouer op ' + s.ouderdom + '. Jou ouers het dit swaar gevat.','sleg');
+    var ou = lewendeOuers();
+    ou.forEach(function(p){ p.band = klem(p.band - tussen(10,30)); });
+    noteer('Jy is ’n ouer op ' + s.ouderdom + '.' +
+      (ou.length ? ' Jou ' + (ou.length>1 ? 'ouers het' : rol(ou[0]).toLowerCase() + ' het') +
+        ' dit swaar gevat.' : ''),'sleg');
     /* Die skool is die eerste ding wat daaronder deurloop. */
     if(['laerskool','hoerskool'].indexOf(s.skool.vlak)>=0){
       if(kans(42)) skoolJaarVerloor('weens die baba');
@@ -2297,8 +2452,11 @@ function onbeplanJaar(){
   if(s.gewoontes.drink>=2 || s.gewoontes.dwelms>=2) p *= 1.4;
   if(!kans(p)) return;
   var vb = voorbehoedingVan();
+  /* O — die spel het altyd "<maat> is swanger" gesê, ook as die speler
+     die vrou is: dan het dit "Bernard is swanger" geskryf. */
+  var wie = (s.geslag==='v') ? 'Jy' : m.naam;
   wagry.push({titel:'Julle gaan ’n baba kry',
-    vraag: m.naam + ' is swanger. Dit was nie beplan nie' +
+    vraag: wie + ' is swanger. Dit was nie beplan nie' +
       (vb.id==='geen' ? ' — en julle het niks gebruik nie.' :
        ' — ' + vb.n.toLowerCase() + ' werk nie elke keer nie.') +
       (s.ouderdom<18 ? '\nJy is ' + s.ouderdom + ' jaar oud.' : ''),
@@ -2387,17 +2545,18 @@ function kindStudieVraag(v){
   var k = v.kl, koste = Math.round(tussen(KIND_STUDIE_KOSTE[0],KIND_STUDIE_KOSTE[1]));
   var st = kies(STUDIES.filter(function(x){ return x.aps <= k.skool.aps; }) || STUDIES) || STUDIES[0];
   var beurs = k.skool.aps >= 34;
-  var opsies = [{t:'Ja, ek betaal sy klasgeld', sub:geld(koste) + ' per jaar vir ' +
-      st.jare + ' jaar', doen:function(){
+  var opsies = [{t:'Ja, ek betaal ' + besit(v) + ' klasgeld', sub:geld(koste) + ' per jaar vir ' +
+      meerv(st.jare,'jaar','jaar'), doen:function(){
     k.skool.vlak='universiteit'; k.skool.studie=st.n; k.skool.jareOor=st.jare;
     k.studieBetaal = koste;
     kindNoteer(v,'het ' + st.n + ' op universiteit begin', true, 'skool'); }}];
-  if(beurs) opsies.push({t:'Hy kry ’n beurs', sub:'Met ’n APS van ' + k.skool.aps +
+  if(beurs) opsies.push({t:(v.geslag==='v'?'Sy':'Hy') + ' kry ’n beurs',
+    sub:'Met ’n APS van ' + k.skool.aps +
     ' bied NSFAS of die universiteit self aan', doen:function(){
       k.skool.vlak='universiteit'; k.skool.studie=st.n; k.skool.jareOor=st.jare;
       k.studieBetaal = 0;
       kindNoteer(v,'het ’n beurs gekry en ' + st.n + ' begin studeer', true, 'skool'); }});
-  opsies.push({t:'Hy moet gaan werk', klas:'grys',
+  opsies.push({t:(v.geslag==='v'?'Sy':'Hy') + ' moet gaan werk', klas:'grys',
     sub:'Daar is nie geld vir ’n graad nie', doen:function(){
       v.band = klem(v.band - tussen(4,14));
       kindNoteer(v,'moes gaan werk in plaas van studeer', true, 'sleg');
@@ -2405,7 +2564,7 @@ function kindStudieVraag(v){
   wagry.push({titel:v.naam + ' se APS is ' + k.skool.aps,
     vraag:v.naam + ' kan universiteit toe gaan. ’n Graad in ' + st.n + ' duur ' +
       st.jare + ' jaar en kos ongeveer ' + geld(koste) + ' per jaar.' +
-      (beurs ? '\nSy punte is goed genoeg vir ’n beurs.' : ''),
+      (beurs ? '\n' + hoofletter(besit(v)) + ' punte is goed genoeg vir ’n beurs.' : ''),
     opsies:opsies});
 }
 /* 'n Kleinkind (of 'n kind van 'n ou gestoorde lewe) se eie besluit. */
@@ -2436,7 +2595,11 @@ function kindWerkKies(v, stil){
 function kindMaat(v, stil){
   var k = v.kl;
   var g = kans(50) ? 'm' : 'v';
-  k.maat = {naam: kies(g==='m'?MANSNAME:VROUENAME), van: kies(VANNE), geslag:g,
+  /* O — "Andries is getroud met Andries Swanepoel" het gebeur omdat die
+     naam lukraak gekies is sonder om na die kind se eie naam te kyk. */
+  var mn = kies(g==='m'?MANSNAME:VROUENAME);
+  for(var k2=0;k2<10 && mn===v.naam;k2++) mn = kies(g==='m'?MANSNAME:VROUENAME);
+  k.maat = {naam: mn, van: kies(VANNE), geslag:g,
     ouderdom: Math.max(18, v.ouderdom + tussen(-5,5)), getroud:1};
   if(!stil){
     kindNoteer(v,'is getroud met ' + k.maat.naam + ' ' + k.maat.van, true, 'liefde');
@@ -2457,8 +2620,10 @@ function kleinkindBy(v){
   k.kinders.push({id:kk.id, naam:kk.naam});
   s.kleinkinders = (s.kleinkinders||0) + 1;
   s.geluk = klem(s.geluk + tussen(8,16));
-  noteer(v.naam + ' het ’n baba gekry: ' + kk.naam + '. Jy is nou ’n ' +
-    (s.geslag==='m' ? 'oupa' : 'ouma') + '!','liefde');
+  /* O — "Jy is nou 'n oupa!" het by elke kleinkind weer gestaan. */
+  noteer(v.naam + ' het ’n baba gekry: ' + kk.naam +
+    ((s.kleinkinders||0)<=1 ? '. Jy is nou ’n ' + (s.geslag==='m' ? 'oupa' : 'ouma') + '!' : '.'),
+    'liefde');
   kindNoteer(v,'het ’n ' + (kk.geslag==='m'?'seun':'dogter') + ' gekry: ' + kk.naam);
 }
 /* Een jaar in 'n kind (of kleinkind) se lewe. */
@@ -2481,7 +2646,8 @@ function kindJaar(v){
       'het ’n sertifikaat vir wiskunde gekry','het met die onderwyser gesukkel',
       'het ’n nuwe beste vriend','het in die skoolkonsert gespeel',
       'het die hele kwartaal se huiswerk betyds ingegee','het ’n prys op prysuitdeling gekry',
-      'het sy eerste rugbywedstryd gespeel','het van skool af weggebly',
+      'het ' + besit(v) + ' eerste ' + (v.geslag==='v'?'netbalwedstryd':'rugbywedstryd') +
+        ' gespeel','het van skool af weggebly',
       'het ’n liefdesbriefie by die huis laat lê','het leer swem by die skoolgala']));
     if(o===18 && !k.skool.matriek) kindMatriek(v);
     return;
@@ -2504,7 +2670,8 @@ function kindJaar(v){
       kindNoteer(v,'het ' + besit(v) + ' graad in ' + k.skool.studie + ' gekry', true, 'skool');
       s.geluk = klem(s.geluk + tussen(8,16));
       kindWerkKies(v);
-    } else kindNoteer(v,'is in ' + besit(v) + ' ' + (1 + (kindStudieJaar(k))) + 'e jaar van ' + k.skool.studie);
+    } else kindNoteer(v,'is in ' + besit(v) + ' ' + rangTel(kindStudieJaar(k)) +
+      ' jaar van ' + k.skool.studie);
     return;
   }
   /* --- aftrede. 'n Kind van 70 werk nie nog as kelner nie. --- */
@@ -2569,6 +2736,12 @@ function toestandVan(id){
   var r = null;
   TOESTANDE.forEach(function(x){ if(x.id===id) r=x; });
   return r;
+}
+/* O — die naam van 'n toestand in 'n sin: "jy het ’n gebreekte been",
+   "jy het HIV". tt.n.toLowerCase() het "gebreekte been" en "hiv" gegee. */
+function siekteNaam(tt){
+  if(!tt) return '';
+  return tt.lk || tt.n.toLowerCase();
 }
 function hetToestand(id){
   return (s.siektes||[]).some(function(x){ return x.id===id; });
@@ -2690,7 +2863,7 @@ function vraBehandeling(x){
     opsies.push({t:'Gebruik jou mediese fonds',
       sub: gap>0 ? 'Jy betaal ' + geld(gap) + ' uit jou eie sak' : 'Volledig gedek',
       doen:function(){ x.behandel=1; x.pad='fonds';
-        noteer('Jou mediese fonds dek ' + tt.n.toLowerCase() + '.','geld');
+        noteer('Jou mediese fonds dek ' + siekteNaam(tt) + '.','geld');
         eersteRekening(x); }});
   }
   opsies.push({t:'Gaan staatshospitaal toe',
@@ -2700,19 +2873,19 @@ function vraBehandeling(x){
       if(!tt.staatGratis && kans(STAAT_WAG)){
         x.wag = 1;
         noteer('Jy is op die waglys gesit. Die behandeling kom eers volgende jaar.','sleg');
-      } else noteer('Die staatshospitaal het jou vir ' + tt.n.toLowerCase() + ' behandel.','neutraal');
+      } else noteer('Die staatshospitaal het jou vir ' + siekteNaam(tt) + ' behandel.','neutraal');
     }});
   if(vol>0) opsies.push({t:'Betaal self, privaat',
     sub: geld(vol) + ' per jaar' + (vol > Math.max(0,s.geld)+(s.spaar||0) ?
       ' — jy het dit nie' : ''),
     klas: vol > Math.max(0,s.geld)+(s.spaar||0) ? 'rooi' : '',
     doen:function(){ x.behandel=1; x.pad='privaat';
-      noteer('Jy het besluit om ' + tt.n.toLowerCase() + ' privaat te laat behandel.','neutraal');
+      noteer('Jy het besluit om ' + siekteNaam(tt) + ' privaat te laat behandel.','neutraal');
       eersteRekening(x); }});
-  opsies.push({t:'Doen niks daaraan', klas:'grys',
+  opsies.push({t:'Doen niks daaraan nie', klas:'grys',
     sub: tt.dringend ? 'Dit is gevaarlik' : 'Dit kos niks, maar dit gaan nie weg nie',
     doen:function(){ x.behandel=0; x.pad=null;
-      noteer('Jy het ' + tt.n.toLowerCase() + ' onbehandeld gelaat.','sleg'); }});
+      noteer('Jy het ' + siekteNaam(tt) + ' onbehandeld gelaat.','sleg'); }});
   wagry.push({titel:tt.e + ' ' + tt.n,
     vraag: tt.sub + '.\n' + (tt.soort==='chronies'
       ? 'Dit gaan nie weg nie. Die behandeling kos ' + geld(vol) + ' per jaar.'
@@ -2728,7 +2901,7 @@ function eersteRekening(x){
   if(koste<=0) return;
   var tt = toestandVan(x.id);
   x.betaalJaar = s.ouderdom;
-  betaalWatJyKan(koste, tt.n.toLowerCase() + ' se behandeling');
+  betaalWatJyKan(koste, siekteNaam(tt) + ' se behandeling');
 }
 /* ---------- F1: die siektejaar ---------- */
 function siekteJaar(){
@@ -2743,7 +2916,7 @@ function siekteJaar(){
     x.jare = (x.jare||0) + 1;
     if(x.wag>0){ x.wag--;
       if(x.wag<=0) noteer('Jou plek op die staatshospitaal se lys het oopgekom: ' +
-        tt.n.toLowerCase() + ' word nou behandel.','goed'); }
+        siekteNaam(tt) + ' word nou behandel.','goed'); }
     /* 'n Behandelde chroniese toestand maak jou nie elke jaar swakker
        nie — dit hou jou net op 'n laer vlak, en dit is sy erns in
        doodsKans() wat jou uiteindelik vat. Onbehandeld vreet dit elke
@@ -2773,7 +2946,7 @@ function siekteJaar(){
            res van jou lewe van jou gesondheid afkom nie. */
         var terug = Math.round((x.gekos||0) * (x.behandel ? 0.88 : 0.72)) + tussen(0,2);
         s.gesondheid = klem(s.gesondheid + terug);
-        noteer('Jy is oor ' + tt.n.toLowerCase() + '.','goed');
+        noteer('Jy is oor ' + siekteNaam(tt) + '.','goed');
       }
       return;
     }
@@ -2781,7 +2954,7 @@ function siekteJaar(){
        toestand oopmaak (hoë bloeddruk wat 'n beroerte word). */
     if(!x.behandel && kans(4 + tt.erns*2)){
       var volg = tt.id==='bloeddruk' ? 'beroerte' : tt.id==='diabetes' ? 'hart' : null;
-      if(volg && !hetToestand(volg)) kryToestand(volg, 'omdat ' + tt.n.toLowerCase() +
+      if(volg && !hetToestand(volg)) kryToestand(volg, 'omdat ' + siekteNaam(tt) +
         ' onbehandeld gebly het');
     }
     /* Kanker kan ook verdwyn, as dit behandel word. */
@@ -2811,13 +2984,15 @@ function kryToestand(id, rede){
   if(tt.soort==='chronies')
     s.gesondheid = klem(s.gesondheid - tussen(tt.gesond[0], tt.gesond[1]*2));
   s.geluk = klem(s.geluk - Math.round(tt.erns*4 + 3));
-  noteer('Die dokter sê jy het ' + tt.n.toLowerCase() +
+  noteer('Die dokter sê jy het ' + siekteNaam(tt) +
     (rede ? ' ' + rede : '') + '.','sleg');
   /* 'n Kind se ouers besluit vir hom, en hulle gaan staat toe as daar
      nie 'n fonds is nie. */
   if(s.ouderdom<18 && !s.mediesefonds){
     x.behandel = 1; x.pad = 'staat';
-    noteer('Jou ouers het jou staatshospitaal toe gevat.','neutraal');
+    var sorger = lewendeOuers()[0];
+    noteer(sorger ? (sorger.naam + ' het jou staatshospitaal toe gevat.')
+      : 'Jy is self staatshospitaal toe.','neutraal');
     return;
   }
   vraBehandeling(x);
@@ -2836,14 +3011,14 @@ function siekteKosteJaar(){
     if(koste > ruimte){
       x.behandel = 0; x.pad = null;
       s.geluk = klem(s.geluk - tussen(6,14));
-      noteer('Jy kon nie ' + tt.n.toLowerCase() + ' se ' + geld(koste) +
+      noteer('Jy kon nie ' + siekteNaam(tt) + ' se ' + geld(koste) +
         ' bekostig nie. Die behandeling het opgehou.','sleg');
       /* Die staat is altyd daar, al is die waglys lank. */
       if(kans(62)){ x.behandel = 1; x.pad = 'staat'; x.wag = kans(STAAT_WAG) ? 1 : 0;
         noteer('Jy het by die staatshospitaal se kliniek aangesluit.','neutraal'); }
       return;
     }
-    som += betaalWatJyKan(koste, tt.n.toLowerCase() + ' se behandeling');
+    som += betaalWatJyKan(koste, siekteNaam(tt) + ' se behandeling');
   });
   /* E4 — voorbehoeding kos ook elke jaar geld. */
   var vb = voorbehoedingVan();
@@ -2923,7 +3098,7 @@ function gewoonteJaar(){
     if(v===1 && stil > GEWOONTE_STIL) return;
     if(g.spiraal[v] && kans(g.spiraal[v])){
       s.gewoontes[g.id] = v + 1;
-      noteer('Jy is nou ' + g.vlakke[v+1] + '.', v+1>=3 ? 'sleg' : 'neutraal');
+      noteer('Jy ' + g.vlakke[v+1] + '.', v+1>=3 ? 'sleg' : 'neutraal');
       if(v+1>=3) s.geluk = klem(s.geluk - tussen(5,12));
     }
   });
@@ -3021,7 +3196,7 @@ function vaardigJaar(){
     if(nuut < (v.vlak||0)){
       v.vlak = nuut;
       noteer('Jy het ' + x.n.toLowerCase() + ' te lank laat lê. Jy ' +
-        (nuut ? x.vlakke[nuut] : 'kan dit skaars meer') + '.','sleg');
+        (nuut ? x.vlakke[nuut] : 'kan dit skaars meer doen') + '.','sleg');
     }
   });
 }

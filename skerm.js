@@ -76,8 +76,8 @@ function vraOuer(p, koste, wat, klaar){
     klaar();
   } else {
     s.geluk = klem(s.geluk-4); p.band = klem(p.band-1);
-    noteer(p.naam + ' het nee gese oor ' + wat.toLowerCase() + '. "Ons het nie nou die geld nie."','sleg');
-    wenk(p.naam + ' het nee gese.');
+    noteer(p.naam + ' het nee gesê oor ' + wat.toLowerCase() + '. "Ons het nie nou die geld nie."','sleg');
+    wenk(p.naam + ' het nee gesê.');
     sluitModaal(); stoor(); renderAlles();
   }
 }
@@ -156,8 +156,14 @@ function wysGrafskrif(){
      boedel is klaar verdeel voordat hy kies, sodat hy sien wat elke
      kind sou erf. */
   var kinders = lewendeKinders();
-  if(kinders.length) h += '<div class="m-teks" style="margin-top:10px">Jou lyn hou aan: ' +
-    'kies een van jou kinders en speel sy lewe verder, met sy deel van die boedel.</div>';
+  if(kinders.length){
+    /* O — "sy lewe" ook vir 'n dogter. Met een kind weet ons die geslag;
+       met meer bly dit "sy of haar". */
+    var bs = kinders.length===1 ? besit(kinders[0]) : 'sy of haar';
+    h += '<div class="m-teks" style="margin-top:10px">Jou lyn hou aan: ' +
+      'kies een van jou kinders en speel ' + bs + ' lewe verder, met ' + bs +
+      ' deel van die boedel.</div>';
+  }
   m.innerHTML = '<div class="mk graf">' + h + '<div class="m-lys" id="m-lys"></div></div>';
   kinders.sort(function(a,b){ return b.ouderdom - a.ouderdom; });
   kinders.slice(0,6).forEach(function(v){

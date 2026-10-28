@@ -430,7 +430,7 @@ function rlSpin(){
   rl.rot += 360*5 + ((doel - nou + 360) % 360);
   el('rl-wiel').style.transform = 'rotate(' + rl.rot + 'deg)';
   el('rl-naaf').textContent = '';
-  msBoods('Die bal rol ...');
+  msBoods('Die bal rol\u2026');
   setTimeout(function(){
     var terug = 0, ingesit = rlTotaal();
     for(var k in rl.insette) terug += rl.insette[k] * rlBetaal(k, n);

@@ -286,7 +286,7 @@ function eieWerf(){
 
 /* ---------- Een lid ---------- */
 function eieLidStatus(l){
-  if(l.tronk) return 'in die tronk, ' + l.tronk + (l.tronk===1 ? ' jaar' : ' jaar') + ' oor';
+  if(l.tronk) return 'in die tronk, ' + l.tronk + ' jaar oor';
   if(l.gewerk===s.ouderdom) return 'klaar gewerk vanjaar';
   return 'beskikbaar';
 }
