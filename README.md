@@ -37,6 +37,7 @@ blaaier).
 | `ontsnap.js` | Tronk-ontsnapping: die beplanning oor jare, die stealth-mini-spel, en die lewe op die vlug. |
 | `begin.js` | Die inskryfpunt. |
 | `dev.js` | Die ontwikkelaar-paneel vir playtest — laai heel laaste en doen niks sonder `?dev` nie. |
+| `toets/` | Die toets-harnas: speel duisende lewens in Node en soek foute (sien onder). Die spel self gebruik dit nie. |
 
 Dit is gewone `<script src>`-lêers en nie ES modules nie, sodat
 dubbelklik op `index.html` werk. Alle paaie is relatief, so dieselfde
@@ -51,6 +52,16 @@ met kortpaaie: statte en geld stel, onsterflik, 1/5/10 jaar spring (met
 outo-antwoord), elke mini-spel direk oopmaak sonder gevolge, tronk/ontsnap/vlug/
 straat, organisasies en range, ’n werk of motor kry, en die stoor kopieer of laai.
 Sonder `?dev` sien ’n speler niks daarvan nie.
+
+## Outomatiese toetse: die harnas
+
+`node toets/toets.js` laai die spel sonder 'n blaaier en speel 150 lewens in elk van agt
+scenario's (passief, aktief, tronk, dakloos, op die vlug, die onderwêreld, gesin en die
+generasiespel, en skool los op 16). Dit soek crashes, onmoontlike toestande, teks wat in
+'n toestand nie hoort nie, en taalfoute, en kyk of 'n ou stoor-lêer nog laai. Elke fout
+kom met 'n saad: `node toets/toets.js -s tronk --saad 42` speel daardie lewe presies weer
+en wys sy hele log. Die reëls staan in `toets/reels.js`, die scenario's in
+`toets/scenarios.js` — voeg daar by as jy iets nuuts bou of 'n fout regmaak.
 
 ## Hosting op GitHub Pages
 
