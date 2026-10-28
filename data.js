@@ -605,62 +605,103 @@ var REP_NAME = [[0,'’n Niemand'],[10,'’n Bekende gesig'],[25,'Gehard'],[45,'
   [70,'’n Naam in die onderwêreld'],[90,'’n Legende']];
 /* Die jare wat 'n job van elke erns in die hof kan kos. */
 var ERNS_JARE = [null, [1,2], [1,4], [2,6], [3,10], [8,18]];
-/* Range binne 'n organisasie: die punte wat jy nodig het. 'n Job wat
-   slaag gee ORG_PUNTE_SLAAG plus die job se rang; een wat misluk kos 1. */
-var ORG_RANG_PUNTE = [0, 4, 10, 20], ORG_PUNTE_SLAAG = 2, ORG_JOBS_PER_JAAR = 2;
+/* Range binne 'n organisasie: die punte wat jy nodig het. 'n Riskante job
+   wat slaag gee ORG_PUNTE_SLAAG plus die job se rang; een wat misluk kos 1.
+   'n Veilige job gee net ORG_PUNTE_VEILIG plus die rang: die stadige pad. */
+var ORG_RANG_PUNTE = [0, 4, 10, 20], ORG_PUNTE_SLAAG = 4, ORG_PUNTE_VEILIG = 1, ORG_JOBS_PER_JAAR = 2;
+/* Die organisasie beskerm sy mense op sy eie jobs: die gevangskans val met
+   ORG_BESKERM per rang, en as jy tog gevang word, is daar ORG_PLAN[rang]%
+   kans dat die organisasie 'n plan maak (’n getuie wat sy storie verander,
+   ’n dossier wat wegraak) en die saak nooit hof toe gaan nie. */
+var ORG_BESKERM = 6, ORG_PLAN = [30, 45, 60, 75];
 /* veilig:true — die job self is nie 'n misdaad waarvoor jy gearresteer kan word nie
-   (jy kyk, spot of verken net). Dit het geen risiko, geen hitte en geen hofsaak nie. */
+   (jy kyk, spot, verken of beplan net). Dit het geen risiko, geen hitte en geen
+   hofsaak nie, en gee net sy eie 'rep' (nie REP_PER_ERNS nie). Elke rang in elke
+   organisasie het een: wie net veilig speel, kom altyd bo uit — net stadiger. */
 var ORGANISASIES = [
   {id:'bende', n:'Die Vlakte-bende', e:'\u{1F9E2}', rep:0, min:14, deel:20000,
    sub:'’n Straatbende op die Kaapse Vlakte', range:['Loopjong','Soldaat','Vertroude','Luitenant'], jobs:[
-    {n:'Hou die hoek dop vir die polisie', rang:0, betaal:[1500,6000], risiko:0, veilig:true, erns:1, rep:1},
-    {n:'Smous namaak-goed by die taxistaanplek', rang:0, betaal:[3000,12000], risiko:16, erns:1, rep:1},
+    {n:'Hou die hoek dop vir die polisie', rang:0, betaal:[1500,6000], risiko:0, veilig:true, erns:1, rep:2},
+    {n:'Dra boodskappe tussen die bende se huise', rang:1, betaal:[3000,9000], risiko:0, veilig:true, erns:1, rep:2},
+    {n:'Leer die nuwe loopjongs die strate ken', rang:2, betaal:[6000,15000], risiko:0, veilig:true, erns:1, rep:3},
+    {n:'Praat vrede met die bende oorkant die spoorlyn', rang:3, betaal:[10000,25000], risiko:0, veilig:true, erns:1, rep:3},
+    {n:'Smous namaak-goed by die taxistaanplek', rang:0, betaal:[4000,14000], risiko:16, erns:1, rep:3},
     {n:'Vat ’n pakkie na die ander kant van die dorp', rang:1, betaal:[8000,25000], risiko:24, erns:2, rep:2, voertuig:true},
     {n:'Breek in by ’n pakhuis', rang:2, betaal:[25000,90000], risiko:34, erns:3, rep:3, spel:'slot', voertuig:true},
     {n:'Samel beskermingsgeld in by die winkels', rang:3, betaal:[40000,120000], risiko:30, erns:3, rep:4}
   ]},
   {id:'chop', n:'Die Chop-shop-netwerk', e:'\u{1F527}', rep:20, min:16, deel:60000,
    sub:'Gesteelde motors kry hier nuwe nommerplate', range:['Spotter','Dief','Bestuurder','Voorman'], jobs:[
-    {n:'Spot duur motors in die parkeerterreine', rang:0, betaal:[5000,15000], risiko:0, veilig:true, erns:1, rep:1},
+    {n:'Spot duur motors in die parkeerterreine', rang:0, betaal:[5000,15000], risiko:0, veilig:true, erns:1, rep:2},
+    {n:'Hou die werkswinkel se onderdele-boeke by', rang:1, betaal:[8000,20000], risiko:0, veilig:true, erns:1, rep:3},
+    {n:'Bou kontakte by die tweedehandse motorhandelaars', rang:2, betaal:[12000,30000], risiko:0, veilig:true, erns:1, rep:3},
+    {n:'Beplan die week se bestellings vir die diewe', rang:3, betaal:[20000,50000], risiko:0, veilig:true, erns:1, rep:3},
     {n:'Steel ’n Polo op bestelling', rang:0, betaal:[25000,60000], risiko:32, erns:3, rep:2, spel:'aanskakel', spoed:175},
     {n:'Ry ’n gesteelde bakkie oor die grens', rang:1, betaal:[50000,140000], risiko:36, erns:3, rep:3, spoed:170},
+    {n:'Herregistreer gesteelde motors by die lisensiekantoor', rang:2, betaal:[80000,250000], risiko:28, erns:3, rep:4},
     {n:'Steel ’n BMW uit ’n beveiligde garage', rang:2, betaal:[120000,300000], risiko:44, erns:3, rep:4, spel:'aanskakel', spoed:250},
     {n:'Bestuur die werkswinkel vir die netwerk', rang:3, betaal:[150000,400000], risiko:22, erns:3, rep:4}
   ]},
   {id:'hawe', n:'Die Hawe-sindikaat', e:'\u{2693}', rep:40, min:18, deel:150000,
    sub:'Perlemoen, sigarette en wat ook al deur die hawe kom', range:['Draer','Skipper','Koerier','Kaptein'], jobs:[
+    {n:'Hou boek van die skepe en die skofte by die hawe', rang:0, betaal:[10000,25000], risiko:0, veilig:true, erns:1, rep:3},
+    {n:'Staan op die uitkyk op die kaai', rang:1, betaal:[15000,35000], risiko:0, veilig:true, erns:1, rep:3},
+    {n:'Leer die doeane se mense by ’n braai ken', rang:2, betaal:[20000,50000], risiko:0, veilig:true, erns:1, rep:3},
+    {n:'Beplan die sindikaat se skeepsroosters', rang:3, betaal:[40000,90000], risiko:0, veilig:true, erns:1, rep:4},
     {n:'Laai perlemoen af by Gansbaai', rang:0, betaal:[20000,60000], risiko:28, erns:3, rep:2, voertuig:true},
     {n:'Ry ’n vrag sigarette na Gauteng', rang:0, betaal:[40000,120000], risiko:34, erns:3, rep:3, voertuig:true},
     {n:'Koop ’n doeanebeampte om', rang:1, betaal:[80000,250000], risiko:30, erns:4, rep:4},
+    {n:'Verander die vragmanifeste by die hawekantoor', rang:2, betaal:[150000,500000], risiko:30, erns:3, rep:5},
     {n:'Smokkel ’n houer deur die hawe', rang:2, betaal:[250000,900000], risiko:46, erns:4, rep:6, voertuig:true},
     {n:'Bestuur die roete na die Ooste', rang:3, betaal:[500000,1500000], risiko:40, erns:4, rep:7}
   ]},
   {id:'sindikaat', n:'Die Sindikaat', e:'\u{1F3A9}', rep:65, min:21, deel:400000,
    sub:'Die groot geld: kontant-in-transito en bankkluise', range:['Kontak','Spesialis','Beplanner','Regterhand'], jobs:[
-    {n:'Verken ’n geldwa se roete', rang:0, betaal:[30000,90000], risiko:0, veilig:true, erns:2, rep:2},
+    {n:'Verken ’n geldwa se roete', rang:0, betaal:[30000,90000], risiko:0, veilig:true, erns:1, rep:3},
+    {n:'Bestudeer ’n bank se sekuriteitstelsel', rang:1, betaal:[40000,110000], risiko:0, veilig:true, erns:1, rep:3},
+    {n:'Toets nuwe spesialiste vir die span', rang:2, betaal:[60000,150000], risiko:0, veilig:true, erns:1, rep:4},
+    {n:'Adviseer die baas oor die volgende groot slag', rang:3, betaal:[100000,250000], risiko:0, veilig:true, erns:1, rep:4},
+    {n:'Ry die sindikaat se kontant na ’n wasplek', rang:0, betaal:[80000,200000], risiko:26, erns:4, rep:4, voertuig:true},
     {n:'Kraak ’n kluis vir die span', rang:0, betaal:[150000,500000], risiko:44, erns:5, rep:6, spel:'kluis', wapen:true},
+    {n:'Vervals die dokumente vir ’n spookmaatskappy', rang:1, betaal:[150000,400000], risiko:24, erns:4, rep:5},
     {n:'Bestuur die ontsnapmotor by ’n kontantroof', rang:1, betaal:[200000,700000], risiko:50, erns:5, rep:7, voertuig:true, wapen:true},
+    {n:'Koop ’n bankbestuurder om vir die kluis se kodes', rang:2, betaal:[300000,900000], risiko:32, erns:4, rep:6},
     {n:'Beplan ’n bankkluis-heist', rang:2, betaal:[800000,3000000], risiko:56, erns:5, rep:9, spel:'kluis', voertuig:true, wapen:true},
     {n:'Was die sindikaat se geld deur ’n maatskappy', rang:3, betaal:[400000,1200000], risiko:20, erns:4, rep:6}
   ]}
 ];
-/* Jou eie organisasie. Mense werf is die moeilike deel: die kans hang
-   af van die organisasie se rep, en dié is 'n deel van jou eie rep plus
+/* Jou eie organisasie. Die org se rep is 'n deel van jou eie rep plus
    werkRep — wat jou mense se jobs opbou (en wat mislukkings afbreek). */
 var EIE_ORG_REP = 75, EIE_ORG_OUDERDOM = 21, EIE_ORG_KOSTE = 100000;
 var EIE_ORG_UIT_JOU_REP = 0.3, EIE_WERKREP_VERVAL = 0.15;
-var EIE_WERF_PER_JAAR = 2, EIE_LEDE_BASIS = 3, EIE_LOON = 15000;   /* loon per lid per vlak per jaar */
-var EIE_WERF_BASIS = 12, EIE_WERF_PER_REP = 0.8;   /* werfkans = basis + org-rep × dit */
-var EIE_GEVANG = 50;         /* % van mislukte jobs waar jou mens gevang word */
+var EIE_LEDE_BASIS = 4, EIE_LEDE_PER_REP = 15;     /* maks lede = basis + org-rep / dit */
 var EIE_DEEL = 0.5;          /* jou mense hou die helfte van die buit */
+/* Werwing. 'n Vreemdeling (twee pogings per jaar): basis + org-rep × dit.
+   Iemand wat jy ken (een keer per jaar per persoon): hoofsaaklik die band —
+   band − EIE_VRA_AF + org-rep × EIE_VRA_PER_REP. 'n Nee kos band. */
+var EIE_WERF_PER_JAAR = 2, EIE_WERF_BASIS = 8, EIE_WERF_PER_REP = 0.6;
+var EIE_VRA_AF = 20, EIE_VRA_PER_REP = 0.3, EIE_VRA_NEE = [5,12];
+var EIE_VRA_TIPES = ['vriend','klasmaat','kollega','lief','eggenoot','broer','suster','neef','niggie',
+  'oom','tante','seun','dogter','kleinkind'];
+/* Elke lid het sy eie rep (0-100) en rang. Die loon is per rang per jaar;
+   'n hoër rang wil meer hê, maar werk beter (+EIE_RANG_SUKSES per rang).
+   Bevorder kan net met genoeg lid-rep. */
+var EIE_LID_RANGE = ['Lid','Vertroude','Luitenant'], EIE_LID_RANG_REP = [0, 25, 50];
+var EIE_LOON = [15000, 30000, 60000], EIE_RANG_SUKSES = 5;
+var EIE_BONUS = 20000;       /* 'n bonus: lojaliteit +15 (en band +8 vir iemand wat jy ken) */
+/* Sukses = 85 − 10 × moeilik + (lid-rep − die job se lidRep) − hitte/5 + rang-bonus.
+   'n Sukses gee die lid 'repLid'; 'n mislukking kos hom EIE_LID_REP_AF, en in
+   EIE_GEVANG% van mislukkings word hy gevang en sit hy 'tronk' jaar. */
+var EIE_GEVANG = 50, EIE_LID_REP_AF = 2;
 var EIE_JOBS = [
-  {n:'Smous op straat', moeilik:1, orgRep:0, buit:[8000,30000], rep:1, erns:1},
-  {n:'Steel motors vir ’n chop shop', moeilik:2, orgRep:10, buit:[30000,120000], rep:2, erns:3},
-  {n:'Samel beskermingsgeld in', moeilik:2, orgRep:15, buit:[25000,90000], rep:2, erns:3},
-  {n:'Smokkel perlemoen', moeilik:3, orgRep:25, buit:[60000,250000], rep:3, erns:3},
-  {n:'Steel ’n vragmotor vol elektronika uit ’n depot', moeilik:4, orgRep:40,
-   buit:[200000,700000], rep:5, erns:4},
-  {n:'’n Kontant-in-transito-roof', moeilik:5, orgRep:60, buit:[600000,2400000], rep:7, erns:5}
+  {n:'Spot teikens vir die organisasie', veilig:true, moeilik:0, lidRep:0, orgRep:0, buit:[3000,10000], rep:0, repLid:3, erns:1},
+  {n:'Smous op straat', moeilik:1, lidRep:0, orgRep:0, buit:[8000,30000], rep:1, repLid:4, erns:1, tronk:[0,1]},
+  {n:'Steel motors vir ’n chop shop', moeilik:2, lidRep:10, orgRep:10, buit:[30000,120000], rep:2, repLid:5, erns:3, tronk:[1,3]},
+  {n:'Samel beskermingsgeld in', moeilik:2, lidRep:15, orgRep:15, buit:[25000,90000], rep:2, repLid:5, erns:3, tronk:[1,3]},
+  {n:'Smokkel perlemoen', moeilik:3, lidRep:25, orgRep:25, buit:[60000,250000], rep:3, repLid:6, erns:3, tronk:[2,4]},
+  {n:'Steel ’n vragmotor vol elektronika uit ’n depot', moeilik:4, lidRep:40, orgRep:35,
+   buit:[200000,700000], rep:5, repLid:8, erns:4, tronk:[3,6]},
+  {n:'’n Kontant-in-transito-roof', moeilik:5, lidRep:60, orgRep:50, buit:[600000,2400000], rep:7, repLid:10, erns:5, tronk:[6,12]}
 ];
 
 /* ==========================================================================

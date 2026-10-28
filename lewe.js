@@ -260,6 +260,8 @@ function vulNuweVelde(){
   if(!s.straatRep) s.straatRep = 0;
   if(s.bende===undefined) s.bende = null;
   if(s.eieOrg===undefined) s.eieOrg = null;
+  /* Fase 9b — elke lid van jou eie organisasie het sy eie rep en job. */
+  if(s.eieOrg) s.eieOrg.lede.forEach(eieLidHerstel);
   /* Fase 9 — die vlug, en die ontsnappingsplan van 'n ou tronkvonnis. */
   if(s.vlug===undefined) s.vlug = null;
   if(!s.vlugJare) s.vlugJare = 0;

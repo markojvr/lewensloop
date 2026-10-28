@@ -1159,12 +1159,20 @@ function oopPersoon(id){
     o.push({t:'Lees ' + v.naam + ' se lewensverhaal', klas:'grys',
       sub:'Wat alles met hom gebeur het', doen:function(){ wysKindLewe(v); }});
   }
+  /* Fase 9b — jou eie organisasie: vra om aan te sluit, of bestuur die lid. */
+  var lid = s.eieOrg ? eieLidVan(v) : null;
+  if(lid) o.push({t:'\u{1F451} Bestuur in ' + s.eieOrg.naam, sub:EIE_LID_RANGE[lid.rang] + ' · rep ' + lid.rep + ' · ' + eieLidStatus(lid),
+    doen:function(){ eieLidMenu(lid.id); }});
+  else if(s.eieOrg && !s.tronk && eieKanVra(v))
+    o.push({t:'\u{1F451} Vra om by ' + s.eieOrg.naam + ' aan te sluit', sub:v.orgGevra===s.ouderdom ? 'Het vanjaar al nee gesê' :
+      'Kans ' + eieVraKans(v) + '% · ’n nee kos band', doen:function(){ eieVra(v); }});
   if(v.tipe==='lief') o.push({t:'Verbreek die verhouding', klas:'rooi', doen:function(){ raak(v,'verbreek'); }});
   if(v.tipe==='eggenoot') o.push({t:'Skei', klas:'rooi', doen:function(){ raak(v,'skei'); }});
   o.push({t:'Maak rusie', klas:'rooi', doen:function(){ raak(v,'rusie'); }});
   o.push({t:'Sluit', klas:'grys', doen:function(){ sluitModaal(); }});
   wysModaal(v.naam + ' ' + v.van,
-    rol(v) + ' \u2014 ' + v.ouderdom + ' jaar oud\nVerhouding: ' + v.band + '/100', o);
+    rol(v) + ' \u2014 ' + v.ouderdom + ' jaar oud\nVerhouding: ' + v.band + '/100' +
+    (v.tronk ? '\nIn die tronk: nog ' + v.tronk + ' jaar' : ''), o);
 }
 
 function raak(v, wat){

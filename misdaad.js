@@ -88,7 +88,7 @@ function doenMisdaad(id){
 function misdaadMaat(c){
   if(!c.m.maat){ misdaadVoertuig(c); return; }
   var opsies = [{t:'Gaan alleen', sub:'Die hele buit is joune', doen:function(){ misdaadVoertuig(c); }}];
-  s.verhoudings.filter(function(v){ return v.lewe && v.ouderdom>=12 &&
+  s.verhoudings.filter(function(v){ return v.lewe && v.ouderdom>=12 && !v.tronk &&
       ['vriend','broer','suster','klasmaat','kollega','lief','eggenoot'].indexOf(v.tipe)>=0; })
     .sort(function(a,b){ return b.band - a.band; }).slice(0,8)
     .forEach(function(v){
@@ -131,6 +131,7 @@ function misdaadRisiko(c){
   var mods = (c.voertuig ? c.voertuig.mod : 0) + (c.maat ? -8 : 0)
     - Math.round((s.slim-50)/6) + spelMod(c.q);
   if(c.m.vereis==='kodeer') mods -= 2*Math.max(0, vaardigVlak('kodeer') - (t.kodeer||2));
+  if(c.job && s.bende) mods -= ORG_BESKERM*s.bende.rang;    /* die organisasie beskerm sy mense */
   var r = Math.max(Math.round(t.risiko*RISIKO_VLOER), t.risiko + mods);
   r += s.rekord.length*3 + hitteRisiko();
   return Math.max(3, Math.min(95, r));
@@ -180,7 +181,7 @@ function misdaadBetaal(c, bedrag, ekstra){
   /* G8 — witboordjie-misdaad: niemand sien dit nou nie, maar die oudit kom. */
   if(t.oudit) ouditBy(m, t, bedrag);
   /* Fase 8b — 'n misdaad wat slaag, bou jou naam; 'n job ook jou rang. */
-  repBy(REP_PER_ERNS[misdaadErns(m, t)]);
+  if(!c.veilig) repBy(REP_PER_ERNS[misdaadErns(m, t)]);   /* 'n veilige job: net sy eie rep (orgJobSlaag) */
   var teks = m.n + ' (' + t.n + ')' + hoeTeks(c) + ' het ' + geld(myne) + ' opgelewer' +
     (c.maat ? ' (julle het ' + geld(bedrag) + ' gedeel)' : '') + '.' + (ekstra||'');
   if(m.wapen) teks += ' Niemand is beseer nie.';
@@ -223,6 +224,7 @@ function misdaadGevang(c){
   s.geluk = klem(s.geluk - 10);
   if(c.job) orgJobMisluk(c);
   noteer('Die polisie het jou betrap tydens ' + m.n.toLowerCase() + ' (' + t.n + ')' + hoeTeks(c) + '.','misdaad');
+  if(c.job && orgPlan(c)) return;
   if(c.maat){
     var w = R(100);
     if(w < 28){

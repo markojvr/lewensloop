@@ -81,7 +81,8 @@ function devOop(){
     '<div class="dev-blok"><div class="dev-t">Onderwêreld</div>' +
       ORGANISASIES.map(function(o){ return k(o.e + ' ' + o.n, 'devOrg(\'' + o.id + '\')'); }).join('') +
       k('Rang op','devRang()') + k('Begin eie organisasie','devEieOrg()') +
-      k('+3 lede in eie org','devLede()') +
+      k('+3 vreemdelinge in eie org','devLede()') + k('+3 vriende (band 95)','devVriende()') +
+      k('Stel ’n lid se rep…','devLidRep()') + k('Lede: nuwe jaar (weer werk)','devLedeVry()') +
     '</div>' +
 
     '<div class="dev-blok"><div class="dev-t">Werk en bates</div>' +
@@ -246,10 +247,35 @@ function devEieOrg(){
 function devLede(){
   var e = s.eieOrg; if(!e){ wenk('Begin eers jou eie organisasie.'); return; }
   for(var i=0;i<3;i++){
-    var m = kans(50);
-    e.lede.push({naam:kies(m ? MANSNAME : VROUENAME) + ' ' + kies(VANNE), vlak:tussen(1,3), lojaal:tussen(50,80), jare:0});
+    var g = kans(50) ? 'm' : 'v';
+    e.lede.push(eieNuweLid(kies(g==='m' ? MANSNAME : VROUENAME) + ' ' + kies(VANNE), null, tussen(0,20), tussen(50,80), g));
   }
   devKlaar('+3 lede.');
+}
+/* Drie grootmens-vriende met 'n hoë band, om die werwing te toets. */
+function devVriende(){
+  for(var i=0;i<3;i++){
+    var v = nuweMens(null, Math.max(18, s.ouderdom + tussen(-3,3))); v.tipe = 'vriend'; v.band = 95;
+    s.verhoudings.push(v);
+  }
+  devKlaar('+3 vriende met band 95.');
+}
+function devLidRep(){
+  var e = s.eieOrg; if(!e || !e.lede.length){ wenk('Jy het nog geen lede nie.'); return; }
+  devToe();
+  kiesLys('\u{1F6E0} Watter lid?', 'Kies, en dan die rep.', e.lede.map(function(l){
+    return {t:l.naam, sub:'rep ' + l.rep + ' · ' + EIE_LID_RANGE[l.rang], doen:function(){
+      kiesLys('\u{1F6E0} Rep vir ' + l.naam, '', [0,10,25,40,60,80,100].map(function(r){
+        return {t:'Rep ' + r, doen:function(){ l.rep = r; sluitModaal(); devKlaar(l.naam + ': rep ' + r + '.'); }};
+      }), 'Terug', function(){ sluitModaal(); devOop(); }); }};
+  }), 'Terug', function(){ sluitModaal(); devOop(); });
+}
+function devLedeVry(){
+  var e = s.eieOrg; if(!e){ wenk('Begin eers jou eie organisasie.'); return; }
+  e.lede.forEach(function(l){ l.gewerk = -1; l.tronk = 0; var v = eiePersoon(l); if(v) v.tronk = 0; });
+  s.verhoudings.forEach(function(v){ v.orgGevra = null; });
+  s.gedoen.werf = 0;
+  devKlaar('Lede vry om weer te werk; werwing herstel.');
 }
 
 /* ---------- Werk en bates ---------- */

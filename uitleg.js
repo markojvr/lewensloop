@@ -466,6 +466,7 @@ function renderWerk(){
 /* E7/E12 — 'n kind se eie lewe en 'n eggenoot se beroep staan op sy
    kaart, want dit is wat jy van hom wil weet. */
 function persoonSub(v){
+  if(v.tronk) return 'in die tronk (' + v.tronk + ' jaar oor)';   /* Fase 9b */
   if(v.tipe==='eggenoot'){
     if(v.afgetree) return 'op pensioen';
     if(v.werk) return v.werk.t.toLowerCase() + ' \u00b7 ' + kortGeld(v.werk.salaris) + '/jaar';
